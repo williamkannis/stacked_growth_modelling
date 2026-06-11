@@ -11,12 +11,14 @@
 #' (1),sampling event, and hydroperiod groups.
 #' @param sp Character to indicate which species is being modeled. Used in 
 #' bridgedataframe
-#' @param min.pred minimum prediction input value
-#' @param max.pred maximum prediction input value
+#' @param min.pred Minimum prediction input value
+#' @param max.pred Maximum prediction input value
+#' 
 #' @returns a named list containing the prediction function input dataframe and 
 #' a bridge dataframe to link combined grouping ids to sampling and hydroperiod 
 #' ids. Prediction dataframe has a column for the combined grouping id 
 #' (group_id) and the prediction input value (pred; length or age).
+#' @export
 
 # REQUIRES: dplyr (all), tidyr,
 
@@ -59,32 +61,67 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 }
 
 
-# group predict stacking  ------------------------------------------------------
+# growth_stackR  ---------------------------------------------------------------
 
-# DESCRIPTION: Create model stacked, group specific growth curve predictions or 
-# growth parameters estimates. Function extract parameter posterior distributions 
-# based on model names provided with stacking weights. Wrapper for param_extract, 
-# prediction_sampler, and parameter_sampler
-
-# INPUT:
-# ! stack.df = dataframe containing model file names and stacking wts. Must have
-#              columns "model" and "stack_wt
-# ! mod.dir  = pathway for Stan model output files
-# ! group.id = Character("hydr_","mu_", "","all") indicating the grouping level  
-#               of model parameters to extract. If all is selected, population,
-#               site, and hydroperiod level parameters will be extracted
-# ! group.size = number of groups in grouping level# ! sim = total number of postieror draws for stacking
-# ! type = Character ("parameter" or "prediction"), model stack growth predictions
-#          or paramters
-# ! ... = additional arguments for the prediction_sampler and parameter_sampler
-#         functions
-
-# OUTPUT: 3D array containing either group specific model parameters, or predictions
-# with each slcie being an random psoterior draw from one of the models in stack.
+#' Model stack predictions and growth parameters
+#' 
+#' @description Create model stacked, group specific growth curve predictions 
+#' or growth parameters estimates with credible intervals. 
+#' 
+#' @param stack.df Data frame containing model file names and stacking wts. 
+#' Must have columns "model" and "stack_wt
+#' @param mod.dir  File path for Stan model output files
+#' @param group.id Character ("hydr_","mu_", "","all") indicating the grouping 
+#' level of model parameters to extract. If all is selected, population, site, 
+#' and hydroperiod level parameters will be extracted
+#' @param group.size Number of groups in grouping level
+#' @param sim Number of posterior draws for stacking
+#' @param type Character ("parameter" or "prediction"), model stack growth 
+#' predictions or parameters
+#' @param type sum.fun Character ("mean" or "median) for type of summary 
+#' statistic of posterior distribution. Default is mean 
+#' @param ... = Additional arguments passed to prediction_sampler or 
+#' parameter_sampler auxiliary functions. Required arguments for stacked growth 
+#' curve predictions include:
+#'   \describe{
+#'     \item{input.df}{Data frame with a column ("input) for prediction input  
+#'      data (length or age) and an optional column ("group_id") for a grouping 
+#'     variable}
+#'     \item{input.var}{Character ("length" or "age") to indicate if prediction 
+#'     is made using length or age data}
+#'     \item{output.var}{Character ("length","age","growth","interval_growth") 
+#'     to indicate what type of prediction is being made. If vector is provided, 
+#'     multiple prediction columns will be created. Growth indicates 
+#'     instantaneous growth, and interval growth is exponential growth during a 
+#'     specified interval}
+#'     \item{days}{Number of datys to estimate interval growth. Only required 
+#'     if output.var includes "interval_growth"}
+#'     \item{parallel}{T or F. Use multiple cores. Only should be used on 
+#'     Linux and MacOS. Default is F.}
+#'     \item{mc.cores}{Number of core for parallel processing if parallel = T
+#'     Default is NULL}
+#'   }
+#'   
+#'Required arguments for stacked parameter estimates include:
+#'   \describe{
+#'     \item{truncate.inf}{Truncate negative values of the inflection 
+#'     parameter to zero (i.e., faster growth at birth) }
+#'   }
+#'   
+#' @details Function extract parameter posterior distributions based on model  
+#' names provided with stacking weights. Summarizes posterior distributions for 
+#' predictions with mean or median, and 95% credible intervals. Wrapper for 
+#' param_extract, prediction_sampler, parameter_sampler, and boot_summary
+#' 
+#' @returns Three-dimensional array containing either group specific model 
+#' parameters, or predictions with each slice being an random posterior draw 
+#' from one of the models in stack. ####FIX####THIS####
+#' @export
 
 # REQUIRES: abind
 
-growth_stackR <- function(stack.df, mod.dir, group.id, group.size, sim,type,sum.fun, ...){
+growth_stackR <- function(stack.df, mod.dir, group.id, group.size, 
+                          sim,type,sum.fun, ...){
   
   # Prediction or parameters?
   fun_name = paste0(type,"_sampler")
@@ -207,25 +244,46 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
 }
 
 
-# Estimate R2 of length predictions of all models  ------------------------------
+# len_R2  ----------------------------------------------------------------------
 
-# DESCRIPTION: Estiame R2 of length predictions of all models in stacking output. 
-# Function extract parameter posterior distributions and predicts teh length at
-# age for each grouping. R2 is then estimated for each model Wrapper for , 
-# param_extract and prediction_sampler.
+#' R-sqaured estimation for candidate models.
+#' 
+#' @description Estimates r-squared of length predictions of all candidate 
+#' models in stacking output. 
+#' 
+#' @param stack.df Data frame containing model file names and stacking wts. 
+#' Must have columns "model" and "stack_wt
+#' @param mod.dir File path for Stan model output files
+#' @param group.id Character("hydr_","mu_", "","all") indicating the grouping 
+#' level of model parameters to extract. If all is selected, population, site, 
+#' and hydroperiod level parameters will be extracted
+#' @param group.size Number of groups in grouping level
+#' @param n.sims Number of posterior draws
+#' @param sp Character for name of species of which to estimate r-squared
+#' @param sum.fun Character ("mean" or "median) for type of summary 
+#' statistic of posterior distribution. Default is mean 
+#' @param ... = Additional arguments passed to prediction_sampler or 
+#' parameter_sampler auxiliary functions. Required arguments for stacked growth 
+#' curve predictions include:
+#'   \describe{
+#'     \item{input.df}{Data frame with a column ("input) for prediction input  
+#'      data (length or age) and an optional column ("group_id") for a grouping 
+#'     variable}
+#'     \item{parallel}{T or F. Use multiple cores. Only should be used on 
+#'     Linux and MacOS. Default is F.}
+#'     \item{mc.cores}{Number of core for parallel processing if parallel = T
+#'     Default is NULL}
+#'   }
+#'
+#' 
+#' @details Function extract parameter posterior distributions for each model and 
+#' predicts the length at age for each grouping. R-squared is then estimated 
+#' for each model. Wrapper for param_extract and prediction_sampler.
+#' 
+#' @returns Data frame containing r-squared and adjusted r-squared for each 
+#' model
+#' @export
 
-# INPUT:
-# ! stack.df = dataframe containing model file names and stacking wts. Must have
-#              columns "model" and "stack_wt
-# ! mod.dir  = pathway for Stan model output files
-# ! group.id = Character("hydr_","mu_", "","all") indicating the grouping level  
-#               of model parameters to extract. If all is selected, population,
-#               site, and hydroperiod level parameters will be extracted
-# ! group.size = number of groups in grouping level# ! sim = total number of postieror draws for stacking
-# ! n.sims = number of posteiror draws to estimate mean with
-# ! ... = additional arguments for the prediction_sampler functions
-
-# OUTPUT: dataframe containing r2 and adjusted r2 for each model
 
 # REQUIRES: purrr
 
