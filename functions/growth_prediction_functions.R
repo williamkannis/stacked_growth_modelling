@@ -8,7 +8,7 @@
 
 # CREATED: Feb 5, 2026
 
-# DESCRIPTION: Function used to create both candidate and model-stacked growth
+# DESCRIPTION: Functions used to create both candidate and model-stacked growth
 # curve predictions using Stan growth model outputs. Functions also can model-
 # stack growth parameters across models. Script includes helper functions used
 # in main functions
@@ -213,7 +213,7 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
 #' level of model parameters to extract. If all is selected, population, site, 
 #' and hydroperiod level parameters will be extracted
 #' @param group.size Number of groups in grouping level
-#' @param sim Number of posterior draws for stacking
+#' @param n.sim Number of posterior draws for stacking
 #' @param type Character ("parameter" or "prediction"), model stack growth 
 #' predictions or parameters
 #' @param type sum.fun Character ("mean" or "median) for type of summary 
@@ -252,14 +252,12 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
 #' candidate model. Wrapper for param_extract, prediction_sampler, 
 #' parameter_sampler, and boot_summary
 #' 
-#' @returns Data frame with a row for every input (age or length), grouping,
+#' @returns Data.frame with a row for every input (age or length), grouping,
 #' and model combination. Contains columns for age or length, model name, 
 #' grouping index, and columns for prediction summary statistics (mean or 
-#' median, lower, and upper credible interval) for each output variable.
+#' median, lower-lwr, and upper-upr credible interval) for each output variable.
 #' 
 #' @export
-
-
 
 # REQUIRES: purrr
 
@@ -343,7 +341,7 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
 #' predicts the length at age for each grouping. R-squared is then estimated 
 #' for each model. Wrapper for param_extract and prediction_sampler.
 #' 
-#' @returns Data frame containing r-squared and adjusted r-squared for each 
+#' @returns Data.frame containing r-squared and adjusted r-squared for each 
 #' model
 #' @export
 
@@ -410,24 +408,38 @@ len_R2 <- function(stack.df, mod.dir, group.id, group.size, n.sim,sp,sum.fun="me
 }
 
 
-# linear predict stacking  -----------------------------------------------------
+# linear_pred_stackR  ----------------------------------------------------------
   
-# DESCRIPTION: Create model stacked, group specific parameter and inst. growth
-# predictions. Function extract prediction posterior distributions based on model 
-# names provided with stacking weights. Wrapper for predict_extract, 
-# linear_prediction_sampler.
-
-# INPUT:
-# ! stack.df = dataframe containing model file names and stacking wts. Must have
-#              columns "model" and "stack_wt
-# ! mod.dir  = pathway for Stan model output files
-
-# OUTPUT: 3D array containing  predictions with each slcie being an random 
-# posterior draw from one of the models in stack.
+#' Model-stacked instantaneous growth predictions
+#'
+#' @description Creates model-stacked predictions of instantaneous growth rate
+#' across a range of predictor variables.
+#' 
+#' @param stack.df Data.frame containing model file names and stacking weights. 
+#' Must have columns "model" and "stack_wt. Models must include predictions of
+#' instantaneous growth (inst_growth) and asymptotic length (Linf) across a 
+#' range of predictor variables.
+#' @param mod.dir  File path for Stan model output files
+#' @param sim Number of posterior draws for stacking
+#' @param sum.fun Character ("mean" or "median) for type of summary 
+#' statistic of posterior distribution. Default is mean 
+#'
+#' @details Function extract prediction posterior distributions of instantaneous 
+#' growth rates across predictors based on model names provided with stacking 
+#' weights. Posterior distributions are combined based on stacking weights and 
+#' summarized with mean or median, and 95% credible intervals. Wrapper for 
+#' predict_extract, linear_prediction_sampler.
+#' 
+#' @returns Data.frame with rows for each prediction input (e.g. PC1 value) and
+#' columns for prediction number (pred_id), and columns for prediction summary 
+#' statistics (mean or median, lower-lwr, and upper-upr credible interval) for 
+#' each output variable.
+#' 
+#' @export
 
 # REQUIRES: abind
 
-linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun, ...){
+linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
   
   # Retain models with 
   stack <- stack.df %>% 
