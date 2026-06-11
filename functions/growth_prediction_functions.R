@@ -92,8 +92,8 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 #' predictions or parameters
 #' @param type sum.fun Character ("mean" or "median) for type of summary 
 #' statistic of posterior distribution. Default is mean 
-#' @param ... = Additional arguments passed to prediction_sampler or 
-#' parameter_sampler auxiliary functions. Required arguments for stacked growth 
+#' @param ... = Additional arguments passed to .prediction_sampler or 
+#' .parameter_sampler auxiliary functions. Required arguments for stacked growth 
 #' curve predictions include:
 #'   \describe{
 #'     \item{input.df}{Data.frame with a column ("input) for prediction input  
@@ -106,7 +106,11 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 #'     multiple prediction columns will be created. Growth indicates 
 #'     instantaneous growth, and interval growth is exponential growth during a 
 #'     specified interval}
-#'     \item{days}{Number of datys to estimate interval growth. Only required 
+#'     \item{days}{Number of days to estimate interval growth. Only required 
+#'     if output.var includes "interval_growth"}
+#'     \item{wt.df}{wt.df = Data.frame containing length-weight parameters. 
+#'     Only required if output.var includes "interval_growth"}
+#'     \item{dry.wt}{Optional dry weight conversion factor. Only required 
 #'     if output.var includes "interval_growth"}
 #'     \item{parallel}{T or F. Use multiple cores. Only should be used on 
 #'     Linux and MacOS. Default is F.}
@@ -117,15 +121,15 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 #'Required arguments for stacked parameter estimates include:
 #'   \describe{
 #'     \item{truncate.inf}{Truncate negative values of the inflection 
-#'     parameter to zero (i.e., faster growth at birth) }
+#'     parameter to zero (i.e., faster growth at birth). Default is F. }
 #'   }
 #'   
 #' @details Function extract parameter posterior distributions based on model  
 #' names provided with stacking weights. Combines posterior distributions for 
 #' predictions based on model stacking weights. Summarizes posterior 
 #' distributions for predictions with mean or median, and 95% credible intervals. 
-#' Wrapper for param_extract, prediction_sampler, parameter_sampler, and 
-#' boot_summary
+#' Wrapper for .param_extract, .prediction_sampler, .parameter_sampler, and 
+#' .boot_summary
 #' 
 #' @returns Data.frame with a row for every input (age or length) and grouping
 #' combination. Contains columns for age or length, grouping index, and columns 
@@ -140,7 +144,7 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
                           sim,type,sum.fun, ...){
   
   # Prediction or parameters?
-  fun_name = paste0(type,"_sampler")
+  fun_name = paste0(".",type,"_sampler")
   fun = get(fun_name)
   
   # Retain models with 
@@ -152,7 +156,7 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
   mods<- stack$model
   
   # Select desired groupings
-  mod_list <- lapply(mods,param_extract,mod.dir,group.id,group.size)
+  mod_list <- lapply(mods,.param_extract,mod.dir,group.id,group.size)
 
   # prepare prediction inputs
   sim_list = stack$n_sim
@@ -177,13 +181,14 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
   }
   
   # Summarize into data.frame
-  boot_summary(
+  .boot_summary(
     out,
     sum.fun=sum.fun,
     group.var=group_var
   )
   
 }
+
 
 # curve_predictR  --------------------------------------------------------------
 
@@ -205,8 +210,8 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
 #' predictions or parameters
 #' @param type sum.fun Character ("mean" or "median) for type of summary 
 #' statistic of posterior distribution. Default is mean 
-#' #' @param ... = Additional arguments passed to prediction_sampler or 
-#' parameter_sampler auxiliary functions. Required arguments for stacked growth 
+#' #' @param ... = Additional arguments passed to .prediction_sampler or 
+#' .parameter_sampler auxiliary functions. Required arguments for stacked growth 
 #' curve predictions include:
 #'   \describe{
 #'     \item{input.df}{Data.frame with a column ("input) for prediction input  
@@ -230,14 +235,14 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
 #'Required arguments for stacked parameter estimates include:
 #'   \describe{
 #'     \item{truncate.inf}{Truncate negative values of the inflection 
-#'     parameter to zero (i.e., faster growth at birth) }
+#'     parameter to zero (i.e., faster growth at birth). Default is F }
 #'   }
 #'   
 #' @details Function extract parameter posterior distributions based on model  
 #' names provided with stacking weights. Summarizes posterior distributions for 
 #' predictions with mean or median, and 95% credible intervals for each 
-#' candidate model. Wrapper for param_extract, prediction_sampler, 
-#' parameter_sampler, and boot_summary
+#' candidate model. Wrapper for .param_extract, .prediction_sampler, 
+#' .parameter_sampler, and .boot_summary
 #' 
 #' @returns Data.frame with a row for every input (age or length), grouping,
 #' and model combination. Contains columns for age or length, model name, 
@@ -251,14 +256,14 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
 curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,sum.fun="mean", ...){
   
   # Prediction or parameters?
-  fun_name = paste0(type,"_sampler")
+  fun_name = paste0(".",type,"_sampler")
   fun = get(fun_name)
   
   # Load it model parameters
   mods<- stack.df$model
   
   # Extract posterior distributions
-  mod_list <- lapply(mods,param_extract,mod.dir,group.id,group.size)
+  mod_list <- lapply(mods,.param_extract,mod.dir,group.id,group.size)
   
   # prepare prediction inputs
   g_mod_list <- substr(mods,1,2)
@@ -280,7 +285,7 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
   }
   
   # Extract means
-  pred_summary <- lapply(pred_list, boot_summary,sum.fun=sum.fun, group.var=group_var)
+  pred_summary <- lapply(pred_list, .boot_summary,sum.fun=sum.fun, group.var=group_var)
   
   # Add model name
   pred_summary <- purrr::map2(pred_summary,names(pred_summary),
@@ -309,8 +314,8 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
 #' @param sp Character for name of species of which to estimate r-squared
 #' @param sum.fun Character ("mean" or "median) for type of summary 
 #' statistic of posterior distribution. Default is mean 
-#' @param ... = Additional arguments passed to prediction_sampler or 
-#' parameter_sampler auxiliary functions. Required arguments for stacked growth 
+#' @param ... = Additional arguments passed to .prediction_sampler or 
+#' .parameter_sampler auxiliary functions. Required arguments for stacked growth 
 #' curve predictions include:
 #'   \describe{
 #'     \item{input.df}{Data.frame with a column ("input) for prediction input  
@@ -325,7 +330,7 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
 #' 
 #' @details Function extract parameter posterior distributions for each model and 
 #' predicts the length at age for each grouping. R-squared is then estimated 
-#' for each model. Wrapper for param_extract and prediction_sampler.
+#' for each model. Wrapper for .param_extract and .prediction_sampler.
 #' 
 #' @returns Data.frame containing r-squared and adjusted r-squared for each 
 #' model
@@ -339,13 +344,13 @@ len_R2 <- function(stack.df, mod.dir, group.id, group.size, n.sim,sp,sum.fun="me
   mods<- stack.df$model
   
   # Extract posterior distributions
-  mod_list <- lapply(mods,param_extract,mod.dir,group.id,group.size)
+  mod_list <- lapply(mods,.param_extract,mod.dir,group.id,group.size)
   
   # prepare prediction inputs
   g_mod_list <- substr(mods,1,2)
   
   # Run prediction function
-  pred_list <-Map(function(x,y) prediction_sampler(model.out = x,
+  pred_list <-Map(function(x,y) .prediction_sampler(model.out = x,
                                                    g.mod = y, 
                                                    n.sim = n.sim,
                                                    input.var = "age",
@@ -355,7 +360,7 @@ len_R2 <- function(stack.df, mod.dir, group.id, group.size, n.sim,sp,sum.fun="me
   names(pred_list) <- mods
   
   # Extract means
-  pred_summary <- lapply(pred_list, boot_summary,sum.fun = sum.fun, group.var=c("group_id","age"))
+  pred_summary <- lapply(pred_list, .boot_summary,sum.fun = sum.fun, group.var=c("group_id","age"))
   
   # Add model name
   pred_summary <- purrr::map2(pred_summary,names(pred_summary),
@@ -444,10 +449,291 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
   out <- abind::abind(pred_list, along = 3)
   
   # Summarize into data.frame
-  boot_summary(
+  .boot_summary(
     out,
     sum.fun=sum.fun,
     group.var=c("pred_id")
   )
   
 }  
+
+# Model parameter extraction helpers -------------------------------------------
+
+# Extracts posterior distribution of the asymptotic, scaling, and inflection
+# parameters from a growth model stanfit object based on user selected
+# groupings (hydroperiod, sampling event, or population). In cases where 
+# estimates do not differ among groups, each group will be assigned population
+# values. Returns a 3d array (num groups, 4, iterations). Each slice is a 
+# posterior draw of the asymptotic, scaling, and inflection parameter values for
+# each group
+
+# REQUIRES: rstan, abind
+
+.param_extract <-function(mod.out,mod.dir,group.id,group.size){
+  
+  # Each model has different name for same class of parameter, create list with
+  # all the names for each class
+  Linf <- c("Linf")
+  slope <- c("K","gninf","gi","g1","g2","g3")
+  inf <- c("t0","ti")
+  param.list <- list(Linf,slope,inf)
+  
+  # Load in model outputs
+  mod.dir.file <- file.path(mod.dir,mod.out)
+  mod <- readRDS(mod.dir.file)
+  
+  # Load in posterior samples for all parameters
+  sim.list <- rstan::extract(mod,permute =T)
+  
+  # How many posterior draws are there?
+  n.iter <- dim(sim.list[[1]])[1]
+  
+  # Extract draws from group-specific group parametes
+  out.list <-lapply(param.list, .single_param_extract,
+                    mod=mod,
+                    sim.list=sim.list,
+                    group.id=group.id,
+                    group.size=group.size)
+  
+  # Merge model draw outputs into an 3d array
+  # This array will have each slice contain a matix with columns for group
+  # and rows as posterior samples
+  out.array <- abind::abind(out.list,along=3)
+  
+  # Create and merge in group ids to array
+  id <- matrix(rep(seq(1,group.size),n.iter),
+               nrow = n.iter,
+               ncol = group.size,
+               byrow = T)
+  out.array.ids <- abind::abind(id,out.array,along=3)
+  
+  # Array needs to be rotated so that each slice is a matrix with group-specific
+  # values for each parameter
+  out.array.perm <- aperm(out.array.ids,c(2,3,1))
+  colnames(out.array.perm) <- c("group_id","Linf","g","inf")
+  out.array.perm
+}
+
+.single_param_extract <- function(mod,params,sim.list,group.id,group.size){
+  
+  # Remove grouping ids from parameter names (i.e., hydr_K -> K)
+  param.mod <-stringr::str_extract(mod@model_pars, "[^_]+$")
+  
+  # For parameter grouping or choice, choose the model specific
+  # parameter name (e.g., slope for gompertz is gi, and K for Von Bert)
+  param.select <-params[params %in% param.mod]
+  
+  # Create id for group-specific parameter of interest
+  param.group <-paste0(group.id,param.select)
+  
+  # Create id for population mean, for cases when model does not have groupings
+  # for model of interest
+  param.mu <-paste0("mu_",param.select)
+  
+  # If more than one group exist for parameter...
+  if(length(dim(sim.list[[param.group]])) > 1) {
+    
+    # Extract the posterior draws for each
+    out <- sim.list[[param.group]]
+  } else {
+    
+    # OR, if groups have the same parameter values, copy draws into a matrix
+    # with group-size columns
+    out.list <- rep(list(sim.list[[param.mu]]),group.size)
+    out <- do.call(cbind,out.list)
+  }
+  # Return resulting matrix
+  out
+}
+
+# Curve prediction helpers  ----------------------------------------------------
+
+# Creates group-specific growth curve predictions using length or 
+# age values using multiple draws of growth parameter distributions from Stan
+# models. Data.frame containing age or length inputs for specified groups are 
+# used to create a 3D array containing input data, groupings, and growth 
+# predictions. Each slice represents a random posterior draw.
+
+# REQUIRES: dplyr (full), stringr, purrr, abind, parallel (suggested)
+
+.prediction_sampler <-function(model.out,n.sim,...,parallel=F,mc.cores=NULL){
+  
+  # Parallel processing?
+  if (parallel == T) {
+    lapply_fun <- function(...) parallel::mclapply(...,mc.cores=mc.cores)
+  } else {
+    lapply_fun <- lapply
+  }
+  
+  # extract random posterior draws
+  mod_list <- .post_draw(model.out,n.sim)
+  
+  # run specified function using each random growth parameter draws
+  out_list <- lapply_fun(mod_list,.growth_predictR,...)
+  
+  # Bind results into a 3d array
+  abind::abind(out_list,along = 3)
+  
+}
+
+.growth_predictR <- function(model.out,g.mod,input.df,input.var,output.var,wt.df = NULL,dry.wt=1){
+  
+  # Does model output have groupings?
+  if(nrow(model.out)==1){
+    # Universal parameter estimates
+    out_df <- input.df %>% 
+      mutate(Linf=model.out$Linf,
+             g = model.out$g,
+             inf = model.out$inf)
+  } else{
+    # Group specific parameters estimates
+    out_df <- input.df %>% 
+      left_join(model.out,by = join_by(group_id))
+  }  
+  
+  # apply prediction function(s) to data
+  preds <- purrr::map(
+    output.var,
+    ~{
+      # Load in helper functions
+      fun_name <- paste(input.var,.x,sep="2")
+      fun <- get(fun_name)
+      
+      # set function arguments
+      args <- list(
+        input = out_df$input,
+        Linf = out_df$Linf,
+        g = out_df$g,
+        inf = out_df$inf,
+        g.mod = g.mod
+      )
+      
+      # add additional arguments for helper functions
+      if("days" %in% names(formals(fun))){
+        stopifnot("Days missing in input data" = "days" %in% colnames(out_df))
+        args$days = out_df$days
+      }
+      
+      if("wt.df" %in% names(formals(fun))){
+        stopifnot("Weight-length parameters missing. Please provide dataframe with conversions" = 
+                    "days" %in% colnames(out_df))
+        args$wt.df <-wt.df
+        args$dry.wt <- dry.wt
+      }
+      
+      # apply function
+      do.call(fun,args)
+    }
+  )
+  
+  # Add prediction columns to data
+  names(preds) <- paste0(output.var,"_pred")
+  bind_cols(out_df,preds) %>% 
+    rename_with(~c(input.var),c(input)) %>% 
+    select(-Linf,-g,-inf)
+}
+
+
+# Parameter prediction helpers  ------------------------------------------------
+
+# Extracts random posterior draws of group-specific growth parameter
+# estimates from n 3d array (groupings) or matrix (no groupings) containing 
+# growth parameter estimates from a three parameter growth model. Returns an
+# array with group-specific (if present) asymptotic length and
+# growth curve inflection parameters, with each slice being a random posterior
+# draw.
+
+# REQUIRES: abind
+
+.parameter_sampler <- function (model.out,n.sim,truncate.inf = F,g.mod = NULL) {
+  
+  # Pull random samples from posterior
+  mod_list <- .post_draw(model.out,n.sim)
+  
+  # Extract parameter of interest
+  out_list <- lapply(mod_list, function(x) as.data.frame(x[,c("group_id","Linf","inf")]))
+  out <-abind::abind(out_list,along = 3)
+  
+  # For inf, truncate negative ages to zero, for these fish they 
+  # experience greatest growth rate at birth
+  if (truncate.inf == F) return(out)
+  out[,"inf",][out[,"inf",] <0] <- 0
+  out
+}
+
+# Misc. helpers  ---------------------------------------------------------------
+
+### random posterior draws  ####
+# Draw random samples from posterior distribution of growth curve parameters
+# from a 3d array (groupings present) or matrix (no groupings). Returns a list
+# of growth parameter data.frames (col = parameter, row = groups). Each
+# data.frame is a random draw from posterior distribution
+
+.post_draw <- function (model.out,n.sim){
+  
+  # For outputs without group specific parameters (matrix),
+  # each row is a posterior draw
+  if(is.na(dim(model.out)[3])){
+    
+    # How many iterations?
+    n.iter = nrow(model.out)
+    
+    # Random draws
+    s <- sample(1:n.iter,n.sim,replace = T)
+    
+    # Create a list of random draws of growth parameters
+    mod_list <- lapply(s,function(x) as.data.frame(model.out[x,]))
+  } else {
+    
+    # For outputs with group specific parameters (arrays),
+    # each slice is a posterior draw
+    
+    # How many iterations?
+    n.iter = dim(model.out)[3]
+    
+    # Random draws
+    s <- sample(1:n.iter,n.sim,replace = T)
+    
+    # Create a list of random draws of growth parameters
+    mod_list <- lapply(s, function(x) {
+      as.data.frame(matrix(
+        model.out[ , , x],
+        nrow = dim(model.out)[1],
+        dimnames = dimnames(model.out)[1:2]
+      ))
+    })
+  }
+  mod_list
+}
+
+### Summarize arrays  ###
+# Summarizes data in arrays created in bootstrapping or posterior distribution 
+# sampling. Returns data.frame containing group specific mean or median values 
+# with 95% confidence or credible intervals
+
+# REQUIRES: dplyr (full)
+
+.boot_summary <- function(array,group.var,sum.fun="mean",ci=c(0.0275,0.975)){
+  
+  # Summary function
+  fun <- get(sum.fun)
+  
+  # summary function label
+  fun_label <- paste0("_",sum.fun)
+  
+  # Calculate summary statistic and 95 CI interval of estimates
+  summary <- as.data.frame(apply(array,c(1,2), fun))
+  uprs <- as.data.frame(apply(array,c(1,2), quantile, probs=ci[2], na.rm=T))
+  lwrs <- as.data.frame(apply(array,c(1,2), quantile, probs=ci[1], na.rm=T))
+  
+  # Merge into one summary table
+  summary %>%
+    left_join(lwrs,
+              by=group.var,
+              suffix = c("","_lwr"))  %>%
+    left_join(uprs,
+              by=group.var,
+              suffix = c(fun_label,"_upr"))
+}
+
+
