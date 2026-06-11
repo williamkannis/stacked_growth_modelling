@@ -109,13 +109,17 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 #'   }
 #'   
 #' @details Function extract parameter posterior distributions based on model  
-#' names provided with stacking weights. Summarizes posterior distributions for 
-#' predictions with mean or median, and 95% credible intervals. Wrapper for 
-#' param_extract, prediction_sampler, parameter_sampler, and boot_summary
+#' names provided with stacking weights. Combines posterior distributions for 
+#' predictions based on model stacking weights. Summarizes posterior 
+#' distributions for predictions with mean or median, and 95% credible intervals. 
+#' Wrapper for param_extract, prediction_sampler, parameter_sampler, and 
+#' boot_summary
 #' 
-#' @returns Three-dimensional array containing either group specific model 
-#' parameters, or predictions with each slice being an random posterior draw 
-#' from one of the models in stack. ####FIX####THIS####
+#' @returns Data frame with a row for every input (age or length) and grouping
+#' combination. Contains columns for age or length, grouping index, and columns 
+#' for prediction summary statistics (mean or median, lower, and upper 
+#' credible interval) for each output variable.
+#' 
 #' @export
 
 # REQUIRES: abind
@@ -177,26 +181,69 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
   
 }
 
-# length predictions of all models  --------------------------------------------
+# curve_predictR  --------------------------------------------------------------
 
-# DESCRIPTION: Estiame R2 of length predictions of all models in stacking output. 
-# Function extract parameter posterior distributions and predicts teh length at
-# age for each grouping. R2 is then estimated for each model Wrapper for , 
-# param_extract and prediction_sampler.
+#' Candidate model predictions and growth parameters
+#' 
+#' @description Create group specific growth curve predictions 
+#' or growth parameters estimates with credible intervals for each candidate
+#' model used in model stacking. 
+#' 
+#' 
+#' @param stack.df Data frame containing model file names and stacking wts. 
+#' Must have columns "model" and "stack_wt
+#' @param mod.dir  File path for Stan model output files
+#' @param group.id Character ("hydr_","mu_", "","all") indicating the grouping 
+#' level of model parameters to extract. If all is selected, population, site, 
+#' and hydroperiod level parameters will be extracted
+#' @param group.size Number of groups in grouping level
+#' @param sim Number of posterior draws for stacking
+#' @param type Character ("parameter" or "prediction"), model stack growth 
+#' predictions or parameters
+#' @param type sum.fun Character ("mean" or "median) for type of summary 
+#' statistic of posterior distribution. Default is mean 
+#' #' @param ... = Additional arguments passed to prediction_sampler or 
+#' parameter_sampler auxiliary functions. Required arguments for stacked growth 
+#' curve predictions include:
+#'   \describe{
+#'     \item{input.df}{Data frame with a column ("input) for prediction input  
+#'      data (length or age) and an optional column ("group_id") for a grouping 
+#'     variable}
+#'     \item{input.var}{Character ("length" or "age") to indicate if prediction 
+#'     is made using length or age data}
+#'     \item{output.var}{Character ("length","age","growth","interval_growth") 
+#'     to indicate what type of prediction is being made. If vector is provided, 
+#'     multiple prediction columns will be created. Growth indicates 
+#'     instantaneous growth, and interval growth is exponential growth during a 
+#'     specified interval}
+#'     \item{days}{Number of datys to estimate interval growth. Only required 
+#'     if output.var includes "interval_growth"}
+#'     \item{parallel}{T or F. Use multiple cores. Only should be used on 
+#'     Linux and MacOS. Default is F.}
+#'     \item{mc.cores}{Number of core for parallel processing if parallel = T
+#'     Default is NULL}
+#'   }
+#'   
+#'Required arguments for stacked parameter estimates include:
+#'   \describe{
+#'     \item{truncate.inf}{Truncate negative values of the inflection 
+#'     parameter to zero (i.e., faster growth at birth) }
+#'   }
+#'   
+#' @details Function extract parameter posterior distributions based on model  
+#' names provided with stacking weights. Summarizes posterior distributions for 
+#' predictions with mean or median, and 95% credible intervals for each 
+#' candidate model. Wrapper for param_extract, prediction_sampler, 
+#' parameter_sampler, and boot_summary
+#' 
+#' @returns Data frame with a row for every input (age or length), grouping,
+#' and model combination. Contains columns for age or length, model name, 
+#' grouping index, and columns for prediction summary statistics (mean or 
+#' median, lower, and upper credible interval) for each output variable.
+#' 
+#' @export
 
-# INPUT:
-# ! stack.df = dataframe containing model file names and stacking wts. Must have
-#              columns "model" and "stack_wt
-# ! mod.dir  = pathway for Stan model output files
-# ! group.id = Character("hydr_","mu_", "","all") indicating the grouping level  
-#               of model parameters to extract. If all is selected, population,
-#               site, and hydroperiod level parameters will be extracted
-# ! group.size = number of groups in grouping level# ! sim = total number of 
-#                postieror draws for stacking
-# ! n.sims = number of posteiror draws to estimate mean with
-# ! ... = additional arguments for the prediction_sampler functions
 
-# OUTPUT: dataframe containing r2 and adjusted r2 for each model
 
 # REQUIRES: purrr
 
