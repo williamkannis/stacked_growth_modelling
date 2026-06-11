@@ -16,9 +16,9 @@
 
 # grouping_predDF  -------------------------------------------------------------
 
-#' Grouped prediction data frame preparation.
+#' Grouped prediction data.frame preparation.
 #' 
-#' @description Prepares input dataframe for length2age_predict and  
+#' @description Prepares input data.frame for length2age_predict and  
 #' length2growth_predict functions for population, sampling event, and hydroperiod
 #' level predictions. Also produces bridge function to link combined grouping ids
 #' back to original group level ids.
@@ -26,38 +26,35 @@
 #' @param group.size Vector containing the number of groups in the population 
 #' (1),sampling event, and hydroperiod groups.
 #' @param sp Character to indicate which species is being modeled. Used in 
-#' bridgedataframe
+#' bridgedata.frame
 #' @param min.pred Minimum prediction input value
 #' @param max.pred Maximum prediction input value
 #' 
-#' @returns a named list containing the prediction function input dataframe and 
-#' a bridge dataframe to link combined grouping ids to sampling and hydroperiod 
-#' ids. Prediction dataframe has a column for the combined grouping id 
+#' @returns a named list containing the prediction function input data.frame and 
+#' a bridge data.frame to link combined grouping ids to sampling and hydroperiod 
+#' ids. Prediction data.frame has a column for the combined grouping id 
 #' (group_id) and the prediction input value (pred; length or age).
 #' @export
 
 # REQUIRES: dplyr (all), tidyr,
 
 grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_","hydr_","")) {
-  
-  # # Three groupings used in model
-  # group_vec <- c("mu_","hydr_","")
-  
+
   # Create a unique id for each grouping among all groups
   id_df <- data.frame(group = unlist(purrr::map2(group_vec,group.size,rep)),
                       old_id = unlist(purrr::map(group.size,seq,from=1)),
                       group_id=1:sum(group.size))
   
-  # Create prediction dataframe with a user specified range of input (age or length)
+  # Create prediction data.frame with a user specified range of input (age or length)
   # data for each new grouping. This can be feed to one of the prediction
   # functions
   pred_df <- id_df %>% 
     tidyr::crossing(input = min.pred:max.pred) %>% 
     select(group_id,input)
   
-  # Create a dataframe that links to new group ids to hydroperiod or sample
+  # Create a data.frame that links to new group ids to hydroperiod or sample
   # event ids. This wide format table can be merged directly into the 
-  # sample_id_bridge dataframe
+  # sample_id_bridge data.frame
   id_bridge_df<-  id_df %>% 
     mutate(
       species = sp,  
@@ -84,12 +81,11 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 #' @description Create model stacked, group specific growth curve predictions 
 #' or growth parameters estimates with credible intervals. 
 #' 
-#' @param stack.df Data frame containing model file names and stacking wts. 
+#' @param stack.df Data.frame containing model file names and stacking wts. 
 #' Must have columns "model" and "stack_wt
 #' @param mod.dir  File path for Stan model output files
-#' @param group.id Character ("hydr_","mu_", "","all") indicating the grouping 
-#' level of model parameters to extract. If all is selected, population, site, 
-#' and hydroperiod level parameters will be extracted
+#' @param group.id Character ("hydr_","mu_", "") indicating the grouping 
+#' level of model parameters to extract. 
 #' @param group.size Number of groups in grouping level
 #' @param sim Number of posterior draws for stacking
 #' @param type Character ("parameter" or "prediction"), model stack growth 
@@ -100,7 +96,7 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 #' parameter_sampler auxiliary functions. Required arguments for stacked growth 
 #' curve predictions include:
 #'   \describe{
-#'     \item{input.df}{Data frame with a column ("input) for prediction input  
+#'     \item{input.df}{Data.frame with a column ("input) for prediction input  
 #'      data (length or age) and an optional column ("group_id") for a grouping 
 #'     variable}
 #'     \item{input.var}{Character ("length" or "age") to indicate if prediction 
@@ -131,7 +127,7 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 #' Wrapper for param_extract, prediction_sampler, parameter_sampler, and 
 #' boot_summary
 #' 
-#' @returns Data frame with a row for every input (age or length) and grouping
+#' @returns Data.frame with a row for every input (age or length) and grouping
 #' combination. Contains columns for age or length, grouping index, and columns 
 #' for prediction summary statistics (mean or median, lower, and upper 
 #' credible interval) for each output variable.
@@ -156,16 +152,8 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
   mods<- stack$model
   
   # Select desired groupings
-  if (group.id == "all") {
-    stopifnot("Please provide group sizes for all three groupings" = 
-                length(group.size) == 3)
-    mod_list <- lapply(mods,param_extract_all,
-                       group.size = group.size,
-                       mod.dir = mod.dir)
-  } else {
-    mod_list <- lapply(mods,param_extract,mod.dir,group.id,group.size)
-  }
-  
+  mod_list <- lapply(mods,param_extract,mod.dir,group.id,group.size)
+
   # prepare prediction inputs
   sim_list = stack$n_sim
   g_mod_list <- substr(mods,1,2)
@@ -188,7 +176,7 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
     group_var <- c("group_id")
   }
   
-  # Summarize into dataframe
+  # Summarize into data.frame
   boot_summary(
     out,
     sum.fun=sum.fun,
@@ -206,12 +194,11 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
 #' model used in model stacking. 
 #' 
 #' 
-#' @param stack.df Data frame containing model file names and stacking wts. 
+#' @param stack.df Data.frame containing model file names and stacking wts. 
 #' Must have columns "model" and "stack_wt
 #' @param mod.dir  File path for Stan model output files
-#' @param group.id Character ("hydr_","mu_", "","all") indicating the grouping 
-#' level of model parameters to extract. If all is selected, population, site, 
-#' and hydroperiod level parameters will be extracted
+#' @param group.id Character ("hydr_","mu_", "") indicating the grouping 
+#' level of model parameters to extract.
 #' @param group.size Number of groups in grouping level
 #' @param n.sim Number of posterior draws for stacking
 #' @param type Character ("parameter" or "prediction"), model stack growth 
@@ -222,7 +209,7 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
 #' parameter_sampler auxiliary functions. Required arguments for stacked growth 
 #' curve predictions include:
 #'   \describe{
-#'     \item{input.df}{Data frame with a column ("input) for prediction input  
+#'     \item{input.df}{Data.frame with a column ("input) for prediction input  
 #'      data (length or age) and an optional column ("group_id") for a grouping 
 #'     variable}
 #'     \item{input.var}{Character ("length" or "age") to indicate if prediction 
@@ -299,7 +286,7 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
   pred_summary <- purrr::map2(pred_summary,names(pred_summary),
                               function(x,y) x %>% mutate(mod =y))
   
-  # Combine into one data frame
+  # Combine into one data.frame
   bind_rows(pred_summary)
   
 }
@@ -312,12 +299,11 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
 #' @description Estimates r-squared of length predictions of all candidate 
 #' models in stacking output. 
 #' 
-#' @param stack.df Data frame containing model file names and stacking wts. 
+#' @param stack.df Data.frame containing model file names and stacking wts. 
 #' Must have columns "model" and "stack_wt
 #' @param mod.dir File path for Stan model output files
-#' @param group.id Character("hydr_","mu_", "","all") indicating the grouping 
-#' level of model parameters to extract. If all is selected, population, site, 
-#' and hydroperiod level parameters will be extracted
+#' @param group.id Character("hydr_","mu_", "") indicating the grouping 
+#' level of model parameters to extract. 
 #' @param group.size Number of groups in grouping level
 #' @param n.sims Number of posterior draws
 #' @param sp Character for name of species of which to estimate r-squared
@@ -327,7 +313,7 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
 #' parameter_sampler auxiliary functions. Required arguments for stacked growth 
 #' curve predictions include:
 #'   \describe{
-#'     \item{input.df}{Data frame with a column ("input) for prediction input  
+#'     \item{input.df}{Data.frame with a column ("input) for prediction input  
 #'      data (length or age) and an optional column ("group_id") for a grouping 
 #'     variable}
 #'     \item{parallel}{T or F. Use multiple cores. Only should be used on 
@@ -345,9 +331,7 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
 #' model
 #' @export
 
-
 # REQUIRES: purrr
-
 
 len_R2 <- function(stack.df, mod.dir, group.id, group.size, n.sim,sp,sum.fun="mean", ...){
   
@@ -377,7 +361,7 @@ len_R2 <- function(stack.df, mod.dir, group.id, group.size, n.sim,sp,sum.fun="me
   pred_summary <- purrr::map2(pred_summary,names(pred_summary),
                               function(x,y) x %>% mutate(mod =y))
   
-  # Combine into one data frame
+  # Combine into one data.frame
   pred_df <- bind_rows(pred_summary)
   
   # Connect group id to site info
@@ -459,7 +443,7 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
   # Bind results into 3d array
   out <- abind::abind(pred_list, along = 3)
   
-  # Summarize into dataframe
+  # Summarize into data.frame
   boot_summary(
     out,
     sum.fun=sum.fun,
