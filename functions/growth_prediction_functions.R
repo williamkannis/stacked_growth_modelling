@@ -111,7 +111,7 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 #'     \item{wt.df}{wt.df = Data.frame containing length-weight parameters. 
 #'     Only required if output.var includes "interval_growth"}
 #'     \item{dry.wt}{Optional dry weight conversion factor. Only required 
-#'     if output.var includes "interval_growth"}
+#'     if output.var includes "interval_growth". Default = 1}
 #'     \item{parallel}{T or F. Use multiple cores. Only should be used on 
 #'     Linux and MacOS. Default is F.}
 #'     \item{mc.cores}{Number of core for parallel processing if parallel = T
@@ -226,6 +226,10 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
 #'     specified interval}
 #'     \item{days}{Number of datys to estimate interval growth. Only required 
 #'     if output.var includes "interval_growth"}
+#'     \item{wt.df}{wt.df = Data.frame containing length-weight parameters. 
+#'     Only required if output.var includes "interval_growth"}
+#'     \item{dry.wt}{Optional dry weight conversion factor. Only required 
+#'     if output.var includes "interval_growth". Default = 1}
 #'     \item{parallel}{T or F. Use multiple cores. Only should be used on 
 #'     Linux and MacOS. Default is F.}
 #'     \item{mc.cores}{Number of core for parallel processing if parallel = T
@@ -417,7 +421,7 @@ len_R2 <- function(stack.df, mod.dir, group.id, group.size, n.sim,sp,sum.fun="me
 #' growth rates across predictors based on model names provided with stacking 
 #' weights. Posterior distributions are combined based on stacking weights and 
 #' summarized with mean or median, and 95% credible intervals. Wrapper for 
-#' predict_extract, linear_prediction_sampler.
+#' .predict_extract, linear_prediction_sampler.
 #' 
 #' @returns Data.frame with rows for each prediction input (e.g. PC1 value) and
 #' columns for prediction number (pred_id), and columns for prediction summary 
@@ -440,10 +444,10 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
   sim_list = stack$n_sim
   
   # Extract posterior distributions of all models with stacking weights
-  mod_list <- lapply(mods,predict_extract,mod.dir)
+  mod_list <- lapply(mods,.predict_extract,mod.dir)
   
   # Run prediction function
-  pred_list <- purrr::map2(mod_list,sim_list, linear_predict_sampler)
+  pred_list <- purrr::map2(mod_list,sim_list, .linear_predict_sampler)
   
   # Bind results into 3d array
   out <- abind::abind(pred_list, along = 3)
@@ -546,6 +550,91 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
   out
 }
 
+# Prediction extracting helpers  -----------------------------------------------
+
+# Extracts posterior distribution of the  predictions of the asymptotic
+# and inflection parameters, as well as instantaneous growth predictions given
+# specific values of predictors. Predictions are created in Stan model and 
+# these functions extracts these predictions into a 3d array (number of 
+# predictions, n.parameters X linear predictors, iterations). Each slice is a 
+# posterior draw of the prediction.
+
+# REQUIRES: rstan, abind
+
+# extract posterior from model output
+.predict_extract <- function(mod.out,mod.dir) {
+  
+  # Load in model
+  mod <- readRDS(file.path(mod.dir,mod.out))
+  
+  # Select predictions of parameters in actual model
+  all_param <- c("pred_Linf","pred_ig")
+  param <- all_param[all_param %in% mod@model_pars]
+  
+  # Extract posteriors
+  sim_list <- rstan::extract(mod,param)
+  
+  # Format each array to bind into one
+  pred_list <- purrr::map2(sim_list,names(sim_list), function(x,y) {
+    array <- aperm(x,c(2,3,1))  # format array so slices are draws
+    colnames(array) <- sapply(seq_len(ncol(array)), function(i) paste0(y,i))  # give each column a unique name
+    array
+  }
+  )
+  
+  # Bind into one array
+  pred_array <-abind::abind(pred_list,along = 2)
+  
+  # Create a column for prediction id (used for boot summary function)   
+  id <- array(rep(seq(1,nrow(pred_array)),dim(pred_array)[3]),
+              dim = c(dim(pred_array)[1],1,dim(pred_array)[3]),
+              dimnames = list(NULL,"pred_id",NULL)) 
+  abind::abind(id,pred_array,along=2)
+  
+  
+}  
+
+# Selects random draws
+.linear_predict_sampler <- function (model.out,n.sim) {
+  
+  # Pull random samples from posterior
+  mod_list <- post_draw(model.out,n.sim)
+  
+  # Extract parameter of interest
+  out_list <- lapply(mod_list, function(x) as.data.frame(x))
+  abind::abind(out_list,along = 3)
+  
+}
+
+
+# Parameter prediction helpers  ------------------------------------------------
+
+# Extracts random posterior draws of group-specific growth parameter
+# estimates from n 3d array (groupings) or matrix (no groupings) containing 
+# growth parameter estimates from a three parameter growth model. Returns an
+# array with group-specific (if present) asymptotic length and
+# growth curve inflection parameters, with each slice being a random posterior
+# draw.
+
+# REQUIRES: abind
+
+.parameter_sampler <- function (model.out,n.sim,truncate.inf = F,g.mod = NULL) {
+  
+  # Pull random samples from posterior
+  mod_list <- .post_draw(model.out,n.sim)
+  
+  # Extract parameter of interest
+  out_list <- lapply(mod_list, function(x) as.data.frame(x[,c("group_id","Linf","inf")]))
+  out <-abind::abind(out_list,along = 3)
+  
+  # For inf, truncate negative ages to zero, for these fish they 
+  # experience greatest growth rate at birth
+  if (truncate.inf == F) return(out)
+  out[,"inf",][out[,"inf",] <0] <- 0
+  out
+}
+
+
 # Curve prediction helpers  ----------------------------------------------------
 
 # Creates group-specific growth curve predictions using length or 
@@ -596,7 +685,8 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
     output.var,
     ~{
       # Load in helper functions
-      fun_name <- paste(input.var,.x,sep="2")
+      # fun_name <- paste(input.var,.x,sep="2")
+      fun_name <- paste0(".",input.var,"2",.x)
       fun <- get(fun_name)
       
       # set function arguments
@@ -633,32 +723,140 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
     select(-Linf,-g,-inf)
 }
 
+# growth prediction helpers  ---------------------------------------------------
 
-# Parameter prediction helpers  ------------------------------------------------
+# For a given age or length, estimate length, age, instantaneous growth using 
+# von Bertalanffy, Gompertz, or logistic growth model parameters.
 
-# Extracts random posterior draws of group-specific growth parameter
-# estimates from n 3d array (groupings) or matrix (no groupings) containing 
-# growth parameter estimates from a three parameter growth model. Returns an
-# array with group-specific (if present) asymptotic length and
-# growth curve inflection parameters, with each slice being a random posterior
-# draw.
+# REQUIRES: NA
 
-# REQUIRES: abind
-
-.parameter_sampler <- function (model.out,n.sim,truncate.inf = F,g.mod = NULL) {
+.length2growth <- function(input,g.mod,Linf,g,inf){
   
-  # Pull random samples from posterior
-  mod_list <- .post_draw(model.out,n.sim)
+  stopifnot('Growth model must be from the following models "vb" 
+            (von Bertalanffy), "gz" (Gompertz), 
+            or "lg" (logistic).'=g.mod %in% c("vb","gz","lg"))  
   
-  # Extract parameter of interest
-  out_list <- lapply(mod_list, function(x) as.data.frame(x[,c("group_id","Linf","inf")]))
-  out <-abind::abind(out_list,along = 3)
+  ## von Bertalanffy  ##
+  if(g.mod == "vb"){
+    growth = g*(Linf-input)
+  }
   
-  # For inf, truncate negative ages to zero, for these fish they 
-  # experience greatest growth rate at birth
-  if (truncate.inf == F) return(out)
-  out[,"inf",][out[,"inf",] <0] <- 0
-  out
+  ## Gompertz  ##
+  if(g.mod == "gz"){
+    growth <- g*input*log(Linf/input)
+  }  # end GZ if statement
+  
+  ## Logistic  ##
+  if(g.mod == "lg"){
+    growth = g*input*(1-input/Linf)
+  }  # end LG if statement
+  
+  # Fish above Linf will have negative growth, change this to zero
+  growth[growth<0] <- 0
+  
+  growth
+}
+
+.length2age <-function(input,g.mod,Linf,g,inf){
+  
+  stopifnot('Growth model must be from the following models "vb" 
+            (von Bertalanffy), "gz" (Gompertz), 
+            or "lg" (logistic).'=g.mod %in% c("vb","gz","lg"))  
+  
+  ## von Bertalanffy  ##
+  if(g.mod == "vb"){
+    age = ifelse(input > Linf,
+                 Inf,
+                 inf-log(1-(input/Linf))/g)
+  }
+  
+  ## Gompertz  ##
+  if(g.mod == "gz"){
+    age = ifelse(input > Linf,
+                 Inf,
+                 inf + -log(-log(input/Linf))/g)
+  }  # end GZ if statement
+  
+  if(g.mod == "lg"){
+    age = ifelse(input > Linf,
+                 Inf,
+                 inf-log((Linf/input)-1)/g)
+  }  # end LG if statement
+  age
+}
+
+.age2length <- function(input,g.mod,Linf,g,inf){
+  
+  stopifnot('Growth model must be from the following models "vb" 
+            (von Bertalanffy), "gz" (Gompertz), 
+            or "lg" (logistic).'=g.mod %in% c("vb","gz","lg"))  
+  
+  ## von Bertalanffy  ##
+  if(g.mod == "vb"){
+    l = Linf * (1 - exp(-g *(input - inf)))
+  }
+  
+  ## Gompertz  ##
+  if(g.mod == "gz"){
+    l = Linf * exp(-exp(-g * (input - inf)))
+  }  # end GZ if statement
+  
+  ## Logistic  ##
+  if(g.mod == "lg"){
+    l = Linf/(1 + exp(-g * (input - inf)))
+  }  # end LG if statement
+  l
+}
+
+.age2growth <- function(input,...) {
+  l <- .age2length(input,...)
+  .length2growth(l,...)
+}
+
+# Interval growth helpers  -----------------------------------------------------
+
+# Estimates the exponential growth of a fish during a set interval of time
+# given its current length and growth curve outputs. Length is foretasted out
+# to the end of the growth interval and Growth rates are provided in 
+# terms of fish weight based on provided length-weight parameters
+
+# REQUIRES: NA
+
+.length2interval_growth <- function(input,...,days,wt.df,dry.wt=1){
+  
+  # Forecast length at end of interval
+  length_t <- .length_forcast(input,days,...)
+  
+  # Estimate growth using weights
+  dry_wt = .length2wt(input,wt.df,dry.wt)
+  dry_wt_t = .length2wt(length_t,wt.df,dry.wt)
+  .exp_growth(dry_wt,dry_wt_t,days)
+  
+}
+
+.length_forcast <- function(input,days,...) {
+  
+  # estimate current age
+  age = .length2age(input,...)
+  
+  # Estimate length at end of interval
+  # All length >= Linf have inf age, meaning all lengths >=Linf
+  # would have length_t = Linf and negative growth. To correct
+  # this, change all infinite ages to have length_t=length
+  age_t <- age + days
+  ifelse(is.infinite(age),
+         input,
+         .age2length(age_t,...))
+}
+
+.length2wt <- function(input, wt.df, dry=1) {
+  wt = 10^(wt.df$a + wt.df$b * log10(input*wt.df$c))  # length to weight equation
+  dry_wt = wt*dry  # and convert to dry weight (default = 1 so no conversion)
+  return(dry_wt)
+}
+
+.exp_growth <- function(intial,final,t) {
+  log(final/intial)/t
 }
 
 # Misc. helpers  ---------------------------------------------------------------
