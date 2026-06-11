@@ -1,6 +1,6 @@
 # grouped prediction df function  ----------------------------------------------
 
-# DESCRIPTION: Prepares input dataframe for length2age_predict and 
+# DESCRIPTION: Prepares input dataframe for length2age_predict and  
 # length2growth_predict functions for population, sampling event, and hydroperiod
 # level predictions. Also produces bridge function to link combined grouping ids
 # back to original group level ids.
