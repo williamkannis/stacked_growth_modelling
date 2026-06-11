@@ -1,4 +1,20 @@
-# grouped prediction df function  ----------------------------------------------
+#-------------------------------------------------------------------------------
+#
+# Growth curve and parameter prediction functions
+#
+#-------------------------------------------------------------------------------
+
+# AUTHOR: William K. Annis
+
+# CREATED: Feb 5, 2026
+
+# DESCRIPTION: Function used to create both candidate and model-stacked growth
+# curve predictions using Stan growth model outputs. Functions also can model-
+# stack growth parameters across models. Script includes helper functions used
+# in main functions
+
+
+# grouping_predDF  -------------------------------------------------------------
 
 #' Grouped prediction data frame preparation.
 #' 
