@@ -1,22 +1,22 @@
 # grouped prediction df function  ----------------------------------------------
 
-# DESCRIPTION: Prepares input dataframe for length2age_predict and  
-# length2growth_predict functions for population, sampling event, and hydroperiod
-# level predictions. Also produces bridge function to link combined grouping ids
-# back to original group level ids.
-
-# INPUT:
-# ! group.size =vector containing the number of groups in the population (1),
-#                sampling event, and hydroperiod groups
-# ! sp = character to indicate which species is being modelled. Used in bridge
-#        dataframe
-# ! min.pred = minimum prediction input value
-# ! max.pred = maximum prediction input value
-
-# OUTPUT: a named list containing the prediction function input dataframe and
-# a bridge dataframe to link combined grouping ids to sampling and hydroperiod
-# ids. Prediction dataframe has a column for the combined grouping id (group_id) 
-# and the prediction input value (pred; length or age)
+#' Grouped prediction data frame preparation.
+#' 
+#' @description Prepares input dataframe for length2age_predict and  
+#' length2growth_predict functions for population, sampling event, and hydroperiod
+#' level predictions. Also produces bridge function to link combined grouping ids
+#' back to original group level ids.
+#'
+#' @param group.size Vector containing the number of groups in the population 
+#' (1),sampling event, and hydroperiod groups.
+#' @param sp Character to indicate which species is being modeled. Used in 
+#' bridgedataframe
+#' @param min.pred minimum prediction input value
+#' @param max.pred maximum prediction input value
+#' @returns a named list containing the prediction function input dataframe and 
+#' a bridge dataframe to link combined grouping ids to sampling and hydroperiod 
+#' ids. Prediction dataframe has a column for the combined grouping id 
+#' (group_id) and the prediction input value (pred; length or age).
 
 # REQUIRES: dplyr (all), tidyr,
 
