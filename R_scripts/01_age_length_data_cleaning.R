@@ -5,10 +5,11 @@
 #-------------------------------------------------------------------------------
 
 # AUTHOR: William K. Annis
+
 # CREATED: Feb 2, 2026
 
-# DESCRIPTION: Combines otilith data with annual hydroperiod for each site. 
-# Combined data is then cleaned, removing any male's and missing data.
+# DESCRIPTION: Cleans otilith-derived age-at-length data, removing any male's 
+# and missing data.
 
 
 # Housekeeping  ----------------------------------------------------------------
@@ -18,15 +19,14 @@ rm(list = ls())
 library(dplyr)
 library(readxl)
 library(janitor)
+library(purrr)
 
 # Directories
-phy_dir <- "~/Documents/Work/Everglades post-doc/Data analysis/Data cleaning/cleaned_data"
 raw_dir <- "raw_data"
 input_dir <-"input_data"
 
 # Data
 age_length_df <- read_excel(file.path(raw_dir,"gatto_age_length.xlsx"))
-phy_df <- readRDS(file.path(phy_dir,"phys_cleaned_2026-02-25.rds"))
 
 
 # Clean data -------------------------------------------------------------------
