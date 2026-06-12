@@ -14,10 +14,41 @@
 
 # mean_ci_batch  ---------------------------------------------------------------
 
-mean_ci_batch <- function(stack.df,mod.dir,parallel = T,mc.cores=1,...) {
+#' Batch median and 95% credible interval summary
+#'
+#' @description Summarizes the median and 95% credible intervals of posterior
+#' distribution of parameters from a set of models for use in tables.
+#' 
+#' @param mod.df Data.frame containing model file names. Must have column 
+#' "model".
+#' @param mod.dir File path for Stan model output files
+#' @param parallel T or F. Use multiple cores. Only should be used on Linux and 
+#' MacOS. Default is F.
+#' @param mc.cores Number of core for parallel processing if parallel = T. 
+#' Default is NULL.
+#' @param params Vector containing parameters to summarize c("mu","tau","beta",
+#' "sigma_length").
+#' @param digits Number of digits to round values. Default is 3 digits.
+#' @param ci Vector containing lower and upper percentiles used for credible 
+#' intervals. Default is c(0.025,0.975).
+#' 
+#' @details Posterior distribution for select parameters are extracted from a 
+#' list of models. Posterior distributions are summarized into median and 95% 
+#' credible interval. For each parameter median and 95CI values are formatted 
+#' into a single character string with a set number of digits.
+#' 
+#' @returns Data.frame with rows for each model and a single column for each
+#' user-specified parameter with median and 95% CI as a character in the 
+#' following format: "median (lwr,upr)".
+#' 
+#' @export 
+
+mean_ci_batch <- function(mod.df,mod.dir,parallel = F,mc.cores=NULL,
+                          params = c("mu","tau","beta","sigma_length"),
+                          digits=3,ci = c(0.025,0.975)) {
   
   # Load in model names
-  mods <- stack.df$model
+  mods <- mod.df$model
   
   # Estimate mean and ci
   if (parallel) {
@@ -26,12 +57,17 @@ mean_ci_batch <- function(stack.df,mod.dir,parallel = T,mc.cores=1,...) {
       .mean_ci_fun,
       mod.dir = mod.dir,
       mc.cores =mc.cores,
-      ...)
+      params = params,
+      digits=digits,
+      ci=ci)
   } else {
-    mean_ci_list <-lapply(mods,
-                          .mean_ci_fun,
-                          mod.dir = mod.dir,
-                          ...)
+    mean_ci_list <-lapply(
+      mods,
+      .mean_ci_fun,
+      mod.dir = mod.dir,
+      params = params,
+      digits=digits,
+      ci=ci)
   }
   
   
@@ -40,15 +76,18 @@ mean_ci_batch <- function(stack.df,mod.dir,parallel = T,mc.cores=1,...) {
   
 }
 
-
-.mean_ci_fun <- function(mod.file,mod.dir,params = c("mu","tau","beta","sigma_length"),...) {
+# Helper function 1
+.mean_ci_fun <- function(mod.file,mod.dir,params,digits,ci) {
   
   # Load in model output
   mod <- readRDS(file.path(mod.dir,mod.file))
   
   # Select parameters of interest
   all_params <- mod@model_pars
-  params_select <- unlist(sapply(params,function(i) all_params[grep(i,all_params,T)]))
+  params_select <- unlist(sapply(
+    params,
+    function(i) all_params[grep(i,all_params,T)]
+    ))
   params_select <- params_select[!grepl("log",params_select)]
   params_select <- params_select[!grepl("site",params_select)]
   
@@ -61,7 +100,8 @@ mean_ci_batch <- function(stack.df,mod.dir,parallel = T,mc.cores=1,...) {
     .mean_ci_helper, 
     mod_out = mod_out,
     mod.file=mod.file, 
-    ...)
+    digits = digits,
+    ci=ci)
   
   # COmbine into one dataframe
   mean_ci_df <-mean_ci_list %>% 
@@ -80,7 +120,8 @@ mean_ci_batch <- function(stack.df,mod.dir,parallel = T,mc.cores=1,...) {
   mean_ci_df
 }
 
-.mean_ci_helper <- function(param,mod_out,mod.file,digits=3,ci = c(0.025,0.975)) {
+# Helper function 2
+.mean_ci_helper <- function(param,mod_out,mod.file,digits,ci) {
   
   # Set number of digits
   digit_1 <- c("mu_Linf","mu_ti","mu_t0","sigma_length")
@@ -151,15 +192,30 @@ mean_ci_batch <- function(stack.df,mod.dir,parallel = T,mc.cores=1,...) {
 
 # supp_table_format  -----------------------------------------------------------
 
-supp_table_format <- function(stack.df,mod.dir) {
+#' Full Stan model output tables
+#'
+#' @description Summarizes model outputs for a set of models into one table.
+#' 
+#' @param mod.df Data.frame containing model file names. Must have column
+#' named "model".
+#' @param mod.dir File path for Stan model output files
+#' 
+#' @details Exports a csv file with rows for model parameters for each model
+#' type. Includes mean, sd, median, and 95% credible intervals of each 
+#' parameter's posterior distribution. Also includes effective sample size and
+#' Rhat value.
+#' 
+#' @export 
+
+supp_table_format <- function(mod.df,mod.dir) {
   
   # Load in model names
-  mods <- stack.df$model
+  mods <- mod.df$model
   
   # Summarize tables
   format_list <- lapply(mods,.supp_table_format_helper,mod.dir=mod.dir)
   
-  # Combine into single dataframe
+  # Combine into single data.frame
   bind_rows(format_list) %>% 
     arrange(match(mod,c("vb","gz","lg")))
 }
@@ -214,7 +270,34 @@ supp_table_format <- function(stack.df,mod.dir) {
 
 # beta_mean_ci_batch  ----------------------------------------------------------
 
-beta_mean_ci_batch <- function(stack.df,wt.cutoff = T, mod.dir,parallel = T,mc.cores=1,...) {
+#' Batch beta coefficient summary
+#'
+#' @description Summarizes the median and 95% credible intervals of posterior
+#' distribution of beta coefficients from a set of models for use in plotting.
+#' 
+#' @param stack.df Data.frame containing model file names and stacking weights. 
+#' Must have columns "model" and "stack_wt
+#' @param wt.cutoff T or F: only include models that have non-zero stacking 
+#' weigths? Default is T.
+#' @param mod.dir File path for Stan model output files
+#' @param ci Vector containing lower and upper percentiles used for credible 
+#' intervals. Default is c(0.025,0.975).
+#' @param parallel T or F. Use multiple cores. Only should be used on Linux and 
+#' MacOS. Default is F.
+#' @param mc.cores Number of core for parallel processing if parallel = T. 
+#' Default is NULL.
+#' 
+#' @details Posterior distribution for beta coefficients are extracted from a 
+#' list of models. Posterior distributions are summarized into median and 95% 
+#' credible interval. 
+#' 
+#' @returns Data.frame with rows for each model and beta parameter. Has columns
+#' mean, lower and upper credible intervals, and model name.
+#' 
+#' @export 
+
+beta_mean_ci_batch <- function(stack.df, wt.cutoff = T, mod.dir,  
+                               ci=c(0.025,0.975),parallel = F,mc.cores=NULL) {
   
   # Filter based on wt
   if(wt.cutoff){
@@ -228,25 +311,39 @@ beta_mean_ci_batch <- function(stack.df,wt.cutoff = T, mod.dir,parallel = T,mc.c
   
   # Estimate mean and ci
   if (parallel) {
-    mean_ci_list <-parallel::mclapply(mods,.beta_mean_ci_fun,mod.dir = mod.dir,mc.cores =mc.cores,...)
+    mean_ci_list <-parallel::mclapply(
+      mods,
+      .beta_mean_ci_fun,
+      mod.dir = mod.dir,
+      mc.cores =mc.cores,
+      ci = ci
+      )
   } else {
-    mean_ci_list <-lapply(mods,.beta_mean_ci_fun,mod.dir = mod.dir,...)
+    mean_ci_list <-lapply(
+      mods,
+      .beta_mean_ci_fun,
+      mod.dir = mod.dir,
+      ci = ci
+        )
   }
   
-  
-  # Combine into single dataframe
+  # Combine into single data.frame
   bind_rows(mean_ci_list)
   
 }
 
-.beta_mean_ci_fun <- function(mod.file,mod.dir,params = c("beta"),...) {
+# Helper 1
+.beta_mean_ci_fun <- function(mod.file,mod.dir,ci) {
   
   # Load in model output
   mod <- readRDS(file.path(mod.dir,mod.file))
   
   # Select parameters of interest
   all_params <- mod@model_pars
-  params_select <- unlist(sapply(params,function(i) all_params[grep(i,all_params,T)]))
+  params_select <- unlist(sapply(
+    "beta",
+    function(i) all_params[grep(i,all_params,T)])
+    )
   params_select <- params_select[!grepl("log",params_select)]
   params_select <- params_select[!grepl("site",params_select)]
   
@@ -254,20 +351,26 @@ beta_mean_ci_batch <- function(stack.df,wt.cutoff = T, mod.dir,parallel = T,mc.c
   mod_out <- rstan::extract(mod,params_select)
   
   # Estimate mean and ci of each
-  mean_ci_list <- lapply(params_select, .beta_helper, mod_out = mod_out,mod.file=mod.file, ...)
+  mean_ci_list <- lapply(
+    params_select, 
+    .beta_helper, 
+    mod_out = mod_out,
+    mod.file=mod.file, 
+    ci = ci
+    )
   
-  # COmbine into one dataframe
+  # Combine into one dataframe
   mean_ci_df <-bind_rows(mean_ci_list)
   
   # FOrmat parameter names to match across model types
   mean_ci_df$parameter <- gsub("g1|g2|g3","g",mean_ci_df$parameter)
   mean_ci_df$parameter <- gsub("t0|ti","t",mean_ci_df$parameter)
   
-  
   # Return dataframe
   mean_ci_df
 }
 
+# Helper 2
 .beta_helper <- function(param,mod_out,mod.file,ci = c(0.025,0.975)) {
   
   # Extract parameter of interest
