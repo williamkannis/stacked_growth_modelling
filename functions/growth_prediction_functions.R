@@ -327,8 +327,8 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
 #'     variable}
 #'     \item{parallel}{T or F. Use multiple cores. Only should be used on 
 #'     Linux and MacOS. Default is F.}
-#'     \item{mc.cores}{Number of core for parallel processing if parallel = T
-#'     Default is NULL}
+#'     \item{mc.cores}{Number of core for parallel processing if parallel = T.
+#'     Default is NULL.}
 #'   }
 #'
 #' 

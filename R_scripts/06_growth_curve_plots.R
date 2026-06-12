@@ -9,7 +9,7 @@
 # CREATED: 04-13-2026
 
 # DESCRIPTION: Creates length/growth curve plots, predicted growth at hydrology 
-# plots, and model coeffecient plots for manuscript.
+# plots, and model coefficient plots for manuscript.
 
 
 # House Keeping  ---------------------------------------------------------------
@@ -27,10 +27,10 @@ pred_dir <- "input_data"
 plot_dir <- "stan_outputs/plotting_info"
 export_dir <- "figures"
 mu_dir <- file.path(export_dir,"mu_plots")
-fun_dir <- ""
+fun_dir <- "functions"
 
 # Custom functions
-source()
+source(file.path(fun_dir,"growth_summary_functions.R"))
 
 # Load data
 sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-04-24.rds"))

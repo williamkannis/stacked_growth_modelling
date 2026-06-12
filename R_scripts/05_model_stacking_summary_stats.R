@@ -27,10 +27,10 @@ supp_dir <- "figures/supp_tables"
 loo_dir <- "loo_outputs"
 out_dir <- "stan_outputs/model_out_linear"
 input_dir <-"input_data"
-fun_dir <- ""
+fun_dir <- "functions"
 
 # Load in custom functions
-source()
+source(file.path(fun_dir,"growth_summary_functions.R"))
 
 # Load data
 sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-04-24.rds"))
@@ -242,7 +242,7 @@ lapply(1:length(sp_stack_wt), function (i) {
   
   # Summarize output
   out<- supp_table_format(
-    stack.df = sp_stack_wt[[i]],
+    mod.df = sp_stack_wt[[i]],
     mod.dir = sp_dir[i]
   )
   
