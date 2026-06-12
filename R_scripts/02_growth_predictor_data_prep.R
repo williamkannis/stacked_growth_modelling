@@ -40,7 +40,7 @@ phy_df <- readRDS(file.path(data_dir,"phys_cleaned_2026-02-25.rds"))
 samp_df <- age_df %>% 
   distinct(wateryear,period,region,site) 
 
-# age data were collected during october, which means fish were collected in
+# age data were collected during October, which means fish were collected in
 # the middle of a water year. To have an accurate one year lag in fish/physical
 # predictors we need to create a new year column for the growth measures. Hydro
 # data has annual lags for each period, so this is okay. Some data were collected
