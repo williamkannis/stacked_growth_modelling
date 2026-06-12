@@ -8,22 +8,79 @@
 
 # CREATED: 6/9/2026
 
-# DESCRIPTION: Functions that summarize the results from stan model outputs for
+# DESCRIPTION: Functions that summarize the results from Stan model outputs for
 # the use in tables and figures.
 
 
-# Parameter extraction functions  ----------------------------------------------
-# mod.file <- sp_out[[1]][2]
-# mod <- readRDS(file.path(sp_dir[1],mod.file))
-# param <- mod@model_pars[substr(mod@model_pars,1,4) == "tau"]
-# param <- mod@model_pars[substr(mod@model_pars,1,2) == "mu"]
-# mod@model_pars[substr(mod@model_pars,1,2) == "sg"]
-# 
-# mod_out <-rstan::extract(mod,param[1])[[1]]
+# mean_ci_batch  ---------------------------------------------------------------
 
-# test(mod_out)
+mean_ci_batch <- function(stack.df,mod.dir,parallel = T,mc.cores=1,...) {
+  
+  # Load in model names
+  mods <- stack.df$model
+  
+  # Estimate mean and ci
+  if (parallel) {
+    mean_ci_list <-parallel::mclapply(
+      mods,
+      .mean_ci_fun,
+      mod.dir = mod.dir,
+      mc.cores =mc.cores,
+      ...)
+  } else {
+    mean_ci_list <-lapply(mods,
+                          .mean_ci_fun,
+                          mod.dir = mod.dir,
+                          ...)
+  }
+  
+  
+  # Combine into single data.frame
+  bind_rows(mean_ci_list)
+  
+}
 
-mean_ci_helper <- function(param,mod_out,mod.file,digits=3,ci = c(0.025,0.975)) {
+
+.mean_ci_fun <- function(mod.file,mod.dir,params = c("mu","tau","beta","sigma_length"),...) {
+  
+  # Load in model output
+  mod <- readRDS(file.path(mod.dir,mod.file))
+  
+  # Select parameters of interest
+  all_params <- mod@model_pars
+  params_select <- unlist(sapply(params,function(i) all_params[grep(i,all_params,T)]))
+  params_select <- params_select[!grepl("log",params_select)]
+  params_select <- params_select[!grepl("site",params_select)]
+  
+  # Extract posterior distribution of each parameter
+  mod_out <- rstan::extract(mod,params_select)
+  
+  # Estimate mean and ci of each
+  mean_ci_list <- lapply(
+    params_select, 
+    .mean_ci_helper, 
+    mod_out = mod_out,
+    mod.file=mod.file, 
+    ...)
+  
+  # COmbine into one dataframe
+  mean_ci_df <-mean_ci_list %>% 
+    purrr::reduce(left_join, by = "model")
+  
+  # FOrmat column names to match across data types
+  colnames(mean_ci_df) <- gsub("g1|g2|g3","g",colnames(mean_ci_df))
+  colnames(mean_ci_df)<- gsub("t0|ti","t",colnames(mean_ci_df))
+  
+  if ("tau" %in% colnames(mean_ci_df)){
+    mean_ci_df <- mean_ci_df %>% 
+      rename(tau_1 = tau)
+  }
+  
+  # Return dataframe
+  mean_ci_df
+}
+
+.mean_ci_helper <- function(param,mod_out,mod.file,digits=3,ci = c(0.025,0.975)) {
   
   # Set number of digits
   digit_1 <- c("mu_Linf","mu_ti","mu_t0","sigma_length")
@@ -91,63 +148,23 @@ mean_ci_helper <- function(param,mod_out,mod.file,digits=3,ci = c(0.025,0.975)) 
   out
 }
 
-mean_ci_fun <- function(mod.file,mod.dir,params = c("mu","tau","beta","sigma_length"),...) {
-  
-  # Load in model output
-  mod <- readRDS(file.path(mod.dir,mod.file))
-  
-  # Select parameters of interest
-  all_params <- mod@model_pars
-  params_select <- unlist(sapply(params,function(i) all_params[grep(i,all_params,T)]))
-  params_select <- params_select[!grepl("log",params_select)]
-  params_select <- params_select[!grepl("site",params_select)]
-  
-  # Extract posterior distribution of each parameter
-  mod_out <- rstan::extract(mod,params_select)
-  
-  # Estimate mean and ci of each
-  mean_ci_list <- lapply(params_select, mean_ci_helper, mod_out = mod_out,mod.file=mod.file, ...)
-  
-  # COmbine into one dataframe
-  mean_ci_df <-mean_ci_list %>% 
-    purrr::reduce(left_join, by = "model")
-  
-  # FOrmat column names to match across data types
-  colnames(mean_ci_df) <- gsub("g1|g2|g3","g",colnames(mean_ci_df))
-  colnames(mean_ci_df)<- gsub("t0|ti","t",colnames(mean_ci_df))
-  
-  if ("tau" %in% colnames(mean_ci_df)){
-    mean_ci_df <- mean_ci_df %>% 
-      rename(tau_1 = tau)
-  }
-  
-  
-  # Return dataframe
-  mean_ci_df
-}
 
+# supp_table_format  -----------------------------------------------------------
 
-mean_ci_batch <- function(stack.df,mod.dir,parallel = T,mc.cores=1,...) {
+supp_table_format <- function(stack.df,mod.dir) {
   
   # Load in model names
   mods <- stack.df$model
   
-  # Estimate mean and ci
-  if (parallel) {
-    mean_ci_list <-parallel::mclapply(mods,mean_ci_fun,mod.dir = mod.dir,mc.cores =mc.cores,...)
-  } else {
-    mean_ci_list <-lapply(mods,mean_ci_fun,mod.dir = mod.dir,...)
-  }
-  
+  # Summarize tables
+  format_list <- lapply(mods,.supp_table_format_helper,mod.dir=mod.dir)
   
   # Combine into single dataframe
-  bind_rows(mean_ci_list)
-  
+  bind_rows(format_list) %>% 
+    arrange(match(mod,c("vb","gz","lg")))
 }
 
-
-# Summary function  ------------------------------------------------------------
-supp_table_format_helper <- function(mod.dir,mod.file) {
+.supp_table_format_helper <- function(mod.dir,mod.file) {
   
   # Load in file and extract model summary
   mod <- readRDS(file.path(mod.dir,mod.file))
@@ -184,10 +201,6 @@ supp_table_format_helper <- function(mod.dir,mod.file) {
       lwr = `2.5%`,
       upr = `97.5%`
     ) %>% 
-    # filter(
-    #   str_detect(parameter,str_c(params, collapse = "|")),
-    #   !str_detect(parameter,"1,1|2,2|3,3|2,1|3,1|3,2")
-    # ) %>% 
     filter(
       parameter %in% params
     ) %>% 
@@ -198,23 +211,64 @@ supp_table_format_helper <- function(mod.dir,mod.file) {
     )
 }
 
-supp_table_format <- function(stack.df,mod.dir) {
+
+# beta_mean_ci_batch  ----------------------------------------------------------
+
+beta_mean_ci_batch <- function(stack.df,wt.cutoff = T, mod.dir,parallel = T,mc.cores=1,...) {
+  
+  # Filter based on wt
+  if(wt.cutoff){
+    stack.df <-stack.df %>% 
+      mutate(n_samp = stack_wt*1000) %>% 
+      filter(n_samp >1)
+  }
   
   # Load in model names
   mods <- stack.df$model
   
-  # Summarize tables
-  format_list <- lapply(mods,supp_table_format_helper,mod.dir=mod.dir)
+  # Estimate mean and ci
+  if (parallel) {
+    mean_ci_list <-parallel::mclapply(mods,.beta_mean_ci_fun,mod.dir = mod.dir,mc.cores =mc.cores,...)
+  } else {
+    mean_ci_list <-lapply(mods,.beta_mean_ci_fun,mod.dir = mod.dir,...)
+  }
+  
   
   # Combine into single dataframe
-  bind_rows(format_list) %>% 
-    arrange(match(mod,c("vb","gz","lg")))
+  bind_rows(mean_ci_list)
+  
 }
 
+.beta_mean_ci_fun <- function(mod.file,mod.dir,params = c("beta"),...) {
+  
+  # Load in model output
+  mod <- readRDS(file.path(mod.dir,mod.file))
+  
+  # Select parameters of interest
+  all_params <- mod@model_pars
+  params_select <- unlist(sapply(params,function(i) all_params[grep(i,all_params,T)]))
+  params_select <- params_select[!grepl("log",params_select)]
+  params_select <- params_select[!grepl("site",params_select)]
+  
+  # Extract posterior distribution of each parameter
+  mod_out <- rstan::extract(mod,params_select)
+  
+  # Estimate mean and ci of each
+  mean_ci_list <- lapply(params_select, .beta_helper, mod_out = mod_out,mod.file=mod.file, ...)
+  
+  # COmbine into one dataframe
+  mean_ci_df <-bind_rows(mean_ci_list)
+  
+  # FOrmat parameter names to match across model types
+  mean_ci_df$parameter <- gsub("g1|g2|g3","g",mean_ci_df$parameter)
+  mean_ci_df$parameter <- gsub("t0|ti","t",mean_ci_df$parameter)
+  
+  
+  # Return dataframe
+  mean_ci_df
+}
 
-### Parameter extraction functions  #############################################
-
-beta_helper <- function(param,mod_out,mod.file,ci = c(0.025,0.975)) {
+.beta_helper <- function(param,mod_out,mod.file,ci = c(0.025,0.975)) {
   
   # Extract parameter of interest
   mod_out <- mod_out[[param]]
@@ -246,59 +300,3 @@ beta_helper <- function(param,mod_out,mod.file,ci = c(0.025,0.975)) {
   out[,"mod_file"] <- mod.file
   out
 }
-
-
-beta_mean_ci_fun <- function(mod.file,mod.dir,params = c("beta"),...) {
-  
-  # Load in model output
-  mod <- readRDS(file.path(mod.dir,mod.file))
-  
-  # Select parameters of interest
-  all_params <- mod@model_pars
-  params_select <- unlist(sapply(params,function(i) all_params[grep(i,all_params,T)]))
-  params_select <- params_select[!grepl("log",params_select)]
-  params_select <- params_select[!grepl("site",params_select)]
-  
-  # Extract posterior distribution of each parameter
-  mod_out <- rstan::extract(mod,params_select)
-  
-  # Estimate mean and ci of each
-  mean_ci_list <- lapply(params_select, beta_helper, mod_out = mod_out,mod.file=mod.file, ...)
-  
-  # COmbine into one dataframe
-  mean_ci_df <-bind_rows(mean_ci_list)
-  
-  # FOrmat parameter names to match across model types
-  mean_ci_df$parameter <- gsub("g1|g2|g3","g",mean_ci_df$parameter)
-  mean_ci_df$parameter <- gsub("t0|ti","t",mean_ci_df$parameter)
-  
-  
-  # Return dataframe
-  mean_ci_df
-}
-
-beta_mean_ci_batch <- function(stack.df,wt.cutoff = T, mod.dir,parallel = T,mc.cores=1,...) {
-  
-  # Filter based on wt
-  if(wt.cutoff){
-    stack.df <-stack.df %>% 
-      mutate(n_samp = stack_wt*1000) %>% 
-      filter(n_samp >1)
-  }
-  
-  # Load in model names
-  mods <- stack.df$model
-  
-  # Estimate mean and ci
-  if (parallel) {
-    mean_ci_list <-parallel::mclapply(mods,beta_mean_ci_fun,mod.dir = mod.dir,mc.cores =mc.cores,...)
-  } else {
-    mean_ci_list <-lapply(mods,beta_mean_ci_fun,mod.dir = mod.dir,...)
-  }
-  
-  
-  # Combine into single dataframe
-  bind_rows(mean_ci_list)
-  
-}
-
