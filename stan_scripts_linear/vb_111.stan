@@ -6,10 +6,9 @@
   //
   //----------------------------------------------------------------------------
 
-  // Global model:
-  // all site effects
+  // AUTHOR: William K. Annis
+  // CREATED 4/9/2025
 
-  // By William Annis - 4/9/2025
 
 data {
   
@@ -102,7 +101,7 @@ model {
   to_vector(alpha) ~ normal(0,1);  // site error
   tau ~ student_t(3, 0, 2.5); // error scaling term
 
-  /// Error prior ///
+  // Error prior
   sigma_length ~ student_t(3, 0, 2.5);
 
   
@@ -141,6 +140,17 @@ generated quantities{
 
   // retrieve correlation matrix from cholesky matrix
   cor_mat = multiply_lower_tri_self_transpose(L_omega);
+  
+  // Log pointwise predictive density
+  for(i in 1:N){
+    if(NU==0) log_lik[i] = normal_lpdf(LENGTH[i]|Linf[ID[i]] .* (1 - exp(-g1[ID[i]] .*(AGE[i] - t0[ID[i]]))),sigma_length);
+    if(NU>0) log_lik[i] = student_t_lpdf(LENGTH[i]|NU,Linf[ID[i]] .* (1 - exp(-g1[ID[i]] .*(AGE[i] - t0[ID[i]]))),sigma_length);
+  }
+  
+  
+  //----------------------------------------------------------------------------
+  //  Predictions across range of predictor values
+  //----------------------------------------------------------------------------
 
   // predicted growth paramters
   for (i in 1:K) {
@@ -153,10 +163,6 @@ generated quantities{
   for (i in 1:K) {
     pred_ig[,i] = pred_g1[,i] .* (pred_Linf[,i]-LENGTH_M);
   }
-
-  // Log pointwise predictive density
-  for(i in 1:N){
-    if(NU==0) log_lik[i] = normal_lpdf(LENGTH[i]|Linf[ID[i]] .* (1 - exp(-g1[ID[i]] .*(AGE[i] - t0[ID[i]]))),sigma_length);
-    if(NU>0) log_lik[i] = student_t_lpdf(LENGTH[i]|NU,Linf[ID[i]] .* (1 - exp(-g1[ID[i]] .*(AGE[i] - t0[ID[i]]))),sigma_length);
-  }
  }
+ 
+ 
