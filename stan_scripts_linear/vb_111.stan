@@ -86,7 +86,7 @@ model {
   //  Model priors
   //----------------------------------------------------------------------------
   
-  // Hydroperiod effect priors
+  // Second-level effect priors
   beta_Linf ~ normal(0,10);
   beta_g1  ~ normal(0,10);
   beta_t0 ~ normal(0,10);

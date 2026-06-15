@@ -86,7 +86,7 @@ model {
   //  Model priors
   //----------------------------------------------------------------------------
   
-  // Hydroperiod effect priors
+  // Second-level effect priors
   beta_Linf ~ normal(0,10);
   beta_g3  ~ normal(0,10);
   beta_ti ~ normal(0,10);
@@ -109,7 +109,7 @@ model {
   //  Model Likelihood
   //----------------------------------------------------------------------------
   
-  //  growth equation
+  // growth equation
   vector[N] length_hat;  // Vector containing predicted lengths based on model 
   length_hat = Linf[ID]./(1 + exp(-g3[ID] .* (AGE - ti[ID])));
 
