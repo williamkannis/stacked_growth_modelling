@@ -238,12 +238,16 @@ stan_data_prep <- function(sp, age.df, len.df, fixed.effect = NULL, pred.df=NULL
 
 #' Batch Stan model run and diagnostics
 #'
-#' @description Runs multiple Stan model scripts, compiling convergence and 
-#' sampling diagnostics, and exporting stanfit objects of converged models
+#' @description Runs multiple Bayesian hierarchical growth models of differing
+#' model forms, compiling convergence and sampling diagnostics, and exporting 
+#' stanfit objects of converged models
 #' 
-#' @param data Named list providing data for stan model.
-#' @param mods List of Stan model file names used in analysis.
-#' @param model.dir File path to Stan model files.
+#' @param mod.forms Vector containing selected  growth model forms ("vb" - von 
+#' Bertalanffy, "gz" - Gompertz, "lg" - Logistic). Default is c("vb","gz","lg).
+#' @param fixed.effects Types of second level fixed effects ("linear" or 
+#' "categorical). Default is NULL, indicating no second-level effects.
+#' @param data Named list providing data for stan model. Prepared using 
+#' stan_data_prep with the appropriate fixed.effects argument.
 #' @param export.dir File path where species specific directory will be created.
 #' @param sp name of species used in growth curve. Will be included in Stanfit 
 #' file names and the name of new created exported directory.
@@ -251,7 +255,23 @@ stan_data_prep <- function(sp, age.df, len.df, fixed.effect = NULL, pred.df=NULL
 #' @param ... Additional arguments to be passed to stan. See documentation for 
 #' stan function in rstan.
 #' 
-#' @details Convergence diagnostics include the number of parameters with 
+#' @details Reads in pre-created Stan model scripts based on user-specified 
+#' growth model forms and fixed effect structures. Models are then ran with the 
+#' option of parallel processing. Models are then exported to a species 
+#' specific directory. Model convergence and sampling diagnostics are provided 
+#' in a summarized list.
+#' 
+#' Currently, this function can call Bayesian growth models with the three-
+#' parameter von Bertalanffy, Gompertz, and logistic growth forms. Supported 
+#' effect structures are random effects only, categorical, or linear
+#' second-level effect predictors. In all models, each growth parameter can 
+#' vary based on random grouping (e.g. sampling event). For categorical second
+#' level effects, random groupings are classified into higher level groups, which
+#' can vary in mean growth parameters. For the linear second-level effects, 
+#' differences in random grouping growth parameters are explained by continuous
+#' predictors.
+#' 
+#' Convergence diagnostics include the number of parameters with 
 #' rhat > 1.1 and neff > 4*n.chains. Sampler diagnostics include the number of 
 #' divergent transitions and tree depths exceeding 10. Loo fit is assessed 
 #' using Pareto K values. Pareto K values greater than 1/log(n_eff) or 0.7,
@@ -267,27 +287,57 @@ stan_data_prep <- function(sp, age.df, len.df, fixed.effect = NULL, pred.df=NULL
 
 # REQUIRES: dplyr, parallel,
 
-stan_diag_batch <- function(data,sp=NULL,mods=NULL,model.dir,export.dir,...,mc.cores){
+stan_diag_batch <- function(mod.forms = c("vb","gz","lg"),fixed.effects = NULL,
+                            data,sp=NULL,export.dir,...,parallel = F,mc.cores=NULL){
   
-  # If only model directory provided, load all models
-  if (is.null(mods)){
-    mods <- list.files(model.dir)
+  # Model location
+  model.dir <- "stan_scripts"
+  
+  # Do selected model forms and strucutures match avialable choices?
+  if(!all(mod.forms %in% c("vb","gz","lg"))) {
+    stop('mod.forms must be "vb","gz" or "lg"')}
+  if(!is.null(fixed.effects) & ! fixed.effects %in% c("linear","categorical")){
+    stop('fixed.effects must be "linear" or "categorical"')
   }
-
+  
+  # List file names based on selected model forms and fixed effect strucutre.
+  if(is.null(fixed.effects)) {
+    mods <- sapply(mod.forms, function(x) paste0(x,"_random.stan"))
+  } else{
+    mods <- sapply(mod.forms, function(x) paste0(x,"_",fixed.effects,".stan"))
+  }
+  
   # Run all Stan models in parallel, export models and creating fit diagnostic 
   # tables
-  out <- parallel::mclapply(mods, .stan_diag,
-                            data=data,
-                            model.dir =model.dir,
-                            export.dir=export.dir,
-                            sp=sp,
-                            ...,
-                            mc.cores = mc.cores)
+  if(parallel){  
+    out <- parallel::mclapply(
+      mods, 
+      .stan_diag,
+      data=data,
+      model.dir =model.dir,
+      export.dir=export.dir,
+      sp=sp,
+      ...,
+      mc.cores = mc.cores
+    )
+  } else{
+    out <- lapply(
+      mods, 
+      .stan_diag,
+      data=data,
+      model.dir =model.dir,
+      export.dir=export.dir,
+      sp=sp,
+      ...,
+    )
+  }
   
-  # return list of model outs
+  
+  # return list of model diagnostics
   out
-
+  
 }
+
 
 # Helper function
 .stan_diag <- function(data,model,model.dir,export.dir,sp,...){

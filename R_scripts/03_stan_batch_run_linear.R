@@ -88,18 +88,16 @@ luc_input$NU <- 4
 
 # Run model, export results, and return diagnostics
 luc_diag <- stan_diag_batch(
-              data = luc_input,
-              sp = luc,
-              mods = mod_all_sp,
-              model.dir = mod_dir,
-              export.dir = out_dir,
-              iter = 5000,
-              warmup = 1000,
-              chains =4,
-              control = list(adapt_delta = .97),  
-              cores = 4,
-              mc.cores = 1
-              )
+  fixed.effects = "linear",
+  data = luc_input,
+  sp = luc,
+  export.dir = out_dir,
+  iter = 5000,
+  warmup = 1000,
+  chains =4,
+  control = list(adapt_delta = .97),  
+  cores = 4
+  )
 
 
 # POELAT model runs  -----------------------------------------------------------
@@ -113,16 +111,14 @@ poe_input$NU <- 3
 
 # Run model, export results, and return diagnostics
 poe_diag <- stan_diag_batch(
+  fixed.effects = "linear",
   data = poe_input,
   sp = poe,
-  mods = mod_all_sp,
-  model.dir = mod_dir,
   export.dir = out_dir,
   iter = 7000,
   warmup = 1000,
   chains =4,
   control = list(adapt_delta = .97), 
-  mc.cores = 1,
   cores = 4
 )
 poe_diag_t <- purrr::transpose(poe_diag)
@@ -139,17 +135,15 @@ het_input$NU <- 4
 
 # Run model, export results, and return diagnostics
 het_diag <- stan_diag_batch(
+  fixed.effects = "linear",
   data = het_input,
   sp = het,
-  mods = mod_all_sp,
-  model.dir = mod_dir,
   export.dir = out_dir,
   iter = 5000,
   warmup = 1000,
   chains =4,
   control = list(adapt_delta = .97), 
-  mc.cores = 1,
-  cores = 4
+  mc.cores = 1
 )
 het_diag_t <- purrr::transpose(het_diag)
 
@@ -165,16 +159,14 @@ gam_input$NU <- 4
 
 # Run model, export results, and return diagnostics
 gam_diag <- stan_diag_batch(
+  fixed.effects = "linear",
   data = gam_input,
   sp = gam,
-  mods = mod_all_sp,
-  model.dir = mod_dir,
   export.dir = out_dir,
   iter = 5000,
   warmup = 1000,
   chains =4,
   control = list(adapt_delta = .97),  
-  mc.cores = 1,
   cores = 4
 )
 gam_diag_t <- purrr::transpose(gam_diag)
@@ -191,16 +183,14 @@ fun_input$NU <- 3
 
 # Run model, export results, and return diagnostics
 fun_diag <- stan_diag_batch(
+  fixed.effects = "linear",
   data = fun_input,
   sp = fun,
-  mods = mod_all_sp,
-  model.dir = mod_dir,
   export.dir = out_dir,
   iter = 5000,
   warmup = 1000,
   chains =4,
   control = list(adapt_delta = .97),  
-  mc.cores = 1,
   cores = 4
 )
 fun_diag_t <- purrr::transpose(fun_diag)
@@ -217,20 +207,16 @@ jor_input$NU <- 4
 
 # JORFLO has insufficient sample size for second level effects, run
 # random effect only models
-jor_mods <- c("vb_111_000.stan","lg_111_000.stan","gz_111_000.stan")
-
 # Run model, export results, and return diagnostics
 jor_diag <- stan_diag_batch(
+  fixed.effects = NULL,
   data = jor_input,
   sp = jor,
-  mods = jor_mods,
-  model.dir = mod_dir,
   export.dir = out_dir,
   iter = 5000,
   warmup = 1000,
   chains =4,
   control = list(adapt_delta = .97), 
-  mc.cores = 1,
   cores = 4
 )
 jor_diag_t <- purrr::transpose(jor_diag)
