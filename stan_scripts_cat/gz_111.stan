@@ -21,7 +21,7 @@ data {
   int<lower=1>                  N_CAT;  // number of groups
   row_vector[N]                LENGTH;  // fish lengths
   row_vector[N]                   AGE;  // fish ages
-  int<lower=0>                      NU;  // degrees of freedom for students t errors. If zero, normal errors are estimated
+  int<lower=0>                     NU;  // degrees of freedom for students t errors. If zero, normal errors are estimated
   array[N] int<lower = 0>          ID;  // site/year id
   array[N_SITES] int<lower = 0>   CAT;  // groups
 
