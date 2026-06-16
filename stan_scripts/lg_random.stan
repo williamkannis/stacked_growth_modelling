@@ -130,4 +130,5 @@ generated quantities{
     if(NU==0) log_lik[i] = normal_lpdf(LENGTH[i]|site_Linf[ID[i]]./(1 + exp(-site_g3[ID[i]] .* (AGE[i] - site_ti[ID[i]]))),sigma_length);
     if(NU>0) log_lik[i] = student_t_lpdf(LENGTH[i]|NU,site_Linf[ID[i]]./(1 + exp(-site_g3[ID[i]] .* (AGE[i] - site_ti[ID[i]]))),sigma_length);
   }
+}
 
