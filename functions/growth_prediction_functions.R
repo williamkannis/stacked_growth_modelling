@@ -351,13 +351,15 @@ len_R2 <- function(stack.df, mod.dir, group.id, n.sim,sp,sum.fun="mean", ...){
   g_mod_list <- substr(mods,1,2)
   
   # Run prediction function
-  pred_list <-Map(function(x,y) .prediction_sampler(model.out = x,
-                                                   g.mod = y, 
-                                                   n.sim = n.sim,
-                                                   input.var = "age",
-                                                   output.var = "length",
-                                                   ...),
-                  mod_list, g_mod_list)
+  pred_list <-Map(function(x,y) 
+    .prediction_sampler(model.out = x,
+       g.mod = y, 
+       n.sim = n.sim,
+       input.var = "age",
+       output.var = "length",
+       ...),
+    mod_list, 
+    g_mod_list)
   names(pred_list) <- mods
   
   # Extract means
@@ -519,6 +521,11 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
 }
 
 .single_param_extract <- function(mod,params,sim.list,group.id){
+  
+  # Check for valid group id
+  # if(!group.id %in% c("mu","site","group")) {
+  #   stop('group.id must be "mu", "site", or "group"')
+  # }
   
   # For parameter grouping or choice, choose the model specific
   # parameter name (e.g., slope for gompertz is g2, and g1 for Von Bert)
