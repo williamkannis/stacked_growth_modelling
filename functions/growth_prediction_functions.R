@@ -16,33 +16,48 @@
 
 # grouping_predDF  -------------------------------------------------------------
 
-#' Grouped prediction data.frame preparation.
+#' Grouped prediction data preparation.
 #' 
-#' @description Prepares input data.frame for length2age_predict and  
-#' length2growth_predict functions for population, sampling event, and hydroperiod
-#' level predictions. Also produces bridge function to link combined grouping ids
-#' back to original group level ids.
+#' @description Prepares input data for prediction and stacking functions.
 #'
-#' @param group.size Vector containing the number of groups in the population 
-#' (1),sampling event, and hydroperiod groups.
+#' @param group.id Vector containing grouping identifiers (mu, site, group) for 
+#' group-specific predictions
+#' @param group.size Vector containing the number of groups in each selected
+#' grouping variable.
 #' @param sp Character to indicate which species is being modeled. Used in 
 #' bridgedata.frame
 #' @param min.pred Minimum prediction input value
 #' @param max.pred Maximum prediction input value
 #' 
+#' @details Creates length or age inputs for group-specific predicted growth 
+#' curves, parameter estimates, or r-squares produced using the growth_stackR, 
+#' curve_predictR, or len_R2 functions. Allowed groupings are population-level
+#' (mu), site- or sampling-event-level (site), and categorical predictor 
+#' grouping (cat). When multiple levels of groupings are selected, temporary
+#' group ids are given to prevent duplication. Function returns a bridge 
+#' data.frame to link temporary ids make to original ids.
 #' 
-#' @returns a named list containing the prediction function input data.frame and 
-#' a bridge data.frame to link combined grouping ids to sampling and hydroperiod 
-#' ids. Prediction data.frame has a column for the combined grouping id 
-#' (group_id) and the prediction input value (pred; length or age).
+#' @returns a named list containing the prediction function input data.frame 
+#' (prediction) and a bridge data.frame (id_bridge) to link temporary grouping 
+#' ids to original ids. Prediction data.frame has a column for the temporary 
+#' grouping id  (group_id) and the prediction input value (pred; length or age). 
+#' Bridge data.frame contains a column for species (sp), temporary grouping id
+#' (group_id), and when applicable, a column for sampling id (sample_id - site), 
+#' population mean (mu), and/or categorical grouping (cat_id - cat).
+#' 
 #' @export
 
 # REQUIRES: dplyr (all), tidyr,
 
-grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_","hydr_","")) {
+grouping_predDF <- function(group.id,group.size,sp,min.pred,max.pred) {
+  
+  # Check for valid group id
+  # if(!group.id %in% c("mu","site","cat")) {
+  #   stop('group.id must be "mu", "site", or "cat"')
+  # }
 
   # Create a unique id for each grouping among all groups
-  id_df <- data.frame(group = unlist(purrr::map2(group_vec,group.size,rep)),
+  id_df <- data.frame(group = unlist(purrr::map2(group.id,group.size,rep)),
                       old_id = unlist(purrr::map(group.size,seq,from=1)),
                       group_id=1:sum(group.size))
   
@@ -61,7 +76,7 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
       species = sp,  
       group = case_when(
         group == "" ~ "sample_id",
-        group == "hydr_" ~ "hydro_id",
+        group == "cat_" ~ "cat_id",
         group == "mu_" ~ "mu",
         T ~ NA
       )) %>% 
@@ -85,7 +100,7 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 #' @param stack.df Data.frame containing model file names and stacking wts. 
 #' Must have columns "model" and "stack_wt
 #' @param mod.dir  File path for Stan model output files
-#' @param group.id Character ("group","mu", "site") indicating the grouping 
+#' @param group.id Character ("cat","mu", "site") indicating the grouping 
 #' level of model parameters to extract. 
 #' @param sim Number of posterior draws for stacking
 #' @param type Character ("parameter" or "prediction"), model stack growth 
@@ -201,7 +216,7 @@ growth_stackR <- function(stack.df, mod.dir, group.id, sim,type,sum.fun, ...){
 #' @param stack.df Data.frame containing model file names and stacking wts. 
 #' Must have columns "model" and "stack_wt
 #' @param mod.dir  File path for Stan model output files
-#' @param group.id Character ("group","mu", "site") indicating the grouping 
+#' @param group.id Character ("cat","mu", "site") indicating the grouping 
 #' level of model parameters to extract.
 #' @param n.sim Number of posterior draws for stacking
 #' @param type Character ("parameter" or "prediction"), model stack growth 
@@ -309,7 +324,7 @@ curve_predictR <- function(stack.df, mod.dir, group.id,n.sim, type,sum.fun="mean
 #' @param stack.df Data.frame containing model file names and stacking wts. 
 #' Must have columns "model" and "stack_wt
 #' @param mod.dir File path for Stan model output files
-#' @param group.id Character ("group","mu", "site") indicating the grouping 
+#' @param group.id Character ("cat","mu", "site") indicating the grouping 
 #' level of model parameters to extract.
 #' @param n.sims Number of posterior draws
 #' @param sp Character for name of species of which to estimate r-squared
@@ -536,8 +551,8 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
 .single_param_extract <- function(mod,params,sim.list,group.id){
   
   # Check for valid group id
-  # if(!group.id %in% c("mu","site","group")) {
-  #   stop('group.id must be "mu", "site", or "group"')
+  # if(!group.id %in% c("mu","site","cat")) {
+  #   stop('group.id must be "mu", "site", or "cat"')
   # }
   
   # For parameter grouping or choice, choose the model specific

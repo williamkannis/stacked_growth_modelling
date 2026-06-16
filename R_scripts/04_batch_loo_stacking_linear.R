@@ -95,7 +95,7 @@ input_bridge <- purrr::map2(
   grouping_predDF,
   min.pred=0,
   max.pred=360,
-  group_vec = c("")
+  group.id = c("")
   )
 input_bridge <- purrr::transpose(input_bridge)
 
