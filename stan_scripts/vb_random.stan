@@ -58,9 +58,9 @@ transformed parameters {
   //  Site-level MVN random effects - noncentered parametrization
   //----------------------------------------------------------------------------
   
-  vector[N_SITES]             Linf;  // site-level Linf's
-  vector[N_SITES]               g1;  // site-level g1's
-  vector[N_SITES]               t0;  // site-level t0's
+  vector[N_SITES]        site_Linf;  // site-level Linf's
+  vector[N_SITES]          site_g1;  // site-level g1's
+  vector[N_SITES]          site_t0;  // site-level t0's
   matrix[3,N_SITES]      beta_site;  // site-level error
 
   // Correlated site-level error
@@ -68,9 +68,9 @@ transformed parameters {
   
   // Hyperparameter plus site-level error and hydroperiod effect
   // Implies multi_normal(mu+X*beta, Sigma)
-  Linf = exp(mu_log_Linf+to_vector(beta_site[1,]));
-  g1 = exp(mu_log_g1+to_vector(beta_site[2,]));
-  t0 = mu_t0+to_vector(beta_site[3,]);
+  site_Linf = exp(mu_log_Linf+to_vector(beta_site[1,]));
+  site_g1 = exp(mu_log_g1+to_vector(beta_site[2,]));
+  site_t0 = mu_t0+to_vector(beta_site[3,]);
 }
 
 
@@ -100,7 +100,7 @@ model {
   
   // growth equation
   vector[N] length_hat;  // Vector containing predicted lengths based on model 
-  length_hat = Linf[ID] .* (1 - exp(-g1[ID] .*(AGE - t0[ID])));
+  length_hat = site_Linf[ID] .* (1 - exp(-site_g1[ID] .*(AGE - site_t0[ID])));
   
   // Likelihood
   if(NU == 0) LENGTH ~ normal(length_hat,sigma_length);  
@@ -131,8 +131,8 @@ generated quantities{
 
   // Log pointwise predictive density
   for(i in 1:N){
-    if(NU==0) log_lik[i] = normal_lpdf(LENGTH[i]|Linf[ID[i]] .* (1 - exp(-g1[ID[i]] .*(AGE[i] - t0[ID[i]]))),sigma_length);
-    if(NU>0) log_lik[i] = student_t_lpdf(LENGTH[i]|NU,Linf[ID[i]] .* (1 - exp(-g1[ID[i]] .*(AGE[i] - t0[ID[i]]))),sigma_length);
+    if(NU==0) log_lik[i] = normal_lpdf(LENGTH[i]|site_Linf[ID[i]] .* (1 - exp(-site_g1[ID[i]] .*(AGE[i] - site_t0[ID[i]]))),sigma_length);
+    if(NU>0) log_lik[i] = student_t_lpdf(LENGTH[i]|NU,site_Linf[ID[i]] .* (1 - exp(-site_g1[ID[i]] .*(AGE[i] - site_t0[ID[i]]))),sigma_length);
   }
   
   
