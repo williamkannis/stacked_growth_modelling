@@ -21,7 +21,7 @@ library(readxl)
 library(rstan)
 
 # Directories
-fun_dir <-"~/Documents/Work/Everglades post-doc/Data analysis/R functions - pre pacakge versions"
+fun_dir <-"functions"
 len_dir <- "~/Documents/Work/Everglades post-doc/Data analysis/Data cleaning/cleaned_data"
 input_dir <- "input_data"
 plot_dir <- "stan_outputs/plotting_info"
@@ -47,13 +47,17 @@ mod_files <- list.files(path=mod_dir,pattern="\\.stan$")
 # site information, a bridge dataframe is also created
 sp <- unique(age_df$species)
 
-prep_list <-lapply(sp,stan_data_prep_linear,
-                             age.df = age_df,
-                             pred.df=pred_df,
-                             len.df = len_df,
-                             predictors = c("PC1","PC2","PC3"),
-                             scale = T,
-                             pred.len = 100)
+prep_list <-lapply(
+  sp,
+  stan_data_prep,
+  age.df = age_df,
+  len.df = len_df,
+  pred.df=pred_df,
+  fixed.effect = "linear",
+  predictors = c("PC1","PC2","PC3"),
+  scale = T,
+  linear.predictions = T,
+  pred.len = 100)
 names(prep_list) <- sp
 
 # Split data prep list into Stan data and plotting data (e.g. sample id, average

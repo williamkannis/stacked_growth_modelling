@@ -17,109 +17,65 @@
 # Requires: dplyr (full), tibble, parallel, rstan (full), loo
 
 
-# stan_data_prep_cat  ----------------------------------------------------------
+# stan_data_prep  --------------------------------------------------------------
 
-#' Stan data preparation - categorical groupings
-#' 
-#' @desciption Prepares age-length data for Bayesian hierarchical 
-#' growth modelling with categorical groupings in Stan.
-#' 
-#' @param data Data.frame containing age-length data for a set of species, 
-#' wateryears, regions, and sites.
-#' @param sp Species name for data filtering.
-#' @param grouping Name of the column containing the fixed effects grouping
-#' 
-#' @details Data is filtered by species, assigned a numeric group id based 
-#' on site and year. All data is then formatted into a name list as per 
-#' Stan requirements. A tibble is also created linking each sampling event id 
-#' back to the wateryear, region, and site of each id. 
-#' 
-#' @returns Named list containing the Stan model input data list (stan_data),
-#' and tibble linking sample id to site information (id_bridge).
-#' 
-#' @export
-
-# REQUIRES: dplyr (full)
-
-stan_data_prep_cat <- function(data,sp,grouping){
-  
-  # Filter to species of interest and create numeric sample event ids
-  sp_df <- data %>% 
-    filter(species == sp) %>% 
-    group_by(wateryear,region,site) %>% 
-    mutate(sample_id = cur_group_id()) %>% 
-    ungroup() %>% 
-    arrange(sample_id)
-  
-  # Create table to bridge species specefic sample_ids to years and sites
-  sample_id_bridge <- sp_df %>% 
-    distinct(wateryear,region,site,species,sample_id)
-  
-  # Sampling event-level grouping
-  sp_df[,"group"] <- sp_df[,grouping]
-  group_id <- sp_df %>% 
-    select(sample_id,group) %>% 
-    distinct(sample_id,group) %>% 
-    arrange(sample_id)
-  
-  # Arrange data into input list for Stan analysis
-  input_data <- list(N = nrow(sp_df),
-                     N_SITES = n_distinct(sp_df$sample_id),
-                     N_GROUP = n_distinct(sp_df$group),
-                     LENGTH = sp_df$length,
-                     AGE =sp_df$ring_count,
-                     ID = sp_df$sample_id,
-                     GROUP = as.numeric(group_id$group))
-  
-  # Return input data and bridge table as a list
-  out <-list(input_data,sample_id_bridge)
-  names(out) <- c("stan_data","id_bridge")
-  out
-}
-
-
-# stan_data_prep_linear  -------------------------------------------------------
-
-#' Stan data preparation - linear predictors
+#' Stan growth model data preparation
 #' 
 #' @description Prepares age-length and predictor data for Bayesian hierarchical 
-#' growth modelling with linear predictors in Stan.
+#' growth modelling in Stan.
 #' 
-#' @param age Data.frame containing age-length data for a set of species, 
-#' water years, regions, and sites.
 #' @param sp Species name for data filtering.
-#' @param pred_df Data.frame with second level predictors.
-#' @param len_df Data.frame with fish size structure. Used for average length 
-#' for inst.growth predictions.
-#' @param predictors Vector with column names of chosen predictor variables.
-#' @param scale T or F: scale and center predictors? Default is T.
+#' @param age.df Data.frame containing age-length data for a set of species, 
+#' dates, and sites.
+#' @param len.df Data.frame with fish size structure. Used for average length 
+#' for inst.growth comparisons across groupings
+#' @param fixed.effect Character ("categorical", "linear") indicating the type 
+#' of second level effects present in model. Default is no second-level
+#' effects (Null).
+#' @param pred.df Data.frame with second-level linear or categorical predictors. 
+#' Must have matching date and site columns as age.df. Only necessary if 
+#' fixed.effects != NULL. Default is NULL
+#' @param category Name of column containing categorical predictor variable in
+#' pred.df. Only necessary if fixed.effects == "category" Default is NULL.
+#' @param predictors Vector with column names of chosen predictor variables in 
+#' pred.df. Only necessary if fixed.effects == "linear". Default is NULL
+#' @param scale T or F: scale and center predictors? Only necessary if 
+#' fixed.effects == "linear". Default is T.
+#' @param linear.predictions T or F. Create predictions of growth parameters and
+#' and rates across the range of linear predictor variables? Only possible if 
+#' fixed.effects == "linear". Default is F.
 #' @param pred.len Number of predictions to make along range of predictor 
-#' variables.
+#' variables. Only necessary if linear.predictions == T. Default is 100.
 #' 
 #' @details Data is filtered by species, assigned a numeric group id based 
-#' on site and year. Predictor variables are subset by group id and selected 
-#' variables, and optionally scaled and centered. Linear model produces 
-#' asymptotic length parameter and inst. growth of mean size predictions along  
-#' the entire range of each predictor variable. This function estimates the  
-#' mean fish size using a provided size structure data set, and creates a range 
-#' of predictor variables used for growth predictions. All data is then 
-#' formatted into a name list as per Stan requirements. A tibble is also 
-#' created linking each sampling event id back to the wateryear, region, and 
-#' site of each id. Finally, the non-scaled and centered values of prediction 
-#' input data are included for plot labels, and the mean length used for growth 
-#' predictions is returned.
+#' on site and year. Mean size of that species across sites is estimated using
+#' an optional size structure data.frame. If selected categorical or linear
+#' second-level predictor variables are prepared. For categorical data, categories
+#' are transformed into a numeric categorical id. For linear predictors, 
+#' predictor variables are subset by group id and selected, and optionally 
+#' scaled and centered. The Linear model can produce asymptotic length parameter 
+#' and inst. growth of mean size predictions along the entire range of each 
+#' predictor variable. This function can prepare input data for predictions 
+#' using the full numeric range of provided predictor variables. All data is 
+#' then formatted into a name list as per Stan requirements. 
 #' 
-#' @returns Named list containing the Stan model input data list (stan_data),
-#' tibble linking sample id to site information (id_bridge), matrix 
-#' containing the non-transformed prediction input values for each predictor 
-#' (prediction_labels), and the mean length used for growth predictions 
-#' (mean_length).
+#' @returns Named list containing the Stan model input data list (stan_data), 
+#' a tibble linking sample id to site information (id_bridge), and mean length  
+#' used for growth predictions (mean_length). If fixed.effect == "categorical",
+#' list contains an additional data.frame (category_labels) that links 
+#' category names to cat_ids. If linear.predictions == T, a matrix containing 
+#' the non-transformed prediction input values for each predictor 
+#' (prediction_labels) is included in output. 
 #' 
 #' @export
 
 # REQUIRES: dplyr (full)
 
-stan_data_prep_linear <- function(sp,age.df,pred.df,len.df,predictors,scale = T, pred.len = 100){
+# MAKE SITE INFO MORE GENERAL
+
+stan_data_prep <- function(sp, age.df, len.df, fixed.effect = NULL, pred.df=NULL, 
+                           category = NULL, predictors = NULL, scale = T, 
+                           linear.predictions = F,  pred.len = 100){
   
   # Filter to species of interest and create numeric sample event ids
   sp_df <- age.df %>% 
@@ -129,64 +85,154 @@ stan_data_prep_linear <- function(sp,age.df,pred.df,len.df,predictors,scale = T,
     ungroup() %>% 
     arrange(sample_id)
   
-  # Create table to bridge species specefic sample_ids to years and sites
+  # Create table to bridge species specific sample_ids to years and sites
   sample_id_bridge <- sp_df %>% 
     distinct(wateryear,region,site,species,sample_id)
   
-  # Sampling event-level fixed effects
-  sample_df <- sample_id_bridge %>% 
-    left_join(pred.df) %>% 
-    arrange(sample_id)
-
-  # select predictors of choice
-  x_df_raw <- sample_df[,predictors]
-  
-  # Scale and center ?
-  if(scale) {
-    x_df <- x_df_raw %>% 
-      mutate(across(everything(),~as.numeric(scale(.x))))
-  } else {
-    x_df <- x_df_raw
-  }
-  
-  # Prediction inputs
-  pred_x_df_raw <- apply(
-    x_df_raw,
-    2,
-    simplify = T, 
-    function(x) seq = seq(min(x),max(x),length.out = pred.len)
-    )
-  pred_x_df <- apply(
-    x_df,
-    2,
-    simplify = T, 
-    function(x) seq = seq(min(x),max(x),length.out = pred.len)
-    )
-
-  # Average length
+  # Average length, to compare growth rates among groupings
   length_m <- len.df %>% 
     filter(species == sp) %>% 
     summarise(n = mean(length,na.rm = T)) %>% 
     pull()
   
   # Arrange data into input list for Stan analysis
-  input_data <- list(N = nrow(sp_df),
-                     N_SITES = n_distinct(sp_df$sample_id),
-                     K = ncol(x_df),
-                     N_PRED = nrow(pred_x_df),
-                     LENGTH_M = length_m,
-                     LENGTH = sp_df$length,
-                     AGE =sp_df$ring_count,
-                     ID = sp_df$sample_id,
-                     X = x_df,
-                     PRED_X = pred_x_df)
+  input_data <- list(
+    N = nrow(sp_df),
+    N_SITES = n_distinct(sp_df$sample_id),
+    LENGTH = sp_df$length,
+    AGE =sp_df$ring_count,
+    ID = sp_df$sample_id,
+    LENGTH_M = length_m
+  )
   
-  # Return input data and bridge table as a list
-  out <-list(input_data,sample_id_bridge,pred_x_df_raw,length_m)
-  names(out) <- c("stan_data","id_bridge","prediction_labels","mean_length")
-  out
+  # Return data if no fixed effects are indicated
+  if(is.null(fixed.effect)) {
+    
+    # Return input data and bridge table as a list
+    out <-list(input_data,sample_id_bridge,length_m)
+    names(out) <- c("stan_data","id_bridge","mean_length")
+    return(out)
+  }
+  
+  # Add catergorical second-level predictors if applicable
+  if(fixed.effect == "categorical") {
+    
+    # check if correct type of predictors are provided
+    if(is.null(pred.df)) stop("Please provide data.frame containing predictor
+                              variables")
+    if(!is.null(predictors)) stop("Linear predictors are not possibe with the
+                                  categorical model")
+    if(linear.predictions) stop("Cannot provide linear predictions with the
+                                categorical model")
+    if(is.null(category)) stop("Please provide category for grouping")
+    
+    # Subset predictor data
+    sample_df <- sample_id_bridge %>% 
+      left_join(pred.df) %>% 
+      arrange(sample_id)
+    
+    # select grouping of choice category and change to factor
+    cat_id <- as.factor(sample_df[,category])
+    
+    # link category factor to label
+    cat_bridge <- data.frame(
+      cat = sample_df[,category],
+      cat_id = cat_id
+    )
+    
+    # Arrange data into input list for Stan analysis
+    cat_data <- list(
+      N = nrow(sp_df),
+      N_CAT = n_distinct(cat_id),
+      CAT = as.numeric(cat_id))
+    
+    # Add categorical data to input list
+    input_data <- c(input_data, cat_data)
+    
+    # Return input data and bridge table as a list
+    out <-list(input_data,sample_id_bridge,length_m,cat_bridge)
+    names(out) <- c("stan_data","id_bridge","mean_length","category_labels")
+    return(out)
+  }
+  
+  # add linear second-level predictors if applicable
+  if(fixed.effect == "linear"){
+    
+    # check if correct type of predictors are provided
+    if(is.null(pred.df)) stop("Please provide data.frame containing predictor
+                              variables")
+    if(!is.null(category)) stop("Categorical predictors are not possibe with 
+                                  the linear model")
+    if(is.null(predictors)) stop("Please provide names of linear predictors")
+    
+    
+    # Subset predictor data
+    sample_df <- sample_id_bridge %>% 
+      left_join(pred.df) %>% 
+      arrange(sample_id)
+    
+    # select predictors of choice
+    x_df_raw <- sample_df[,predictors]
+    
+    # Scale and center ?
+    if(scale) {
+      x_df <- x_df_raw %>% 
+        mutate(across(everything(),~as.numeric(scale(.x))))
+    } else {
+      x_df <- x_df_raw
+    }
+    
+    
+    # Arrange data into input list for Stan analysis
+    linear_data <- list(
+      K = ncol(x_df),
+      X = x_df
+    )
+    
+    # Add linear data to input list
+    input_data <- c(input_data,linear_data)
+    
+    # Estimate predictions across linear predictors?
+    if (linear.predictions) {
+      
+      # Prediction input - raw values. Use as labels for pots
+      pred_x_df_raw <- apply(
+        x_df_raw,
+        2,
+        simplify = T, 
+        function(x) seq = seq(min(x),max(x),length.out = pred.len)
+      )
+      
+      # Scaled and centered prediction input
+      pred_x_df <- apply(
+        x_df,
+        2,
+        simplify = T, 
+        function(x) seq = seq(min(x),max(x),length.out = pred.len)
+      )
+      
+      # Arrange data into input list for Stan analysis
+      pred_data = list(
+        N_PRED = nrow(pred_x_df),
+        PRED_X = pred_x_df
+      )
+      
+      # Add prediction data to input data
+      input_data <- c(input_data,pred_data)
+      
+      # Return input data and bridge table as a list
+      out <-list(input_data,sample_id_bridge,length_m,pred_x_df_raw)
+      names(out) <- c("stan_data","id_bridge","mean_length","prediction_labels")
+      return(out)
+      
+    } else {
+      # Return input data and bridge table as a list
+      out <-list(input_data,sample_id_bridge,length_m)
+      names(out) <- c("stan_data","id_bridge","mean_length")
+      return(out)
+    }
+  }
 }
-
 
 # stan_diag_batch --------------------------------------------------------------
 
