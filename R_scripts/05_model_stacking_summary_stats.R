@@ -33,12 +33,12 @@ fun_dir <- "functions"
 source(file.path(fun_dir,"growth_summary_functions.R"))
 
 # Load data
-sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-04-24.rds"))
-sp_loo_compare <- readRDS(file.path(loo_dir,"loo_out_2026-04-24.rds"))
-ind_r2_df <- readRDS(file.path(loo_dir,"ind_model_r2_2026-04-24.rds"))
-stack_param_df <- readRDS(file.path(loo_dir,"stacked_mu_parameters_2026-04-24.rds"))
-ind_gmean_df <- readRDS(file.path(loo_dir,"ind_mean_growth_predictions_2026-04-24.rds"))
-stack_gmean_df <- readRDS(file.path(loo_dir,"stacked_meand_growth_predictions_2026-04-24.rds"))
+sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-06-16.rds"))
+sp_loo_compare <- readRDS(file.path(loo_dir,"loo_out_2026-06-16.rds"))
+ind_r2_df <- readRDS(file.path(loo_dir,"ind_model_r2_2026-06-16.rds"))
+stack_param_df <- readRDS(file.path(loo_dir,"stacked_mu_parameters_2026-06-16.rds"))
+ind_gmean_df <- readRDS(file.path(loo_dir,"ind_mean_growth_predictions_2026-06-16.rds"))
+stack_gmean_df <- readRDS(file.path(loo_dir,"stacked_meand_growth_predictions_2026-06-16.rds"))
 curve_df <- readRDS(file.path(loo_dir,"stacked_curves_2026-04-23.rds"))
 age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-02-26.rds"))
 
@@ -200,10 +200,7 @@ loo_compare_df <- bind_rows(sp_loo_compare) %>%
 
 # merge into table
 stack_df <- bind_rows(sp_stack_wt) %>% 
-    mutate(species = substr(model,8,13))
-
-# Fix JORFLO name
-stack_df$species[stack_df$species == "000_JO"] <- "JORFLO"
+    mutate(species = substr(model,11,16))
 
 
 # Format and export summarized outputs (Table XX)  -----------------------------
@@ -225,9 +222,7 @@ out_table[is.na(out_table)] <- "-"
 
 # Reorder table
 out_order <-c("species","model",
-              "mu_Linf","tau_Linf",
-              "mu_g","tau_g",
-              "mu_t","tau_t",
+              "mu_Linf","mu_g","mu_t",
               "mean_growth","sigma_length",
               "adj_r2","delta_elpd","stack_wt")
 out_table_export <-out_table[,out_order]

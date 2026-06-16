@@ -33,17 +33,27 @@ fun_dir <- "functions"
 source(file.path(fun_dir,"growth_summary_functions.R"))
 
 # Load data
-sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-04-24.rds"))
-curve_df <- readRDS(file.path(loo_dir,"stacked_curves_2026-04-24.rds"))
-mu_curve_df <- readRDS(file.path(loo_dir,"stacked_mu_curves_2026-04-24.rds"))
-ind_mu_curve_df <- readRDS(file.path(loo_dir,"ind_mu_curves_2026-04-24.rds"))
-pred_bridged <- readRDS(file.path(loo_dir,"stacked_growth_predictions_2026-04-24.rds"))
+sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-06-16.rds"))
+curve_df <- readRDS(file.path(loo_dir,"stacked_curves_2026-06-16.rds"))
+mu_curve_df <- readRDS(file.path(loo_dir,"stacked_mu_curves_2026-06-16.rds"))
+ind_mu_curve_df <- readRDS(file.path(loo_dir,"ind_mu_curves_2026-06-16.rds"))
+pred_bridged <- readRDS(file.path(loo_dir,"stacked_growth_predictions_2026-06-16.rds"))
 pred_df <-readRDS(file.path(pred_dir,"fsgrw_predictors_2026-04-23.rds"))
 age_df <- readRDS(file.path(pred_dir,"fsage_cleaned_2026-02-26.rds"))
 
 # Species specific directories
 sp <- names(sp_stack_wt)
 sp_dir <- sapply(sp,function(x) file.path(out_dir,x))
+
+
+# Prepare data  ----------------------------------------------------------------
+
+# Actual data for points and rug lines
+actual_df <- age_df %>% left_join(pred_df) %>% 
+  # filter(species != "JORFLO") %>% 
+  rename(age = ring_count) %>% 
+  mutate(group_name = paste(region,site,wateryear)) %>% 
+  select(species,group_name,age,length,PC1,PC2,PC3)
 
 # All plot parameters
 sp.colors <- c("#b5a331","#339d38","#c26a77","#8c6d3f","#2f2585","#2b695c")
@@ -60,16 +70,6 @@ max_age_mu <-plyr::round_any(max(actual_df$age),5,ceiling)
 max_age_mu <- 360
 mu_breaks <- seq(0,max_age_mu,length.out =4)
 base.size.mu <-45
-
-
-# Prepare data  ----------------------------------------------------------------
-
-# Actual data for points and rug lines
-actual_df <- age_df %>% left_join(pred_df) %>% 
-  # filter(species != "JORFLO") %>% 
-  rename(age = ring_count) %>% 
-  mutate(group_name = paste(region,site,wateryear)) %>% 
-  select(species,group_name,age,length,PC1,PC2,PC3)
 
 
 # Population curves - model comparisons (Fig 3)  -------------------------------
