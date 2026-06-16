@@ -52,9 +52,9 @@
 grouping_predDF <- function(group.id,group.size,sp,min.pred,max.pred) {
   
   # Check for valid group id
-  # if(!group.id %in% c("mu","site","cat")) {
-  #   stop('group.id must be "mu", "site", or "cat"')
-  # }
+  if(!all(group.id %in% c("mu","site","cat"))) {
+    stop('group.id must be "mu", "site", or "cat"')
+  }
 
   # Create a unique id for each grouping among all groups
   id_df <- data.frame(group = unlist(purrr::map2(group.id,group.size,rep)),
@@ -75,9 +75,9 @@ grouping_predDF <- function(group.id,group.size,sp,min.pred,max.pred) {
     mutate(
       species = sp,  
       group = case_when(
-        group == "" ~ "sample_id",
-        group == "cat_" ~ "cat_id",
-        group == "mu_" ~ "mu",
+        group == "site" ~ "sample_id",
+        group == "cat" ~ "cat_id",
+        group == "mu" ~ "mu",
         T ~ NA
       )) %>% 
     tidyr::pivot_wider(names_from = group,
@@ -551,18 +551,18 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
 .single_param_extract <- function(mod,params,sim.list,group.id){
   
   # Check for valid group id
-  # if(!group.id %in% c("mu","site","cat")) {
-  #   stop('group.id must be "mu", "site", or "cat"')
-  # }
-  
+  if(!group.id %in% c("mu","site","cat")) {
+    stop('group.id must be "mu", "site", or "cat"')
+  }
+
   # For parameter grouping or choice, choose the model specific
   # parameter name (e.g., slope for gompertz is g2, and g1 for Von Bert)
   param.mod <-stringr::str_extract(mod@model_pars, "[^_]+$") # (e.g., mu_g1 -> g1)
   param.select <-params[params %in% param.mod]
   
   # Create id for group-specific parameter of interest
-  # param.group <-paste(group.id,param.select,sep="_")
-  param.group <-paste0(group.id,param.select)
+  param.group <-paste(group.id,param.select,sep="_")
+  # param.group <-paste0(group.id,param.select)
   
   # Extract the posterior draws for each
   out <- sim.list[[param.group]]
@@ -623,7 +623,7 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
 .linear_predict_sampler <- function (model.out,n.sim) {
   
   # Pull random samples from posterior
-  mod_list <- post_draw(model.out,n.sim)
+  mod_list <- .post_draw(model.out,n.sim)
   
   # Extract parameter of interest
   out_list <- lapply(mod_list, function(x) as.data.frame(x))

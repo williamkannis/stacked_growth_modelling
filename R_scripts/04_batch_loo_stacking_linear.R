@@ -39,9 +39,9 @@ source(file.path(fun_dir,"growth_prediction_functions.R"))
 
 # Load in data
 fish_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-02-26.rds"))
-sample_bridge <- readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-04-23.rds"))
-pred_lables <- readRDS(file.path(plot_dir,"fsgwh_pred_labels_2026-04-23.rds"))
-mean_lengths <- readRDS(file.path(plot_dir,"fsgwh_mean_lengths_2026-04-23.rds"))
+sample_bridge <- readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-06-16.rds"))
+pred_lables <- readRDS(file.path(plot_dir,"fsgwh_pred_labels_2026-06-16.rds"))
+mean_lengths <- readRDS(file.path(plot_dir,"fsgwh_mean_lengths_2026-06-16.rds"))
 n.cores <- 6
 stack.iter <- 10000
 
@@ -53,7 +53,7 @@ sp_dir <- sapply(sp,function(x) file.path(out_dir,x))
 names(sp_dir) <- sp
 
 # Species specific model outputs
-sp_out <- lapply(sp_dir,list.files)
+sp_out <- lapply(sp_dir,list.files) 
 sp_out <-lapply(sp_out,function(x) x[substr(x,4,6) == "111"])
 
 # are there 3 models in each?
@@ -95,7 +95,7 @@ input_bridge <- purrr::map2(
   grouping_predDF,
   min.pred=0,
   max.pred=360,
-  group.id = c("")
+  group.id = c("site")
   )
 input_bridge <- purrr::transpose(input_bridge)
 
@@ -129,7 +129,7 @@ ind_mu_curve_list <- Map(function(x,d,z)
   curve_predictR(
     stack.df = x,
     mod.dir = d,
-    group.id="mu_",
+    group.id="mu",
     n.sim = stack.iter,
     type = "prediction",
     input.df = z,
@@ -147,7 +147,7 @@ ind_mean_growth_list <- Map(function(x,d,z)
   curve_predictR(
     stack.df = x,
     mod.dir = d,
-    group.id="mu_",
+    group.id="mu",
     n.sim = stack.iter,
     type = "prediction",
     input.df = z,
@@ -165,7 +165,7 @@ r2_list <- lapply(1:length(sp_stack_wt),
   function(i) len_R2(
     stack.df = sp_stack_wt[[i]],
     mod.dir = sp_dir[[i]],
-    group.id="",
+    group.id="site",
     n.sim = stack.iter,
     sp = names(sp_stack_wt)[i],
     input.df = input_list[[i]],
@@ -183,7 +183,7 @@ curve_list <- Map(function(x,y,z)
   growth_stackR(
     stack.df = x,
     mod.dir = y,
-    group.id="",
+    group.id="site",
     sim = stack.iter,
     type = "prediction",
     input.df = z,
@@ -201,7 +201,7 @@ mu_curve_list <- Map(
   function(x,y,z) growth_stackR(
     stack.df = x,
     mod.dir = y,
-    group.id="mu_",
+    group.id="mu",
     sim = stack.iter,
     type = "prediction",
     input.df = z,
@@ -219,7 +219,7 @@ mean_growth_list <- Map(
   function(x,y,z) growth_stackR(
     stack.df = x,
     mod.dir = y,
-    group.id="mu_",
+    group.id="mu",
     sim = stack.iter,
     type = "prediction",
     input.df = z,
@@ -237,7 +237,7 @@ param_list <- Map(function(x,y)
   growth_stackR(
     stack.df = x,
     mod.dir = y,
-    group.id="mu_",
+    group.id="mu",
     sim = stack.iter,
     type = "parameter",
     truncate.inf = F,
@@ -247,10 +247,11 @@ param_list <- Map(function(x,y)
 
 # Parameter and inst. growth linear predictions
 pred_list <- purrr::map2(
-  sp_stack_wt,sp_dir,
+  sp_stack_wt[names(sp_stack_wt) !="JORFLO"],
+  sp_dir[names(sp_dir) != "JORFLO"],
   linear_pred_stackR, 
-  sim = stack.iter,
-  sum.fun = "median"
+    sim = stack.iter,
+    sum.fun = "median"
   )
 
 
