@@ -120,9 +120,9 @@ generated quantities{
   //  Generated qunatities
   //----------------------------------------------------------------------------
     
-  row_vector[N_CAT]   group_Linf;  // group specific Linf
-  row_vector[N_CAT]     group_g1;  // group specific g1
-  row_vector[N_CAT]     group_t0;  // group specific t0
+  row_vector[N_CAT]     cat_Linf;  // group specific Linf
+  row_vector[N_CAT]       cat_g1;  // group specific g1
+  row_vector[N_CAT]       cat_t0;  // group specific t0
   real                   mu_Linf;  // transformed Linf hyperparameter
   real                     mu_g1;  // transformed g1 hyperparameter
   corr_matrix[3]         cor_mat;  // correlation matrix
