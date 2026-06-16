@@ -65,11 +65,11 @@ stan_data_prep_cat <- function(data,sp,grouping){
   # Arrange data into input list for Stan analysis
   input_data <- list(N = nrow(sp_df),
                      N_SITES = n_distinct(sp_df$sample_id),
-                     N_HYDR = n_distinct(sp_df$group),
+                     N_GROUP = n_distinct(sp_df$group),
                      LENGTH = sp_df$length,
                      AGE =sp_df$ring_count,
                      ID = sp_df$sample_id,
-                     HYDR = as.numeric(group_id$group))
+                     GROUP = as.numeric(group_id$group))
   
   # Return input data and bridge table as a list
   out <-list(input_data,sample_id_bridge)
