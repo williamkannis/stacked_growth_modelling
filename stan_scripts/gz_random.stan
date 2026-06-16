@@ -18,9 +18,6 @@ data {
   
   int<lower=1>                      N;  // number of fish
   int<lower=1>                N_SITES;  // number of sites
-  int<lower=1>                      K;  // number of growth predictors
-  int<lower=1>                 N_PRED;  // number of input values for predicted inst. growth
-  real<lower=1>              LENGTH_M;  // average length of fish, used for growth estimation
   vector[N]                    LENGTH;  // fish lengths
   vector[N]                       AGE;  // fish ages
   int<lower=0>                     NU;  // degrees of freedom for students t errors. If zero, normal errors are estimated
@@ -116,10 +113,6 @@ generated quantities{
   real                    mu_g2;  // transformed g2 hyperparameter
   real                    mu_ti;  // transformed ti hyperparameter
   corr_matrix[3]        cor_mat;  // correlation matrix
-  matrix[N_PRED,K]    pred_Linf;  // predicted Linf based on range of predictor values
-  matrix[N_PRED,K]      pred_g2;  // predicted g2 based on range of predictor values
-  matrix[N_PRED,K]      pred_ti;  // predicted ti based on range of predictor values
-  matrix[N_PRED,K]      pred_ig;  // predicted inst. growth based on range of predictor values
   vector[N]             log_lik;  // log-likelihood vector - needed for LOO and WAIC
 
   // Transform hyperparameter means out of log scale
@@ -137,23 +130,4 @@ generated quantities{
 
   }
   
-  
-  //----------------------------------------------------------------------------
-  //  Predictions across range of predictor values
-  //----------------------------------------------------------------------------
-  
-  // predicted growth paramters
-  for (i in 1:K) {
-    pred_Linf[,i] = rep_vector(mu_Linf, N_PRED);
-    pred_g2[,i] = rep_vector(mu_g2, N_PRED);
-    pred_ti[,i] = rep_vector(mu_ti, N_PRED);
-  }
-
-
-  // Instantenous growth equation
-  for (i in 1:K) {
-    pred_ig[,i] = pred_g2[,i] .* LENGTH_M .* log(pred_Linf[,i]/LENGTH_M);
-  }
- }
- 
  

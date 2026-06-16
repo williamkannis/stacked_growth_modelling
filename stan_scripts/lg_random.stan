@@ -18,9 +18,6 @@ data {
   
   int<lower=1>                      N;  // number of fish
   int<lower=1>                N_SITES;  // number of sites
-  int<lower=1>                      K;  // number of growth predictors
-  int<lower=1>                 N_PRED;  // number of input values for predicted inst. growth
-  real<lower=1>              LENGTH_M;  // average length of fish, used for growth estimation
   vector[N]                    LENGTH;  // fish lengths
   vector[N]                       AGE;  // fish ages
   array[N] int<lower = 0>          ID;  // site/year id
@@ -118,10 +115,6 @@ generated quantities{
   real                    mu_g3;  // transformed g3 hyperparameter
   real                    mu_ti;  // transformed ti hyperparameter
   corr_matrix[3]        cor_mat;  // correlation matrix
-  matrix[N_PRED,K]    pred_Linf;  // predicted Linf based on range of predictor values
-  matrix[N_PRED,K]      pred_g3;  // predicted g3 based on range of predictor values
-  matrix[N_PRED,K]      pred_ti;  // predicted ti based on range of predictor values
-  matrix[N_PRED,K]      pred_ig;  // predicted inst. growth based on range of predictor values
   vector[N]             log_lik;  // log-likelihood vector - needed for LOO and WAIC
 
   // Transform hyperparameter means out of log scale
@@ -137,21 +130,4 @@ generated quantities{
     if(NU==0) log_lik[i] = normal_lpdf(LENGTH[i]|site_Linf[ID[i]]./(1 + exp(-site_g3[ID[i]] .* (AGE[i] - site_ti[ID[i]]))),sigma_length);
     if(NU>0) log_lik[i] = student_t_lpdf(LENGTH[i]|NU,site_Linf[ID[i]]./(1 + exp(-site_g3[ID[i]] .* (AGE[i] - site_ti[ID[i]]))),sigma_length);
   }
-
-  //----------------------------------------------------------------------------
-  //  Predictions across range of predictor values
-  //----------------------------------------------------------------------------
-
-  // predicted growth paramters
-  for (i in 1:K) {
-    pred_Linf[,i] = rep_vector(mu_Linf, N_PRED);
-    pred_g3[,i] = rep_vector(mu_g3, N_PRED);
-    pred_ti[,i] = rep_vector(mu_ti,N_PRED);
-  }
-
-  // Instantenous growth equation
-  for (i in 1:K) {
-    pred_ig[,i] = pred_g3[,i] .* LENGTH_M .* (1-(LENGTH_M/pred_Linf[,i]));
-  }
-}
 
