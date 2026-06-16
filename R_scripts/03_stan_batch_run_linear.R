@@ -73,9 +73,6 @@ saveRDS(id_bridge,file.path(plot_dir,paste0("fsgwh_sampleid_bridge_",Sys.Date(),
 saveRDS(pred_lables,file.path(plot_dir,paste0("fsgwh_pred_labels_",Sys.Date(),".rds")))
 saveRDS(mean_lengths,file.path(plot_dir,paste0("fsgwh_mean_lengths_",Sys.Date(),".rds")))
 
-# Select full models
-mod_all_sp <- mod_files[substr(mod_files,4,7) == "111."]
-
 
 # LUCGOO model runs  -----------------------------------------------------------
 
