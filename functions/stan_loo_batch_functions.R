@@ -296,8 +296,10 @@ stan_diag_batch <- function(mod.forms = c("vb","gz","lg"),fixed.effects = NULL,
   # Do selected model forms and strucutures match avialable choices?
   if(!all(mod.forms %in% c("vb","gz","lg"))) {
     stop('mod.forms must be "vb","gz" or "lg"')}
-  if(!is.null(fixed.effects) & ! fixed.effects %in% c("linear","categorical")){
-    stop('fixed.effects must be "linear" or "categorical"')
+  if(!is.null(fixed.effects))  {
+    if(!fixed.effects %in% c("linear","categorical")){
+      stop('fixed.effects must be "linear" or "categorical"')
+    }
   }
   
   # List file names based on selected model forms and fixed effect strucutre.
