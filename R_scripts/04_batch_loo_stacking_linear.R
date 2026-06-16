@@ -28,14 +28,14 @@ library(loo)
 
 # directories
 input_dir <- "input_data"
-fun_dir <-"~/Documents/Work/Everglades post-doc/Data analysis/R functions - pre pacakge versions"
+fun_dir <-"functions"
 out_dir <- "stan_outputs/model_out_linear"
 plot_dir <- "stan_outputs/plotting_info"
 export_dir <- "loo_outputs"
 
 # Load in custom functions
 source(file.path(fun_dir,"stan_loo_batch_functions.R"))
-source(file.path(fun_dir,"growth_prediction_stacking_functions.R"))
+source(file.path(fun_dir,"growth_prediction_functions.R"))
 
 # Load in data
 fish_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-02-26.rds"))
@@ -125,113 +125,125 @@ curve_id_bridge <- bind_rows(input_bridge$id_bridge)
 ### Individual model predictions  ###
 
 # Length and instantaneous growth at age predictions - population level
-ind_mu_curve_list <- Map(function(x,d,z) curve_predictR(
-  stack.df = x,
-  mod.dir = d,
-  group.id="mu",
-  group.size =1,
-  n.sim = stack.iter,
-  type = "prediction",
-  input.df = z,
-  input.var = "age",
-  output.var = c("length","growth"),
-  sum.fun="median",
-  parallel = T,
-  mc.cores = n.cores),
-  sp_stack_wt,sp_dir,input_list)
+ind_mu_curve_list <- Map(function(x,d,z) 
+  curve_predictR(
+    stack.df = x,
+    mod.dir = d,
+    group.id="mu_",
+    n.sim = stack.iter,
+    type = "prediction",
+    input.df = z,
+    input.var = "age",
+    output.var = c("length","growth"),
+    sum.fun="median",
+    parallel = T,
+    mc.cores = n.cores),
+  sp_stack_wt,
+  sp_dir,
+  input_list)
 
 # Inst. growth at mean age
-ind_mean_growth_list <- Map(function(x,d,z) curve_predictR(
-  stack.df = x,
-  mod.dir = d,
-  group.id="mu",
-  group.size =1,
-  n.sim = stack.iter,
-  type = "prediction",
-  input.df = z,
-  input.var = "length",
-  output.var = c("growth"),
-  sum.fun ="median",
-  parallel = T,
-  mc.cores = n.cores),
-  sp_stack_wt,sp_dir,mean_length_input)
+ind_mean_growth_list <- Map(function(x,d,z) 
+  curve_predictR(
+    stack.df = x,
+    mod.dir = d,
+    group.id="mu_",
+    n.sim = stack.iter,
+    type = "prediction",
+    input.df = z,
+    input.var = "length",
+    output.var = c("growth"),
+    sum.fun ="median",
+    parallel = T,
+    mc.cores = n.cores),
+  sp_stack_wt,
+  sp_dir,
+  mean_length_input)
 
 # Estimate R2 of candidate curves
-r2_list <- lapply(1:length(sp_stack_wt),function(i) len_R2(
-  stack.df = sp_stack_wt[[i]],
-  mod.dir = sp_dir[[i]],
-  group.id="",
-  group.size =group_size_list[[i]],
-  n.sim = stack.iter,
-  sp = names(sp_stack_wt)[i],
-  input.df = input_list[[i]],
-  sum.fun="median",
-  parallel = T,
-  mc.cores = n.cores))
+r2_list <- lapply(1:length(sp_stack_wt),
+  function(i) len_R2(
+    stack.df = sp_stack_wt[[i]],
+    mod.dir = sp_dir[[i]],
+    group.id="",
+    n.sim = stack.iter,
+    sp = names(sp_stack_wt)[i],
+    input.df = input_list[[i]],
+    sum.fun="median",
+    parallel = T,
+    mc.cores = n.cores)
+  )
 names(r2_list) <- names(sp_stack_wt)
 
 
 ### Model stacked predictions  ###
 
 # Length and instantaneous growth at age predictions - sampling-event level
-curve_list <- Map(function(x,d,y,z) growth_stackR(
-  stack.df = x,
-  mod.dir = d,
-  group.id="",
-  group.size =y,
-  sim = stack.iter,
-  type = "prediction",
-  input.df = z,
-  input.var = "age",
-  output.var = c("length","growth"),
-  parallel = T,
-  mc.cores = n.cores,
-  sum.fun="median"),
-  sp_stack_wt,sp_dir,group_size_list,input_list)
+curve_list <- Map(function(x,y,z) 
+  growth_stackR(
+    stack.df = x,
+    mod.dir = y,
+    group.id="",
+    sim = stack.iter,
+    type = "prediction",
+    input.df = z,
+    input.var = "age",
+    output.var = c("length","growth"),
+    parallel = T,
+    mc.cores = n.cores,
+    sum.fun="median"),
+  sp_stack_wt,
+  sp_dir,
+  input_list)
 
 # Length and instantaneous growth at age predictions - population level
-mu_curve_list <- Map(function(x,d,z) growth_stackR(
-  stack.df = x,
-  mod.dir = d,
-  group.id="mu",
-  group.size =1,
-  sim = stack.iter,
-  type = "prediction",
-  input.df = z,
-  input.var = "age",
-  output.var = c("length","growth"),
-  parallel = T,
-  mc.cores = n.cores,
-  sum.fun="median"),
-  sp_stack_wt,sp_dir,input_list_mu)
+mu_curve_list <- Map(
+  function(x,y,z) growth_stackR(
+    stack.df = x,
+    mod.dir = y,
+    group.id="mu_",
+    sim = stack.iter,
+    type = "prediction",
+    input.df = z,
+    input.var = "age",
+    output.var = c("length","growth"),
+    parallel = T,
+    mc.cores = n.cores,
+    sum.fun="median"),
+  sp_stack_wt,
+  sp_dir,
+  input_list_mu)
 
 # Inst. growth at mean age
-mean_growth_list <- Map(function(x,d,z) growth_stackR(
-  stack.df = x,
-  mod.dir = d,
-  group.id="mu",
-  group.size =1,
-  sim = stack.iter,
-  type = "prediction",
-  input.df = z,
-  input.var = "length",
-  output.var = c("growth"),
-  parallel = T,
-  mc.cores = n.cores,
-  sum.fun="median"),
-  sp_stack_wt,sp_dir,mean_length_input)
+mean_growth_list <- Map(
+  function(x,y,z) growth_stackR(
+    stack.df = x,
+    mod.dir = y,
+    group.id="mu_",
+    sim = stack.iter,
+    type = "prediction",
+    input.df = z,
+    input.var = "length",
+    output.var = c("growth"),
+    parallel = T,
+    mc.cores = n.cores,
+    sum.fun="median"),
+  sp_stack_wt,
+  sp_dir,
+  mean_length_input)
 
 # Population means of parameters
-param_list <- Map(function(x,d) growth_stackR(
-  stack.df = x,
-  mod.dir = d,
-  group.id="mu_",
-  group.size =1,
-  sim = stack.iter,
-  type = "parameter",
-  truncate.inf = F,
-  sum.fun="median"),
-  sp_stack_wt,sp_dir)
+param_list <- Map(function(x,y) 
+  growth_stackR(
+    stack.df = x,
+    mod.dir = y,
+    group.id="mu_",
+    sim = stack.iter,
+    type = "parameter",
+    truncate.inf = F,
+    sum.fun="median"),
+  sp_stack_wt,
+  sp_dir)
 
 # Parameter and inst. growth linear predictions
 pred_list <- purrr::map2(

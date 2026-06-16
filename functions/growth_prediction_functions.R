@@ -30,6 +30,7 @@
 #' @param min.pred Minimum prediction input value
 #' @param max.pred Maximum prediction input value
 #' 
+#' 
 #' @returns a named list containing the prediction function input data.frame and 
 #' a bridge data.frame to link combined grouping ids to sampling and hydroperiod 
 #' ids. Prediction data.frame has a column for the combined grouping id 
@@ -84,9 +85,8 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 #' @param stack.df Data.frame containing model file names and stacking wts. 
 #' Must have columns "model" and "stack_wt
 #' @param mod.dir  File path for Stan model output files
-#' @param group.id Character ("hydr_","mu_", "") indicating the grouping 
+#' @param group.id Character ("group","mu", "site") indicating the grouping 
 #' level of model parameters to extract. 
-#' @param group.size Number of groups in grouping level
 #' @param sim Number of posterior draws for stacking
 #' @param type Character ("parameter" or "prediction"), model stack growth 
 #' predictions or parameters
@@ -140,8 +140,7 @@ grouping_predDF <- function(group.size,sp,min.pred,max.pred,group_vec = c("mu_",
 
 # REQUIRES: abind
 
-growth_stackR <- function(stack.df, mod.dir, group.id, group.size, 
-                          sim,type,sum.fun, ...){
+growth_stackR <- function(stack.df, mod.dir, group.id, sim,type,sum.fun, ...){
   
   # Prediction or parameters?
   fun_name = paste0(".",type,"_sampler")
@@ -156,7 +155,7 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
   mods<- stack$model
   
   # Select desired groupings
-  mod_list <- lapply(mods,.param_extract,mod.dir,group.id,group.size)
+  mod_list <- lapply(mods,.param_extract,mod.dir,group.id)
 
   # prepare prediction inputs
   sim_list = stack$n_sim
@@ -202,15 +201,14 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
 #' @param stack.df Data.frame containing model file names and stacking wts. 
 #' Must have columns "model" and "stack_wt
 #' @param mod.dir  File path for Stan model output files
-#' @param group.id Character ("hydr_","mu_", "") indicating the grouping 
+#' @param group.id Character ("group","mu", "site") indicating the grouping 
 #' level of model parameters to extract.
-#' @param group.size Number of groups in grouping level
 #' @param n.sim Number of posterior draws for stacking
 #' @param type Character ("parameter" or "prediction"), model stack growth 
 #' predictions or parameters
 #' @param type sum.fun Character ("mean" or "median) for type of summary 
 #' statistic of posterior distribution. Default is mean 
-#' #' @param ... = Additional arguments passed to .prediction_sampler or 
+#' @param ... = Additional arguments passed to .prediction_sampler or 
 #' .parameter_sampler auxiliary functions. Required arguments for stacked growth 
 #' curve predictions include:
 #'   \describe{
@@ -257,7 +255,7 @@ growth_stackR <- function(stack.df, mod.dir, group.id, group.size,
 
 # REQUIRES: purrr
 
-curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,sum.fun="mean", ...){
+curve_predictR <- function(stack.df, mod.dir, group.id,n.sim, type,sum.fun="mean", ...){
   
   # Prediction or parameters?
   fun_name = paste0(".",type,"_sampler")
@@ -267,7 +265,7 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
   mods<- stack.df$model
   
   # Extract posterior distributions
-  mod_list <- lapply(mods,.param_extract,mod.dir,group.id,group.size)
+  mod_list <- lapply(mods,.param_extract,mod.dir,group.id)
   
   # prepare prediction inputs
   g_mod_list <- substr(mods,1,2)
@@ -311,9 +309,8 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
 #' @param stack.df Data.frame containing model file names and stacking wts. 
 #' Must have columns "model" and "stack_wt
 #' @param mod.dir File path for Stan model output files
-#' @param group.id Character("hydr_","mu_", "") indicating the grouping 
-#' level of model parameters to extract. 
-#' @param group.size Number of groups in grouping level
+#' @param group.id Character ("group","mu", "site") indicating the grouping 
+#' level of model parameters to extract.
 #' @param n.sims Number of posterior draws
 #' @param sp Character for name of species of which to estimate r-squared
 #' @param sum.fun Character ("mean" or "median) for type of summary 
@@ -342,13 +339,13 @@ curve_predictR <- function(stack.df, mod.dir, group.id, group.size,n.sim, type,s
 
 # REQUIRES: purrr
 
-len_R2 <- function(stack.df, mod.dir, group.id, group.size, n.sim,sp,sum.fun="mean", ...){
+len_R2 <- function(stack.df, mod.dir, group.id, n.sim,sp,sum.fun="mean", ...){
   
   # Load it model parameters
   mods<- stack.df$model
   
   # Extract posterior distributions
-  mod_list <- lapply(mods,.param_extract,mod.dir,group.id,group.size)
+  mod_list <- lapply(mods,.param_extract,mod.dir,group.id)
   
   # prepare prediction inputs
   g_mod_list <- substr(mods,1,2)
@@ -465,26 +462,25 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
 
 # Extracts posterior distribution of the asymptotic, scaling, and inflection
 # parameters from a growth model stanfit object based on user selected
-# groupings (hydroperiod, sampling event, or population). In cases where 
-# estimates do not differ among groups, each group will be assigned population
-# values. Returns a 3d array (num groups, 4, iterations). Each slice is a 
-# posterior draw of the asymptotic, scaling, and inflection parameter values for
-# each group
+# groupings (grouping - groupt, sampling event - site, or population - mu).
+# Returns a 3d array (num groups, 4, iterations). Each slice is a posterior
+# draw of the asymptotic, scaling, and inflection parameter values for each
+#  group
 
 # REQUIRES: rstan, abind
 
-.param_extract <-function(mod.out,mod.dir,group.id,group.size){
+.param_extract <-function(mod.out,mod.dir,group.id){
   
   # Each model has different name for same class of parameter, create list with
   # all the names for each class
-  Linf <- c("Linf")
-  slope <- c("K","gninf","gi","g1","g2","g3")
-  inf <- c("t0","ti")
-  param.list <- list(Linf,slope,inf)
+  param.list <- list(
+    Linf = c("Linf"),
+    slope = c("g1","g2","g3"),
+    inf = c("t0","ti")
+  )
   
   # Load in model outputs
-  mod.dir.file <- file.path(mod.dir,mod.out)
-  mod <- readRDS(mod.dir.file)
+  mod <- readRDS(file.path(mod.dir,mod.out))
   
   # Load in posterior samples for all parameters
   sim.list <- rstan::extract(mod,permute =T)
@@ -493,16 +489,20 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
   n.iter <- dim(sim.list[[1]])[1]
   
   # Extract draws from group-specific group parametes
-  out.list <-lapply(param.list, .single_param_extract,
+  out.list <-lapply(param.list, 
+                    .single_param_extract,
                     mod=mod,
                     sim.list=sim.list,
-                    group.id=group.id,
-                    group.size=group.size)
+                    group.id=group.id
+  )
   
   # Merge model draw outputs into an 3d array
   # This array will have each slice contain a matix with columns for group
   # and rows as posterior samples
   out.array <- abind::abind(out.list,along=3)
+  
+  # How many groupings exist?
+  group.size = dim(out.array)[2]
   
   # Create and merge in group ids to array
   id <- matrix(rep(seq(1,group.size),n.iter),
@@ -518,37 +518,27 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
   out.array.perm
 }
 
-.single_param_extract <- function(mod,params,sim.list,group.id,group.size){
-  
-  # Remove grouping ids from parameter names (i.e., hydr_K -> K)
-  param.mod <-stringr::str_extract(mod@model_pars, "[^_]+$")
+.single_param_extract <- function(mod,params,sim.list,group.id){
   
   # For parameter grouping or choice, choose the model specific
-  # parameter name (e.g., slope for gompertz is gi, and K for Von Bert)
+  # parameter name (e.g., slope for gompertz is g2, and g1 for Von Bert)
+  param.mod <-stringr::str_extract(mod@model_pars, "[^_]+$") # (e.g., mu_g1 -> g1)
   param.select <-params[params %in% param.mod]
   
   # Create id for group-specific parameter of interest
+  # param.group <-paste(group.id,param.select,sep="_")
   param.group <-paste0(group.id,param.select)
   
-  # Create id for population mean, for cases when model does not have groupings
-  # for model of interest
-  param.mu <-paste0("mu_",param.select)
+  # Extract the posterior draws for each
+  out <- sim.list[[param.group]]
   
-  # If more than one group exist for parameter...
-  if(length(dim(sim.list[[param.group]])) > 1) {
-    
-    # Extract the posterior draws for each
-    out <- sim.list[[param.group]]
-  } else {
-    
-    # OR, if groups have the same parameter values, copy draws into a matrix
-    # with group-size columns
-    out.list <- rep(list(sim.list[[param.mu]]),group.size)
-    out <- do.call(cbind,out.list)
-  }
-  # Return resulting matrix
+  # transform to matrix if ony one group (e.g. mu) for consistent formating
+  if(length(dim(out)) == 1) out <- matrix(out)
+  
+  # return parameter matrix
   out
 }
+
 
 # Prediction extracting helpers  -----------------------------------------------
 
