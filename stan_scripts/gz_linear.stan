@@ -64,9 +64,9 @@ transformed parameters {
   //  Site-level MVN random effects - noncentered parametrization 
   //----------------------------------------------------------------------------
   
-  vector[N_SITES]             Linf;  // site-level Linf's
-  vector[N_SITES]               g2;  // site-level g2's
-  vector[N_SITES]               ti;  // site-level ti's
+  vector[N_SITES]             site_Linf;  // site-level Linf's
+  vector[N_SITES]               site_g2;  // site-level g2's
+  vector[N_SITES]               site_ti;  // site-level ti's
   matrix[3,N_SITES]           beta_site;  // site-level error
 
   // Correlated site-level error
@@ -74,9 +74,9 @@ transformed parameters {
   
   // Hyperparameter plus site-level error and hydroperiod effect
   // Implies multi_normal(mu+X*beta, Sigma)
-  Linf = exp(X * beta_Linf + mu_log_Linf+to_vector(beta_site[1,]));
-  g2 = exp(X * beta_g2 + mu_log_g2+to_vector(beta_site[2,]));
-  ti = exp(X * beta_ti + mu_log_ti+to_vector(beta_site[3,]))-10;
+  site_Linf = exp(X * beta_Linf + mu_log_Linf+to_vector(beta_site[1,]));
+  site_g2 = exp(X * beta_g2 + mu_log_g2+to_vector(beta_site[2,]));
+  site_ti = exp(X * beta_ti + mu_log_ti+to_vector(beta_site[3,]))-10;
 }
 
 
@@ -111,7 +111,7 @@ model {
   
   // growth equation
   vector[N] length_hat;  // Vector containing predicted lengths based on model 
-  length_hat = Linf[ID] .* exp(-exp(-g2[ID] .* (AGE - ti[ID])));
+  length_hat = site_Linf[ID] .* exp(-exp(-site_g2[ID] .* (AGE - site_ti[ID])));
   
   // Likelihood
   if(NU == 0) LENGTH ~ normal(length_hat,sigma_length);  
@@ -144,8 +144,8 @@ generated quantities{
 
   // Log pointwise predictive density
   for(i in 1:N){
-    if(NU==0) log_lik[i] = normal_lpdf(LENGTH[i]|Linf[ID[i]] .* exp(-exp(-g2[ID[i]] .* (AGE[i] - ti[ID[i]]))),sigma_length);
-    if(NU>0) log_lik[i] = student_t_lpdf(LENGTH[i]|NU,Linf[ID[i]] .* exp(-exp(-g2[ID[i]] .* (AGE[i] - ti[ID[i]]))),sigma_length);
+    if(NU==0) log_lik[i] = normal_lpdf(LENGTH[i]|site_Linf[ID[i]] .* exp(-exp(-site_g2[ID[i]] .* (AGE[i] - site_ti[ID[i]]))),sigma_length);
+    if(NU>0) log_lik[i] = student_t_lpdf(LENGTH[i]|NU,site_Linf[ID[i]] .* exp(-exp(-site_g2[ID[i]] .* (AGE[i] - site_ti[ID[i]]))),sigma_length);
   }
   
   //----------------------------------------------------------------------------
