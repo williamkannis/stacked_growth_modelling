@@ -363,7 +363,12 @@ len_R2 <- function(stack.df, mod.dir, group.id, n.sim,sp,sum.fun="mean", ...){
   names(pred_list) <- mods
   
   # Extract means
-  pred_summary <- lapply(pred_list, .boot_summary,sum.fun = sum.fun, group.var=c("group_id","age"))
+  pred_summary <- lapply(
+    pred_list, 
+    .boot_summary,
+    sum.fun = sum.fun, 
+    group.var=c("group_id","age")
+    )
   
   # Add model name
   pred_summary <- purrr::map2(pred_summary,names(pred_summary),
@@ -383,7 +388,11 @@ len_R2 <- function(stack.df, mod.dir, group.id, n.sim,sp,sum.fun="mean", ...){
   actual_df <- fish_df %>% 
     filter(species == sp) %>% 
     rename(age = ring_count) %>% 
-    left_join(bridge_df, by = join_by(wateryear,region,site,age,species))
+    left_join(
+      bridge_df, 
+      by = join_by(wateryear,region,site,age,species),
+      relationship = "many-to-many"
+      )
   
   # Calculate r2 values of predictions for each model
   r2_list <- lapply(mods, function (x) {
@@ -394,7 +403,11 @@ len_R2 <- function(stack.df, mod.dir, group.id, n.sim,sp,sum.fun="mean", ...){
     
     # Estimate r2
     out <- lm(length_pred_median ~ length,df)
-    data.frame(model = x,r2 = summary(out)$r.squared, adj_r2 = summary(out)$adj.r.squared)
+    data.frame(
+      model = x,
+      r2 = summary(out)$r.squared, 
+      adj_r2 = summary(out)$adj.r.squared
+      )
   }) 
   bind_rows(r2_list)
 }
