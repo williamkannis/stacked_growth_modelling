@@ -166,7 +166,9 @@ setdiff(fsden_year %>% distinct(wateryear,region,site),fsden_per %>% distinct(wa
 # Hydrology  -------------------------------------------------------------------
 
 # Summarize annual hydrological data at the site year for each water period to 
-# estimate the impacts of hydrological disturbance and energy on fish growth
+# estimate the impacts of hydrological disturbance and energy on fish growth.
+# Also creates categorical groupings based on anual hydroperiod (i.e. days 
+# flooded).
 
 hydro_df <- phy_df %>% 
   group_by(wateryear,period,region,site) %>% 
@@ -176,7 +178,16 @@ hydro_df <- phy_df %>%
     dsldd = mean(dsldd,na.rm=T),
     lastdaydry = mean(lastdaydry,na.rm=T)
   ) %>% 
-  ungroup()
+  ungroup() %>% 
+  mutate(
+    hydroperiod = case_when(
+      wet_sum_365day > 360 ~ "long",
+      wet_sum_365day >=320 & wet_sum_365day <= 360 ~ "intermediate",
+      wet_sum_365day < 320 ~ "short",
+      T~NA
+    ),
+    hydroperiod = factor(hydroperiod,levels=c("short","intermediate","long"))
+  )
 
 
 # Compile all predictors into one data frame  ----------------------------------
@@ -189,7 +200,7 @@ comp_df <- age_df %>%
 
 # Check for collinearity in data
 comp_df %>% 
-  select(-wateryear,-period,-region,-site) %>% 
+  select(-wateryear,-period,-region,-site,-hydroperiod) %>% 
   cor(use="complete.obs")
 
 
@@ -199,15 +210,15 @@ comp_df %>%
 
 # Create composite variables with PCA  -----------------------------------------
 
-# Use full pisc and hydrology datasets to conduct PCA on biological and
+# Use full pisc and hydrology datas ets to conduct PCA on biological and
 # hydrology variables
 
 # Prepare data input
 pca_data <-hydro_df %>% 
   filter(period == 4) %>% # only use data from period 4 (i.e., when age is collected)
-  right_join(pis_df_all) %>% # only use hydrology data that isnt missing pisc data
+  right_join(pis_df_all) %>% # only use hydrology data that isn't missing pisc data
   left_join(fsden_year)  # load in annual fish densities
-pca_input <- pca_data %>% select(-wateryear,-period,-region,-site)
+pca_input <- pca_data %>% select(-wateryear,-period,-region,-site,-hydroperiod)
   
 # Run pca
 pca_out <- rda(pca_input,scale = T)
@@ -312,7 +323,7 @@ for (i in 1:ncol(pca_ax)) {
 # Create cor matrix
 pca_cor <- pca_df %>% 
   left_join(pca_data) %>% 
-  select(-wateryear,-period,-region,-site) %>% 
+  select(-wateryear,-period,-region,-site,-hydroperiod) %>% 
   cor(use="complete.obs") %>% 
   as.matrix()
 pca_cor <- pca_cor[-c(1:3),1:3]
