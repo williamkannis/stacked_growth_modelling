@@ -103,11 +103,11 @@ mean_ci_batch <- function(mod.df,mod.dir,parallel = F,mc.cores=NULL,
     digits = digits,
     ci=ci)
   
-  # COmbine into one dataframe
+  # Combine into one data.frame
   mean_ci_df <-mean_ci_list %>% 
     purrr::reduce(left_join, by = "model")
   
-  # FOrmat column names to match across data types
+  # Format column names to match across data types
   colnames(mean_ci_df) <- gsub("g1|g2|g3","g",colnames(mean_ci_df))
   colnames(mean_ci_df)<- gsub("t0|ti","t",colnames(mean_ci_df))
   
@@ -174,18 +174,6 @@ mean_ci_batch <- function(mod.df,mod.dir,parallel = F,mc.cores=NULL,
     out_names <- sapply(1:length(mean_ci),function(i) paste(param[1],i,sep="_"))
     colnames(out) <- c("model",out_names)
   }
-  if(param != "tau") return(out)
-  
-  # Name tau estimates to match their corresponding growth parameter
-  mod_struc <- substr(mod.file,4,6)
-  
-  if(mod_struc == "111") colnames(out)[2:ncol(out)] <- c("tau_Linf","tau_g","tau_t")
-  if(mod_struc == "110") colnames(out)[2:ncol(out)] <- c("tau_Linf","tau_g")
-  if(mod_struc == "101") colnames(out)[2:ncol(out)] <- c("tau_Linf","tau_t")
-  if(mod_struc == "011") colnames(out)[2:ncol(out)] <- c("tau_g","tau_t")
-  if(mod_struc == "100") colnames(out)[2:ncol(out)] <- c("tau_Linf")
-  if(mod_struc == "010") colnames(out)[2:ncol(out)] <- c("tau_g")
-  if(mod_struc == "001") colnames(out)[2:ncol(out)] <- c("tau_t")
   out
 }
 
@@ -359,14 +347,14 @@ beta_mean_ci_batch <- function(stack.df, wt.cutoff = T, mod.dir,
     ci = ci
     )
   
-  # Combine into one dataframe
+  # Combine into one data.frame
   mean_ci_df <-bind_rows(mean_ci_list)
   
-  # FOrmat parameter names to match across model types
+  # Format parameter names to match across model types
   mean_ci_df$parameter <- gsub("g1|g2|g3","g",mean_ci_df$parameter)
   mean_ci_df$parameter <- gsub("t0|ti","t",mean_ci_df$parameter)
   
-  # Return dataframe
+  # Return data.frame
   mean_ci_df
 }
 
