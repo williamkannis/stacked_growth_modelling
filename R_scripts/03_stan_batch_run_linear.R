@@ -25,7 +25,7 @@ fun_dir <-"functions"
 len_dir <- "~/Documents/Work/Everglades post-doc/Data analysis/Data cleaning/cleaned_data"
 input_dir <- "input_data"
 plot_dir <- "stan_outputs/plotting_info"
-out_dir <- "stan_outputs/model_out_linear"
+out_dir <- "stan_outputs/model_out"
 
 # Load in custom functions
 source(file.path(fun_dir,"stan_loo_batch_functions.R"))

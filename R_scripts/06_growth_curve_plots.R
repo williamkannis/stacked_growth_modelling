@@ -21,7 +21,7 @@ library(parallel)
 library(tidyverse)
 
 # Directories
-out_dir <- "stan_outputs/model_out_linear"
+out_dir <- "stan_outputs/model_out"
 loo_dir <- "loo_outputs"
 pred_dir <- "input_data"
 plot_dir <- "stan_outputs/plotting_info"

@@ -29,7 +29,7 @@ library(loo)
 # directories
 input_dir <- "input_data"
 fun_dir <-"functions"
-out_dir <- "stan_outputs/model_out_linear"
+out_dir <- "stan_outputs/model_out"
 plot_dir <- "stan_outputs/plotting_info"
 export_dir <- "loo_outputs"
 

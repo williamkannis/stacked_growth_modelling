@@ -25,7 +25,7 @@ library(tidyverse)
 fig_dir <- "figures"
 supp_dir <- "figures/supp_tables"
 loo_dir <- "loo_outputs"
-out_dir <- "stan_outputs/model_out_linear"
+out_dir <- "stan_outputs/model_out"
 input_dir <-"input_data"
 fun_dir <- "functions"
 
