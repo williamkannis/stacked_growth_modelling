@@ -11,7 +11,8 @@
 # DESCRIPTION: Compiles and formats data for use as predictor variables for growth
 # parameters in hierarchical growth models. The Predictor variables were highly 
 # inter-correlated, so we performed principle components analysis to reduce 
-# predictors into three composite variables.
+# predictors into three composite variables. We also provide hydroperiod (i.e, #
+# of days flooded) classifications for use in categorical second-level effects.
 
 
 # Housekeeping  ----------------------------------------------------------------
