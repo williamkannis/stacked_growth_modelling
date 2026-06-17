@@ -36,7 +36,8 @@
 #' Must have matching date and site columns as age.df. Only necessary if 
 #' fixed.effects != NULL. Default is NULL
 #' @param category Name of column containing categorical predictor variable in
-#' pred.df. Only necessary if fixed.effects == "category" Default is NULL.
+#' pred.df. Should contain catergory as a factor. 
+#' Only necessary if fixed.effects == "category" Default is NULL.
 #' @param predictors Vector with column names of chosen predictor variables in 
 #' pred.df. Only necessary if fixed.effects == "linear". Default is NULL
 #' @param scale T or F: scale and center predictors? Only necessary if 
@@ -132,19 +133,26 @@ stan_data_prep <- function(sp, age.df, len.df, fixed.effect = NULL, pred.df=NULL
       arrange(sample_id)
     
     # select grouping of choice category and change to factor
-    cat_id <- as.factor(sample_df[,category])
+    cat_id <- sample_df %>% pull(category)
+    
+    # if category not provided as factor, create factor
+    if(!is.factor(cat_id)) cat_id <- factor(cat_id)
+    
+    # Create numeric id for category groupings
+    cat_id <- as.numeric(cat_id)
     
     # link category factor to label
     cat_bridge <- data.frame(
       cat = sample_df[,category],
       cat_id = cat_id
-    )
+    ) %>% 
+      distinct()
     
     # Arrange data into input list for Stan analysis
     cat_data <- list(
-      N = nrow(sp_df),
       N_CAT = n_distinct(cat_id),
-      CAT = as.numeric(cat_id))
+      CAT = cat_id
+      )
     
     # Add categorical data to input list
     input_data <- c(input_data, cat_data)
