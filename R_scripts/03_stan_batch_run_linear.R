@@ -25,7 +25,6 @@ fun_dir <-"functions"
 len_dir <- "~/Documents/Work/Everglades post-doc/Data analysis/Data cleaning/cleaned_data"
 input_dir <- "input_data"
 plot_dir <- "stan_outputs/plotting_info"
-mod_dir <-"stan_scripts_linear"
 out_dir <- "stan_outputs/model_out_linear"
 
 # Load in custom functions
@@ -34,8 +33,7 @@ source(file.path(fun_dir,"stan_loo_batch_functions.R"))
 # Data (Make sure up-to date version!)
 age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-02-26.rds"))
 len_df <- readRDS(file.path(len_dir,"fslen_cleaned_2026-02-25.rds"))
-pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-04-23.rds"))
-mod_files <- list.files(path=mod_dir,pattern="\\.stan$")
+pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-06-17.rds"))
 
 
 # Create inputs for batch model runs  ------------------------------------------
@@ -44,7 +42,7 @@ mod_files <- list.files(path=mod_dir,pattern="\\.stan$")
 # Data is provide to Stan in named list for all variables. For random effects,
 # groupings must be numeric. This function will create sampling event ids based
 # on wateryear, region, and site. To link the new sampling id back to original
-# site information, a bridge dataframe is also created
+# site information, a bridge data.frame is also created
 sp <- unique(age_df$species)
 
 prep_list <-lapply(
