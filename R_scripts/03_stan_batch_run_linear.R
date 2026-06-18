@@ -49,6 +49,7 @@ prep_list <-lapply(
   sp,
   stan_data_prep,
   age.df = age_df,
+  sample.groups <- c("wateryear","region","site"),
   len.df = len_df,
   pred.df=pred_df,
   fixed.effect = "linear",

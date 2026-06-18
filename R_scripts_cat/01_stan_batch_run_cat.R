@@ -50,6 +50,7 @@ prep_list <-lapply(
   stan_data_prep,
   age.df = age_df,
   len.df = len_df,
+  sample.groups = c("wateryear","region","site"),
   pred.df=pred_df,
   fixed.effect = "categorical",
   category = "hydroperiod"

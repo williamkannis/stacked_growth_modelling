@@ -26,10 +26,16 @@
 #' 
 #' @param sp Species name for data filtering.
 #' @param age.df Data.frame containing age-length data for a set of species, 
-#' dates, and sites.
+#' dates, and sites. Must have columns for species name (species), individual
+#' lengths (length), and ages (age). Additional columns for groupings are 
+#' required for random effects using BLANK.
 #' @param len.df Data.frame with fish size structure. Used for average length 
-#' for inst.growth comparisons across groupings. If NULL (default), lengths 
-#' from age-length data will be used.
+#' for inst.growth comparisons across groupings. Must have columns for species 
+#' names (species) and lengths (length). If NULL (default), lengths from 
+#' age-length data will be used.
+#' @param sample.groups Vector containing the column names used to designate an
+#' individual sampling event (e.g site and date) used for random effects. Used
+#' to create a single sampling identifier.
 #' @param fixed.effect Character ("categorical", "linear") indicating the type 
 #' of second level effects present in model. Default is no second-level
 #' effects (Null).
@@ -71,25 +77,27 @@
 #' 
 #' @export
 
-# REQUIRES: dplyr (full)
+# REQUIRES: dplyr (full), tidyr
 
-# MAKE SITE INFO MORE GENERAL
 
-stan_data_prep <- function(sp, age.df, len.df = NULL, fixed.effect = NULL, pred.df=NULL, 
-                           category = NULL, predictors = NULL, scale = T, 
-                           linear.predictions = F,  pred.len = 100){
+# COMBINE AGE AND PRED COLUMNS
+# change ring_count to age in cleaning script
+
+stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups, fixed.effect = NULL,  
+                           pred.df=NULL,category = NULL, predictors = NULL,  
+                           scale = T,linear.predictions = F,  pred.len = 100){
   
   # Filter to species of interest and create numeric sample event ids
   sp_df <- age.df %>% 
     filter(species == sp) %>% 
-    group_by(wateryear,region,site) %>% 
+    group_by(across(tidyr::all_of(sample.groups))) %>% 
     mutate(sample_id = cur_group_id()) %>% 
     ungroup() %>% 
     arrange(sample_id)
   
   # Create table to bridge species specific sample_ids to years and sites
   sample_id_bridge <- sp_df %>% 
-    distinct(wateryear,region,site,species,sample_id)
+    distinct(across(all_of(c(sample.groups,"species", "sample_id"))))
   
   # Average length, to compare growth rates among groupings
   # If no size structure data.set provided, use lengths from age.df
