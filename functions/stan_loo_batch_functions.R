@@ -28,7 +28,8 @@
 #' @param age.df Data.frame containing age-length data for a set of species, 
 #' dates, and sites. Must have columns for species name (species), individual
 #' lengths (length), and ages (age). Additional columns for groupings are 
-#' required for random effects using BLANK.
+#' required for random effects. If second level fixed effects of selected, data
+#' must include columns for categorical groupings, or linear predictors.
 #' @param len.df Data.frame with fish size structure. Used for average length 
 #' for inst.growth comparisons across groupings. Must have columns for species 
 #' names (species) and lengths (length). If NULL (default), lengths from 
@@ -39,14 +40,11 @@
 #' @param fixed.effect Character ("categorical", "linear") indicating the type 
 #' of second level effects present in model. Default is no second-level
 #' effects (Null).
-#' @param pred.df Data.frame with second-level linear or categorical predictors. 
-#' Must have matching date and site columns as age.df. Only necessary if 
-#' fixed.effects != NULL. Default is NULL
-#' @param category Name of column containing categorical predictor variable in
-#' pred.df. Should contain catergory as a factor. 
-#' Only necessary if fixed.effects == "category" Default is NULL.
-#' @param predictors Vector with column names of chosen predictor variables in 
-#' pred.df. Only necessary if fixed.effects == "linear". Default is NULL
+#' @param category Name of column containing categorical predictor variable. 
+#' Should contain category as a factor. Only necessary if fixed.effects == 
+#' "category" Default is NULL.
+#' @param predictors Vector with column names of chosen predictor variables. 
+#' Only necessary if fixed.effects == "linear". Default is NULL
 #' @param scale T or F: scale and center predictors? Only necessary if 
 #' fixed.effects == "linear". Default is T.
 #' @param linear.predictions T or F. Create predictions of growth parameters and
@@ -80,11 +78,10 @@
 # REQUIRES: dplyr (full), tidyr
 
 
-# COMBINE AGE AND PRED COLUMNS
-# change ring_count to age in cleaning script
+# CHANGE ring_count to age in cleaning script
 
-stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups, fixed.effect = NULL,  
-                           pred.df=NULL,category = NULL, predictors = NULL,  
+stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,   
+                           fixed.effect = NULL,category = NULL, predictors = NULL,  
                            scale = T,linear.predictions = F,  pred.len = 100){
   
   # Filter to species of interest and create numeric sample event ids
@@ -126,24 +123,24 @@ stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups, fixed.effect
     return(out)
   }
   
-  # Add catergorical second-level predictors if applicable
+  # If fixed effects are specified, summarized predictor or categroical data
+  # at sampling event level
+  sample_df<- sp_df %>% 
+    select(tidyr::all_of(c("sample_id",category,predictors))) %>% 
+    distinct() %>% 
+    arrange(sample_id)
+  
+  # Add categorical second-level predictors if applicable
   if(fixed.effect == "categorical") {
     
     # check if correct type of predictors are provided
-    if(is.null(pred.df)) stop("Please provide data.frame containing predictor
-                              variables")
     if(!is.null(predictors)) stop("Linear predictors are not possibe with the
                                   categorical model")
     if(linear.predictions) stop("Cannot provide linear predictions with the
                                 categorical model")
     if(is.null(category)) stop("Please provide category for grouping")
-    
-    # Subset predictor data
-    sample_df <- sample_id_bridge %>% 
-      left_join(pred.df) %>% 
-      arrange(sample_id)
-    
-    # select grouping of choice category and change to factor
+
+    # select category grouping
     cat_id <- sample_df %>% pull(category)
     
     # if category not provided as factor, create factor
@@ -178,18 +175,10 @@ stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups, fixed.effect
   if(fixed.effect == "linear"){
     
     # check if correct type of predictors are provided
-    if(is.null(pred.df)) stop("Please provide data.frame containing predictor
-                              variables")
     if(!is.null(category)) stop("Categorical predictors are not possibe with 
                                   the linear model")
     if(is.null(predictors)) stop("Please provide names of linear predictors")
-    
-    
-    # Subset predictor data
-    sample_df <- sample_id_bridge %>% 
-      left_join(pred.df) %>% 
-      arrange(sample_id)
-    
+
     # select predictors of choice
     x_df_raw <- sample_df[,predictors]
     

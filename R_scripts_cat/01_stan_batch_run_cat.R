@@ -35,7 +35,6 @@ age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-02-26.rds"))
 len_df <- readRDS(file.path(len_dir,"fslen_cleaned_2026-02-25.rds"))
 pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-06-17.rds"))
 
-
 # Create inputs for batch model runs  ------------------------------------------
 
 # Create Stan data lists and id bridge tables for each species.
@@ -45,13 +44,17 @@ pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-06-17.rds"))
 # site information, a bridge data.frame is also created
 sp <- unique(age_df$species)
 
+# Combine age and predictor data.frames
+input_df <- age_df %>% 
+  left_join(pred_df)
+
+# Prepare data
 prep_list <-lapply(
   sp,
   stan_data_prep,
-  age.df = age_df,
+  age.df = input_df,
   len.df = len_df,
   sample.groups = c("wateryear","region","site"),
-  pred.df=pred_df,
   fixed.effect = "categorical",
   category = "hydroperiod"
   )

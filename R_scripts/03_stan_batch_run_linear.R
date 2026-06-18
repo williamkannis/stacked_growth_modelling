@@ -45,13 +45,17 @@ pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-06-17.rds"))
 # site information, a bridge data.frame is also created
 sp <- unique(age_df$species)
 
+# Combine age and predictor data.frames
+input_df <- age_df %>% 
+  left_join(pred_df)
+
+# Prepare data
 prep_list <-lapply(
   sp,
   stan_data_prep,
-  age.df = age_df,
+  age.df = input_df,
   sample.groups <- c("wateryear","region","site"),
   len.df = len_df,
-  pred.df=pred_df,
   fixed.effect = "linear",
   predictors = c("PC1","PC2","PC3"),
   scale = T,
