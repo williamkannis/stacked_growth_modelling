@@ -52,12 +52,11 @@ sp <- list.files(out_dir)
 sp_dir <- sapply(sp,function(x) file.path(out_dir,x))
 names(sp_dir) <- sp
 
-# Species specific model outputs
-sp_out <- lapply(sp_dir,list.files) 
-sp_out <-lapply(sp_out,function(x) x[substr(x,4,6) == "111"])
+# Species specific model outputs. Select only linear or random models
+sp_out <- lapply(sp_dir,list.files,pattern = "linear|random") 
 
 # are there 3 models in each?
-sapply(sp_out,function(x) length(unique(substr(x,1,6))))
+sapply(sp_out,n_distinct)
 
 
 # loo and model stacking  ------------------------------------------------------
