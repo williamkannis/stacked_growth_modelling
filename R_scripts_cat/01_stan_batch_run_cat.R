@@ -112,7 +112,7 @@ poe_diag <- stan_diag_batch(
   data = poe_input,
   sp = poe,
   export.dir = out_dir,
-  iter = 7000,
+  iter = 10000,
   warmup = 1000,
   chains =4,
   control = list(adapt_delta = .97), 
@@ -182,39 +182,14 @@ fun_input$NU <- 3
 fun_diag <- stan_diag_batch(
   fixed.effects = "categorical",
   data = fun_input,
+  mod.forms = c("lg","gz"),
   sp = fun,
   export.dir = out_dir,
-  iter = 5000,
+  iter = 12000,
   warmup = 1000,
   chains =4,
   control = list(adapt_delta = .97),  
   cores = 4
 )
-fun_diag_t <- purrr::transpose(fun_diag)
-
-
-# JORFLO model runs  -----------------------------------------------------------
-
-# Subset by species
-jor <- "JORFLO"
-jor_input <- input_list[[jor]]
-
-# Species specific nu for student t's distribution
-jor_input$NU <- 4
-
-# JORFLO has insufficient sample size for second level effects, run
-# random effect only models
-# Run model, export results, and return diagnostics
-jor_diag <- stan_diag_batch(
-  fixed.effects = "categorical",
-  data = jor_input,
-  sp = jor,
-  export.dir = out_dir,
-  iter = 5000,
-  warmup = 1000,
-  chains =4,
-  control = list(adapt_delta = .97), 
-  cores = 4
-)
-jor_diag_t <- purrr::transpose(jor_diag)
+purrr::transpose(fun_diag)
 
