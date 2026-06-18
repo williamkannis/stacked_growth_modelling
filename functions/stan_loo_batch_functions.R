@@ -28,7 +28,8 @@
 #' @param age.df Data.frame containing age-length data for a set of species, 
 #' dates, and sites.
 #' @param len.df Data.frame with fish size structure. Used for average length 
-#' for inst.growth comparisons across groupings
+#' for inst.growth comparisons across groupings. If NULL (default), lengths 
+#' from age-length data will be used.
 #' @param fixed.effect Character ("categorical", "linear") indicating the type 
 #' of second level effects present in model. Default is no second-level
 #' effects (Null).
@@ -74,7 +75,7 @@
 
 # MAKE SITE INFO MORE GENERAL
 
-stan_data_prep <- function(sp, age.df, len.df, fixed.effect = NULL, pred.df=NULL, 
+stan_data_prep <- function(sp, age.df, len.df = NULL, fixed.effect = NULL, pred.df=NULL, 
                            category = NULL, predictors = NULL, scale = T, 
                            linear.predictions = F,  pred.len = 100){
   
@@ -91,6 +92,8 @@ stan_data_prep <- function(sp, age.df, len.df, fixed.effect = NULL, pred.df=NULL
     distinct(wateryear,region,site,species,sample_id)
   
   # Average length, to compare growth rates among groupings
+  # If no size structure data.set provided, use lengths from age.df
+  if(is.null(len.df)) len.df <- age.df
   length_m <- len.df %>% 
     filter(species == sp) %>% 
     summarise(n = mean(length,na.rm = T)) %>% 
@@ -234,6 +237,11 @@ stan_data_prep <- function(sp, age.df, len.df, fixed.effect = NULL, pred.df=NULL
       return(out)
       
     } else {
+      
+      # If no predictions are to be made, create empty inputs for stan
+      input_data$N_PRED <- 0
+      input_data$PRED_X <- matrix(nrow = 0,ncol = input_data$K)
+      
       # Return input data and bridge table as a list
       out <-list(input_data,sample_id_bridge,length_m)
       names(out) <- c("stan_data","id_bridge","mean_length")
