@@ -78,7 +78,8 @@
 # REQUIRES: dplyr (full), tidyr
 
 
-# CHANGE ring_count to age in cleaning script
+
+# CHANGE FIXED EFFECTS TO INCUDE NONE INSTEAT OF NULL
 
 stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,   
                            fixed.effect = NULL,category = NULL, predictors = NULL,  
@@ -109,7 +110,7 @@ stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,
     N = nrow(sp_df),
     N_SITES = n_distinct(sp_df$sample_id),
     LENGTH = sp_df$length,
-    AGE =sp_df$ring_count,
+    AGE =sp_df$age,
     ID = sp_df$sample_id,
     LENGTH_M = length_m
   )

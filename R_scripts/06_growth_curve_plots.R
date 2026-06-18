@@ -39,7 +39,7 @@ mu_curve_df <- readRDS(file.path(loo_dir,"stacked_mu_curves_2026-06-16.rds"))
 ind_mu_curve_df <- readRDS(file.path(loo_dir,"ind_mu_curves_2026-06-16.rds"))
 pred_bridged <- readRDS(file.path(loo_dir,"stacked_growth_predictions_2026-06-16.rds"))
 pred_df <-readRDS(file.path(pred_dir,"fsgrw_predictors_2026-04-23.rds"))
-age_df <- readRDS(file.path(pred_dir,"fsage_cleaned_2026-02-26.rds"))
+age_df <- readRDS(file.path(pred_dir,"fsage_cleaned_2026-06-18.rds"))
 
 # Species specific directories
 sp <- names(sp_stack_wt)
@@ -51,7 +51,6 @@ sp_dir <- sapply(sp,function(x) file.path(out_dir,x))
 # Actual data for points and rug lines
 actual_df <- age_df %>% left_join(pred_df) %>% 
   # filter(species != "JORFLO") %>% 
-  rename(age = ring_count) %>% 
   mutate(group_name = paste(region,site,wateryear)) %>% 
   select(species,group_name,age,length,PC1,PC2,PC3)
 

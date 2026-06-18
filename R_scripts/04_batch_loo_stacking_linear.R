@@ -38,7 +38,7 @@ source(file.path(fun_dir,"stan_loo_batch_functions.R"))
 source(file.path(fun_dir,"growth_prediction_functions.R"))
 
 # Load in data
-fish_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-02-26.rds"))
+fish_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 sample_bridge <- readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-06-16.rds"))
 pred_lables <- readRDS(file.path(plot_dir,"fsgwh_pred_labels_2026-06-16.rds"))
 mean_lengths <- readRDS(file.path(plot_dir,"fsgwh_mean_lengths_2026-06-16.rds"))

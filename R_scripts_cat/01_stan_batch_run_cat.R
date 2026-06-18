@@ -31,7 +31,7 @@ out_dir <- "stan_outputs/model_out"
 source(file.path(fun_dir,"stan_loo_batch_functions.R"))
 
 # Data (Make sure up-to date version!)
-age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-02-26.rds"))
+age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 len_df <- readRDS(file.path(len_dir,"fslen_cleaned_2026-02-25.rds"))
 pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-06-17.rds"))
 

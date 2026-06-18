@@ -354,6 +354,8 @@ curve_predictR <- function(stack.df, mod.dir, group.id,n.sim, type,sum.fun="mean
 
 # REQUIRES: purrr
 
+## ADD FISH_DF TO AURGMENTS
+
 len_R2 <- function(stack.df, mod.dir, group.id, n.sim,sp,sum.fun="mean", ...){
   
   # Load it model parameters
@@ -402,7 +404,6 @@ len_R2 <- function(stack.df, mod.dir, group.id, n.sim,sp,sum.fun="mean", ...){
   # Link to actual values
   actual_df <- fish_df %>% 
     filter(species == sp) %>% 
-    rename(age = ring_count) %>% 
     left_join(
       bridge_df, 
       by = join_by(wateryear,region,site,age,species),

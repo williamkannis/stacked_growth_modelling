@@ -27,7 +27,7 @@ data_dir <- "~/Documents/Work/Everglades post-doc/Data analysis/Data cleaning/cl
 input_dir <- "input_data"
 
 # Data
-age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-02-26.rds"))
+age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 pis_df <- readRDS(file.path(data_dir,"pisc_cleaned_2026-02-25.rds"))
 len_df <- readRDS(file.path(data_dir,"fslen_cleaned_2026-02-25.rds"))
 phy_df <- readRDS(file.path(data_dir,"phys_cleaned_2026-02-25.rds"))

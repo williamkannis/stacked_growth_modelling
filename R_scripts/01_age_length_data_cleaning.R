@@ -36,7 +36,10 @@ age_length_df <- read_excel(file.path(raw_dir,"gatto_age_length.xlsx"))
 # in addition other missing data are removed
 
 age_length_clean <- age_length_df %>% 
+  
+  # CLean up names
   clean_names() %>% 
+  rename(age = ring_count) %>% 
   
   # Fix site names to match main data
   mutate(
@@ -50,9 +53,9 @@ age_length_clean <- age_length_df %>%
   
   # Remove males and missing data
   filter(sex != "M",
-       !is.na(ring_count),
+       !is.na(age),
        !is.na(length))  %>% 
-  select(wateryear,period,region,site,species,sex,ring_count,length)
+  select(wateryear,period,region,site,species,sex,age,length)
 
 
 # Final check  -----------------------------------------------------------------
@@ -62,7 +65,7 @@ summary(age_length_clean)
 age_length_clean %>% filter(sex == "M") %>% nrow() ==0
 
 # NAs?
-age_length_clean %>% filter(is.na(ring_count)) %>% nrow() ==0
+age_length_clean %>% filter(is.na(age)) %>% nrow() ==0
 age_length_clean %>% filter(is.na(length)) %>% nrow() ==0
 
 

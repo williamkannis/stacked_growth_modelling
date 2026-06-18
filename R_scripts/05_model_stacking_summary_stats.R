@@ -40,7 +40,7 @@ stack_param_df <- readRDS(file.path(loo_dir,"stacked_mu_parameters_2026-06-16.rd
 ind_gmean_df <- readRDS(file.path(loo_dir,"ind_mean_growth_predictions_2026-06-16.rds"))
 stack_gmean_df <- readRDS(file.path(loo_dir,"stacked_meand_growth_predictions_2026-06-16.rds"))
 curve_df <- readRDS(file.path(loo_dir,"stacked_curves_2026-04-23.rds"))
-age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-02-26.rds"))
+age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 
 # Species specific directories
 sp <- names(sp_stack_wt)
@@ -55,10 +55,10 @@ age_df %>%
             median_length = median(length),
             min_length = min(length),
             max_length = max(length),
-            mean_age = mean(ring_count),
-            median_age = median(ring_count),
-            min_age = min(ring_count),
-            max_age = max(ring_count))
+            mean_age = mean(age),
+            median_age = median(age),
+            min_age = min(age),
+            max_age = max(age))
 
 # Species-specific summary
 age_df %>% 
@@ -67,10 +67,10 @@ age_df %>%
             median_length = median(length),
             min_length = min(length),
             max_length = max(length),
-            mean_age = mean(ring_count),
-            median_age = median(ring_count),
-            min_age = min(ring_count),
-            max_age = max(ring_count))
+            mean_age = mean(age),
+            median_age = median(age),
+            min_age = min(age),
+            max_age = max(age))
 
 
 # Parameter and slope estimates ------------------------------------------------
@@ -156,7 +156,6 @@ mean_growth_df <-stack_gmean_df %>%
 # Prepare observed data
 actual_df <- age_df %>% 
   mutate(group_name = paste(region,site,wateryear)) %>% 
-  rename(age=ring_count) %>% 
   left_join(curve_df,join_by(species,group_name,age))
 
 # R2 function
