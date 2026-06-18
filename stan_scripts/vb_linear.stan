@@ -130,11 +130,12 @@ generated quantities{
   real                  mu_Linf;  // transformed Linf hyperparameter
   real                    mu_g1;  // transformed g1 hyperparameter
   corr_matrix[3]        cor_mat;  // correlation matrix
+  vector[N]             log_lik;  // log-likelihood vector - needed for LOO and WAIC
+
   matrix[N_PRED,K]    pred_Linf;  // predicted Linf based on range of predictor values
   matrix[N_PRED,K]      pred_g1;  // predicted g1 based on range of predictor values
   matrix[N_PRED,K]      pred_t0;  // predicted t0 based on range of predictor values
   matrix[N_PRED,K]      pred_ig;  // predicted inst. growth based on range of predictor values
-  vector[N]             log_lik;  // log-likelihood vector - needed for LOO and WAIC
 
   // Transform hyperparameter means out of log scale
   mu_Linf = exp(mu_log_Linf);
