@@ -310,7 +310,7 @@ stan_diag_batch <- function(mod.forms = c("vb","gz","lg"),fixed.effects = NULL,
     }
   }
   
-  # List file names based on selected model forms and fixed effect strucutre.
+  # List file names based on selected model forms and fixed effect structure.
   if(is.null(fixed.effects)) {
     mods <- sapply(mod.forms, function(x) paste0(x,"_random.stan"))
   } else{
