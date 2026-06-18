@@ -256,7 +256,7 @@ stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,
 #' model forms, compiling convergence and sampling diagnostics, and exporting 
 #' stanfit objects of converged models
 #' 
-#' @param mod.forms Vector containing selected  growth model forms ("vb" - von 
+#' @param mod.forms Vector containing selected growth model forms ("vb" - von 
 #' Bertalanffy, "gz" - Gompertz, "lg" - Logistic). Default is c("vb","gz","lg).
 #' @param fixed.effects Types of second level fixed effects ("linear" or 
 #' "categorical). Default is NULL, indicating no second-level effects.
