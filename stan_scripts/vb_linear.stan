@@ -19,14 +19,16 @@ data {
   int<lower=1>                      N;  // number of fish
   int<lower=1>                N_SITES;  // number of sites
   int<lower=1>                      K;  // number of growth predictors
-  int<lower=1>                 N_PRED;  // number of input values for predicted inst. growth
-  real<lower=1>              LENGTH_M;  // average length of fish, used for growth estimation
   vector[N]                    LENGTH;  // fish lengths
   vector[N]                       AGE;  // fish ages
   int<lower=0>                     NU;  // degrees of freedom for students t errors. If zero, normal errors are estimated
   array[N] int<lower = 0>          ID;  // site/year id
   matrix[N_SITES,K]                 X;  // predictor data
+
+  // Linear prediction inputs (if N_PRED > 0)
+  int<lower=0>                 N_PRED;  // number of input values for predicted inst. growth
   matrix[N_PRED,K]             PRED_X;  // prediction input data
+  real<lower=1>              LENGTH_M;  // average length of fish, used for growth estimation
 
 }
 
@@ -152,16 +154,19 @@ generated quantities{
   //  Predictions across range of predictor values
   //----------------------------------------------------------------------------
 
-  // predicted growth paramters
-  for (i in 1:K) {
-    pred_Linf[,i] = exp(mu_log_Linf + beta_Linf[i] .* PRED_X[,i]);
-    pred_g1[,i] = exp(mu_log_g1 + beta_g1[i] .* PRED_X[,i]);
-    pred_t0[,i] = mu_t0 + beta_t0[i] .* PRED_X[,i];
-  }
+  if(N_PRED > 0) {
+    
+      // predicted growth paramters
+    for (i in 1:K) {
+      pred_Linf[,i] = exp(mu_log_Linf + beta_Linf[i] .* PRED_X[,i]);
+      pred_g1[,i] = exp(mu_log_g1 + beta_g1[i] .* PRED_X[,i]);
+      pred_t0[,i] = mu_t0 + beta_t0[i] .* PRED_X[,i];
+    }
 
-  // Instantenous growth equation
-  for (i in 1:K) {
-    pred_ig[,i] = pred_g1[,i] .* (pred_Linf[,i]-LENGTH_M);
+    // Instantenous growth equation
+    for (i in 1:K) {
+      pred_ig[,i] = pred_g1[,i] .* (pred_Linf[,i]-LENGTH_M);
+   }
   }
  }
  

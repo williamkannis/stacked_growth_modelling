@@ -19,14 +19,17 @@ data {
   int<lower=1>                      N;  // number of fish
   int<lower=1>                N_SITES;  // number of sites
   int<lower=1>                      K;  // number of growth predictors
-  int<lower=1>                 N_PRED;  // number of input values for predicted inst. growth
-  real<lower=1>              LENGTH_M;  // average length of fish, used for growth estimation
   vector[N]                    LENGTH;  // fish lengths
   vector[N]                       AGE;  // fish ages
-  array[N] int<lower = 0>          ID;  // site/year id
   int<lower=0>                     NU;  // degrees of freedom for students t errors. If zero, normal errors are estimated
+  array[N] int<lower = 0>          ID;  // site/year id
   matrix[N_SITES,K]                 X;  // predictor data
+
+  // Linear prediction inputs (if N_PRED > 0)
+  int<lower=0>                 N_PRED;  // number of input values for predicted inst. growth
   matrix[N_PRED,K]             PRED_X;  // prediction input data
+  real<lower=1>              LENGTH_M;  // average length of fish, used for growth estimation
+
 
 }
 
@@ -129,11 +132,13 @@ generated quantities{
   real                    mu_g3;  // transformed g3 hyperparameter
   real                    mu_ti;  // transformed ti hyperparameter
   corr_matrix[3]        cor_mat;  // correlation matrix
+  vector[N]             log_lik;  // log-likelihood vector - needed for LOO and WAIC
+  
   matrix[N_PRED,K]    pred_Linf;  // predicted Linf based on range of predictor values
   matrix[N_PRED,K]      pred_g3;  // predicted g3 based on range of predictor values
   matrix[N_PRED,K]      pred_ti;  // predicted ti based on range of predictor values
   matrix[N_PRED,K]      pred_ig;  // predicted inst. growth based on range of predictor values
-  vector[N]             log_lik;  // log-likelihood vector - needed for LOO and WAIC
+
 
   // Transform hyperparameter means out of log scale
   mu_Linf = exp(mu_log_Linf);
@@ -152,18 +157,20 @@ generated quantities{
   //----------------------------------------------------------------------------
   //  Predictions across range of predictor values
   //----------------------------------------------------------------------------
+  
+  if (N_PRED > 0) {
     
-  // predicted growth paramters
-  for (i in 1:K) {
-    pred_Linf[,i] = exp(mu_log_Linf + beta_Linf[i] .* PRED_X[,i]);
-    pred_g3[,i] = exp(mu_log_g3 + beta_g3[i] .* PRED_X[,i]);
-    pred_ti[,i] = exp(mu_log_ti + beta_ti[i] .* PRED_X[,i])-10;
-  }
+    // predicted growth paramters
+    for (i in 1:K) {
+      pred_Linf[,i] = exp(mu_log_Linf + beta_Linf[i] .* PRED_X[,i]);
+      pred_g3[,i] = exp(mu_log_g3 + beta_g3[i] .* PRED_X[,i]);
+      pred_ti[,i] = exp(mu_log_ti + beta_ti[i] .* PRED_X[,i])-10;
+    }
 
-  // Instantenous growth equation
-  for (i in 1:K) {
-    pred_ig[,i] = pred_g3[,i] .* LENGTH_M .* (1-(LENGTH_M/pred_Linf[,i]));
+    // Instantenous growth equation
+    for (i in 1:K) {
+      pred_ig[,i] = pred_g3[,i] .* LENGTH_M .* (1-(LENGTH_M/pred_Linf[,i]));
+    }
   }
-  
-  
  }
+
