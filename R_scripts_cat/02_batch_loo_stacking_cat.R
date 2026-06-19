@@ -195,7 +195,7 @@ names(r2_list) <- names(sp_stack_wt)
 ### Model stacked predictions  ###
 
 # Length and instantaneous growth at age predictions - sampling-event level
-curve_list <- Map(function(x,y,z) 
+site_curve_list <- Map(function(x,y,z) 
   growth_stackR(
     stack.df = x,
     mod.dir = y,
@@ -213,7 +213,7 @@ curve_list <- Map(function(x,y,z)
   input_list_site)
 
 # Length and instantaneous growth at age predictions - category level
-curve_list <- Map(function(x,y,z) 
+cat_curve_list <- Map(function(x,y,z) 
   growth_stackR(
     stack.df = x,
     mod.dir = y,
@@ -283,24 +283,24 @@ param_list <- Map(function(x,y)
 # Format predictions into data frames  -----------------------------------------
 
 # Add species names to data frames
-pred_list <- purrr::map2(
-  pred_list,names(pred_list),
-  function(x,y) x %>% mutate(species =y)
-  )
-curve_list <- purrr::map2(
-  curve_list,names(curve_list), 
-  function(x,y) x %>% mutate(species =y)
-  )
-mu_curve_list <- purrr::map2(
-  mu_curve_list,names(mu_curve_list), 
-  function(x,y) x %>% mutate(species =y)
-  )
 ind_mu_curve_list <- purrr::map2(
   ind_mu_curve_list,names(ind_mu_curve_list),
   function(x,y) x %>% mutate(species =y)
-  )
+)
 r2_list <- purrr::map2(
   r2_list,names(r2_list), 
+  function(x,y) x %>% mutate(species =y)
+)
+site_curve_list <- purrr::map2(
+  curve_list,names(site_curve_list), 
+  function(x,y) x %>% mutate(species =y)
+)
+cat_curve_list <- purrr::map2(
+  curve_list,names(cat_curve_list), 
+  function(x,y) x %>% mutate(species =y)
+)
+mu_curve_list <- purrr::map2(
+  mu_curve_list,names(mu_curve_list), 
   function(x,y) x %>% mutate(species =y)
   )
 param_list <- purrr::map2(
@@ -317,11 +317,11 @@ ind_mean_growth_list <- purrr::map2(
   )
 
 # Create one dataframe for all species
-pred_df <- bind_rows(pred_list)
-curve_df <- bind_rows(curve_list)
-mu_curve_df <- bind_rows(mu_curve_list)
 ind_mu_curve_df <- bind_rows(ind_mu_curve_list)
 r2_df <- bind_rows(r2_list)
+site_curve_df <- bind_rows(site_curve_list)
+cat_curve_df <- bind_rows(cat_curve_list)
+mu_curve_df <- bind_rows(mu_curve_list)
 param_df <- bind_rows(param_list)
 mean_growth_df <- bind_rows(mean_growth_list)
 ind_mean_growth_df <- bind_rows(ind_mean_growth_list)
@@ -329,32 +329,7 @@ ind_mean_growth_df <- bind_rows(ind_mean_growth_list)
 
 # Link predictions to labels  -------------------------------------------------- 
 # Return sampling event labels (e.g., site and year) back to sampling-event
-# level growth curves and PC values to the growth at hydrology predictions.
-
-### Link PC values to linear predictions  ###
-
-# Format prediction input labels to merge
-pred_lables_id <- lapply(pred_lables,function(x) {
-  df <- as.data.frame(x)
-  df[,"pred_id"] <- 1:nrow(df)
-  df
-})
-
-# add species names
-pred_lables_id <- purrr::map2(
-  pred_lables_id,names(pred_lables_id), 
-  function(x,y) x %>% mutate(species =y)
-  )
-
-# Merge into one df
-pred_lables_df <- bind_rows(pred_lables_id)
-
-# Link prediction input labels to predictions
-pred_bridged <- pred_df %>% 
-  left_join(pred_lables_df) %>% 
-  select(-pred_id)
-
-### link sampling event info to curves  ###
+# level growth curves 
 
 # Add hydro and sampling info to bridge df
 bridge_df <- curve_id_bridge %>% 
@@ -366,7 +341,7 @@ bridge_df <- curve_id_bridge %>%
   select(species,group_id,sample_id,group_name)
 
 # Link to predictions
-curve_bridged <-curve_df %>% 
+site_curve_bridged <-site_curve_df %>% 
   left_join(bridge_df,by = join_by(species,group_id))%>%
   select(-group_id)
 
@@ -382,8 +357,7 @@ saveRDS(r2_df, file.path(export_dir,paste0("ind_model_r2_",Sys.Date(),".rds")))
 saveRDS(param_df, file.path(export_dir,paste0("stacked_mu_parameters_",Sys.Date(),".rds")))
 
 # For plots, export length and growth-at-age predictions and bridge tables
-saveRDS(curve_bridged, file.path(export_dir,paste0("stacked_curves_",Sys.Date(),".rds")))
-saveRDS(mu_curve_df, file.path(export_dir,paste0("stacked_mu_curves_",Sys.Date(),".rds")))
-saveRDS(ind_mu_curve_df, file.path(export_dir,paste0("ind_mu_curves_",Sys.Date(),".rds")))
-saveRDS(pred_bridged, file.path(export_dir,paste0("stacked_growth_predictions_",Sys.Date(),".rds")))
-
+saveRDS(site_curve_bridged, file.path(export_dir,paste0("categorical_stacked_site_curves_",Sys.Date(),".rds")))
+saveRDS(cat_curve_bridged, file.path(export_dir,paste0("categorical_stacked_cat_curves_",Sys.Date(),".rds")))
+saveRDS(mu_curve_df, file.path(export_dir,paste0("categorical_stacked_mu_curves_",Sys.Date(),".rds")))
+saveRDS(ind_mu_curve_df, file.path(export_dir,paste0("categorical_ind_mu_curves_",Sys.Date(),".rds")))
