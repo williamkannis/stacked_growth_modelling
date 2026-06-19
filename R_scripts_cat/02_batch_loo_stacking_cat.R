@@ -66,7 +66,7 @@ sapply(sp_out,n_distinct)
 sp_loo <- purrr::map2(sp_out,sp_dir,loo_batch,n.cores)
 
 # Ensure that all models have Pareto' K > 0.7
-sp_loo_diag <- lapply(sp_loo, loo_diag,"ESS")
+lapply(sp_loo, loo_diag,"ESS")
 
 # Compare loo values among models
 sp_loo_compare <- lapply(sp_loo,loo_compare)
@@ -80,41 +80,56 @@ sp_stack_wt <- lapply(sp_loo,stack_format,cores = n.cores)
 # to create model stacked and candidate model prediction curves
 
 # How many sampling events exist per species?
-group_size_list <- lapply(sp, function(sp) {
+group_size_list_site <- lapply(sp, function(sp) {
   g <- fish_df %>% 
     group_by(species) %>% 
     summarise(n_sample = n_distinct(wateryear,region,site)) %>% 
     filter(species == sp)
   c(g$n_sample)
 })
-group_size_list <- rep(3,length(sp))
-names(group_size_list) <- sp
+names(group_size_list_site) <- sp
+
+# How many categories?
+group_size_list_cat <- rep(3,length(sp))
+names(group_size_list_site) <- sp
 
 # Data frames containing input ages for sampling-event level predictions. 
-input_bridge <- purrr::map2(
-  group_size_list,names(group_size_list),
+input_bridge_site <- purrr::map2(
+  group_size_list,names(group_size_list_site),
+  grouping_predDF,
+  min.pred=0,
+  max.pred=360,
+  group.id = c("site")
+  )
+input_bridge_site <- purrr::transpose(input_bridge_site)
+
+# Data frames containing input ages for category level predictions. 
+input_bridge_cat <- purrr::map2(
+  group_size_list,names(group_size_list_site),
   grouping_predDF,
   min.pred=0,
   max.pred=360,
   group.id = c("cat")
-  )
-input_bridge <- purrr::transpose(input_bridge)
+)
+input_bridge_cat <- purrr::transpose(input_bridge_cat)
 
 # Extract sampling event and age inputs
-input_list <- input_bridge$prediction
+input_list_site <- input_bridge_site$prediction
+input_list_cat <- input_bridge_cat$prediction
 
 # Create population input using one group idea
-input_list_mu <-lapply(input_list, function(x) x %>% filter(group_id ==1))
+input_list_mu <-lapply(input_list_site, function(x) x %>% filter(group_id ==1))
 
 # Extract mean age used for inst. growth predictions
 mean_length_input <- lapply(
   mean_lengths, 
-  function(x) data.frame(group_id=1, input =x)
+  function(x) data.frame(group_id=1:3, input =rep(x,3))
   )
 mean_length_input <- mean_length_input[order(names(mean_length_input))]
+mean_length_input <-mean_length_input[names(mean_length_input) != "JORFLO"]
 
 # DF to link group id back to organizational data
-curve_id_bridge <- bind_rows(input_bridge$id_bridge)
+curve_id_bridge <- bind_rows(input_bridge_site$id_bridge)
 
 
 # Create prediction arrays  ----------------------------------------------------
@@ -141,7 +156,7 @@ ind_mu_curve_list <- Map(function(x,d,z)
     mc.cores = n.cores),
   sp_stack_wt,
   sp_dir,
-  input_list)
+  input_list_mu)
 
 # Inst. growth at mean age
 ind_mean_growth_list <- Map(function(x,d,z) 
@@ -169,7 +184,7 @@ r2_list <- lapply(1:length(sp_stack_wt),
     group.id="site",
     n.sim = stack.iter,
     sp = names(sp_stack_wt)[i],
-    input.df = input_list[[i]],
+    input.df = input_list_site[[i]],
     sum.fun="median",
     parallel = T,
     mc.cores = n.cores)
@@ -180,6 +195,24 @@ names(r2_list) <- names(sp_stack_wt)
 ### Model stacked predictions  ###
 
 # Length and instantaneous growth at age predictions - sampling-event level
+curve_list <- Map(function(x,y,z) 
+  growth_stackR(
+    stack.df = x,
+    mod.dir = y,
+    group.id="site",
+    sim = stack.iter,
+    type = "prediction",
+    input.df = z,
+    input.var = "age",
+    output.var = c("length","growth"),
+    parallel = T,
+    mc.cores = n.cores,
+    sum.fun="median"),
+  sp_stack_wt,
+  sp_dir,
+  input_list_site)
+
+# Length and instantaneous growth at age predictions - category level
 curve_list <- Map(function(x,y,z) 
   growth_stackR(
     stack.df = x,
@@ -195,7 +228,7 @@ curve_list <- Map(function(x,y,z)
     sum.fun="median"),
   sp_stack_wt,
   sp_dir,
-  input_list)
+  input_list_cat)
 
 # Length and instantaneous growth at age predictions - population level
 mu_curve_list <- Map(
@@ -215,12 +248,12 @@ mu_curve_list <- Map(
   sp_dir,
   input_list_mu)
 
-# Inst. growth at mean age
+# Inst. growth at mean age - category level
 mean_growth_list <- Map(
   function(x,y,z) growth_stackR(
     stack.df = x,
     mod.dir = y,
-    group.id="mu",
+    group.id="cat",
     sim = stack.iter,
     type = "prediction",
     input.df = z,
@@ -233,7 +266,7 @@ mean_growth_list <- Map(
   sp_dir,
   mean_length_input)
 
-# Population means of parameters
+# Means of parameters - category level
 param_list <- Map(function(x,y) 
   growth_stackR(
     stack.df = x,
