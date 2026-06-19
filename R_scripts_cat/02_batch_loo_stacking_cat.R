@@ -42,18 +42,19 @@ fish_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 sample_bridge <- readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-06-16.rds"))
 pred_lables <- readRDS(file.path(plot_dir,"fsgwh_pred_labels_2026-06-16.rds"))
 mean_lengths <- readRDS(file.path(plot_dir,"fsgwh_mean_lengths_2026-06-16.rds"))
-n.cores <- 6
+n.cores <- 5
 stack.iter <- 10000
 
 # Load in model outputs  -------------------------------------------------------
 
 # Species-specific directories
 sp <- list.files(out_dir)
+sp <-sp[grep("JORFLO",sp,invert = TRUE)] # Remove JORFLO
 sp_dir <- sapply(sp,function(x) file.path(out_dir,x))
 names(sp_dir) <- sp
 
 # Species specific model outputs. Select only linear or random models
-sp_out <- lapply(sp_dir,list.files,pattern = "categorical|random") 
+sp_out <- lapply(sp_dir,list.files,pattern = "categorical") 
 
 # are there 3 models in each?
 sapply(sp_out,n_distinct)
@@ -86,6 +87,7 @@ group_size_list <- lapply(sp, function(sp) {
     filter(species == sp)
   c(g$n_sample)
 })
+group_size_list <- rep(3,length(sp))
 names(group_size_list) <- sp
 
 # Data frames containing input ages for sampling-event level predictions. 
@@ -94,7 +96,7 @@ input_bridge <- purrr::map2(
   grouping_predDF,
   min.pred=0,
   max.pred=360,
-  group.id = c("site")
+  group.id = c("cat")
   )
 input_bridge <- purrr::transpose(input_bridge)
 
@@ -182,7 +184,7 @@ curve_list <- Map(function(x,y,z)
   growth_stackR(
     stack.df = x,
     mod.dir = y,
-    group.id="site",
+    group.id="cat",
     sim = stack.iter,
     type = "prediction",
     input.df = z,
@@ -236,22 +238,13 @@ param_list <- Map(function(x,y)
   growth_stackR(
     stack.df = x,
     mod.dir = y,
-    group.id="mu",
+    group.id="cat",
     sim = stack.iter,
     type = "parameter",
     truncate.inf = F,
     sum.fun="median"),
   sp_stack_wt,
   sp_dir)
-
-# Parameter and inst. growth linear predictions
-pred_list <- purrr::map2(
-  sp_stack_wt[names(sp_stack_wt) !="JORFLO"],
-  sp_dir[names(sp_dir) != "JORFLO"],
-  linear_pred_stackR, 
-    sim = stack.iter,
-    sum.fun = "median"
-  )
 
 
 # Format predictions into data frames  -----------------------------------------
