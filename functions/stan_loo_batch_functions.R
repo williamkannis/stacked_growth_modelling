@@ -16,6 +16,7 @@
 
 # Requires: dplyr (full), tibble, parallel, rstan (full), loo
 
+## MAYBE COMBINE DATA PREP AND MODEL RUN. AND CREATE A SEPERATE DIAGNTIC FUNCTION ##
 
 # stan_data_prep  --------------------------------------------------------------
 
@@ -307,7 +308,7 @@ stan_diag_batch <- function(mod.forms = c("vb","gz","lg"),fixed.effects = NULL,
   # Model location
   model.dir <- "stan_scripts"
   
-  # Do selected model forms and strucutures match avialable choices?
+  # Do selected model forms and structures match available choices?
   if(!all(mod.forms %in% c("vb","gz","lg"))) {
     stop('mod.forms must be "vb","gz" or "lg"')}
   if(!is.null(fixed.effects))  {

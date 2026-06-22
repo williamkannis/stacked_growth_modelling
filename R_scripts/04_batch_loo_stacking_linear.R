@@ -331,9 +331,9 @@ site_curve_bridged <-site_curve_df %>%
 # For summary stats, export loo, stacking weights, growth rates, r2, and parameters
 saveRDS(sp_loo_compare,file.path(export_dir,paste0("loo_out_",Sys.Date(),".rds")))
 saveRDS(sp_stack_wt,file.path(export_dir,paste0("stack_wt_out_",Sys.Date(),".rds")))
-saveRDS(mean_growth_df, file.path(export_dir,paste0("stacked_meand_growth_predictions_",Sys.Date(),".rds")))
+saveRDS(mean_growth_df, file.path(export_dir,paste0("stacked_mean_growth_predictions_",Sys.Date(),".rds")))
 saveRDS(ind_mean_growth_df, file.path(export_dir,paste0("ind_mean_growth_predictions_",Sys.Date(),".rds")))
-saveRDS(r2_df, file.path(export_dir,paste0("ind_model_r2_",Sys.Date(),".rds")))
+saveRDS(r2_df, file.path(export_dir,paste0("model_r2_",Sys.Date(),".rds")))
 saveRDS(param_df, file.path(export_dir,paste0("stacked_mu_parameters_",Sys.Date(),".rds")))
 
 # For plots, export length and growth-at-age predictions and bridge tables
