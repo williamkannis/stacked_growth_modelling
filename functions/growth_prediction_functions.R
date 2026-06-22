@@ -13,223 +13,38 @@
 # stack growth parameters across models. Script includes helper functions used
 # in main functions
 
-
-# grouping_predDF  -------------------------------------------------------------
-
-#' Grouped prediction data preparation.
-#' 
-#' @description Prepares input data for prediction and stacking functions.
-#'
-#' @param group.id Vector containing grouping identifiers (mu, site, group) for 
-#' group-specific predictions
-#' @param group.size Vector containing the number of groups in each selected
-#' grouping variable.
-#' @param sp Character to indicate which species is being modeled. Used in 
-#' bridgedata.frame
-#' @param min.pred Minimum prediction input value
-#' @param max.pred Maximum prediction input value
-#' 
-#' @details Creates length or age inputs for group-specific predicted growth 
-#' curves, parameter estimates, or r-squares produced using the growth_stackR, 
-#' curve_predictR, or len_R2 functions. Allowed groupings are population-level
-#' (mu), site- or sampling-event-level (site), and categorical predictor 
-#' grouping (cat). When multiple levels of groupings are selected, temporary
-#' group ids are given to prevent duplication. Function returns a bridge 
-#' data.frame to link temporary ids make to original ids.
-#' 
-#' @returns a named list containing the prediction function input data.frame 
-#' (prediction) and a bridge data.frame (id_bridge) to link temporary grouping 
-#' ids to original ids. Prediction data.frame has a column for the temporary 
-#' grouping id  (group_id) and the prediction input value (pred; length or age). 
-#' Bridge data.frame contains a column for species (sp), temporary grouping id
-#' (group_id), and when applicable, a column for sampling id (sample_id - site), 
-#' population mean (mu), and/or categorical grouping (cat_id - cat).
-#' 
-#' @export
-
-# REQUIRES: dplyr (all), tidyr,
-
-grouping_predDF <- function(group.id,group.size,sp,min.pred,max.pred) {
-  
-  # Check for valid group id
-  if(!all(group.id %in% c("mu","site","cat"))) {
-    stop('group.id must be "mu", "site", or "cat"')
-  }
-
-  # Create a unique id for each grouping among all groups
-  id_df <- data.frame(group = unlist(purrr::map2(group.id,group.size,rep)),
-                      old_id = unlist(purrr::map(group.size,seq,from=1)),
-                      group_id=1:sum(group.size))
-  
-  # Create prediction data.frame with a user specified range of input (age or length)
-  # data for each new grouping. This can be feed to one of the prediction
-  # functions
-  pred_df <- id_df %>% 
-    tidyr::crossing(input = min.pred:max.pred) %>% 
-    select(group_id,input)
-  
-  # Create a data.frame that links to new group ids to hydroperiod or sample
-  # event ids. This wide format table can be merged directly into the 
-  # sample_id_bridge data.frame
-  id_bridge_df<-  id_df %>% 
-    mutate(
-      species = sp,  
-      group = case_when(
-        group == "site" ~ "sample_id",
-        group == "cat" ~ "cat_id",
-        group == "mu" ~ "mu",
-        T ~ NA
-      )) %>% 
-    tidyr::pivot_wider(names_from = group,
-                       values_from = old_id)
-  
-  # return a named list
-  out <- list(pred_df,id_bridge_df)
-  names(out) <- c("prediction","id_bridge")
-  out
-}
-
-
-# growth_stackR  ---------------------------------------------------------------
-
-#' Model stack predictions and growth parameters
-#' 
-#' @description Create model stacked, group specific growth curve predictions 
-#' or growth parameters estimates with credible intervals. 
-#' 
-#' @param stack.df Data.frame containing model file names and stacking wts. 
-#' Must have columns "model" and "stack_wt
-#' @param mod.dir  File path for Stan model output files
-#' @param group.id Character ("cat","mu", "site") indicating the grouping 
-#' level of model parameters to extract. 
-#' @param sim Number of posterior draws for stacking
-#' @param type Character ("parameter" or "prediction"), model stack growth 
-#' predictions or parameters
-#' @param type sum.fun Character ("mean" or "median) for type of summary 
-#' statistic of posterior distribution. Default is mean 
-#' @param ... = Additional arguments passed to .prediction_sampler or 
-#' .parameter_sampler auxiliary functions. Required arguments for stacked growth 
-#' curve predictions include:
-#'   \describe{
-#'     \item{input.df}{Data.frame with a column ("input) for prediction input  
-#'      data (length or age) and an optional column ("group_id") for a grouping 
-#'     variable}
-#'     \item{input.var}{Character ("length" or "age") to indicate if prediction 
-#'     is made using length or age data}
-#'     \item{output.var}{Character ("length","age","growth","interval_growth") 
-#'     to indicate what type of prediction is being made. If vector is provided, 
-#'     multiple prediction columns will be created. Growth indicates 
-#'     instantaneous growth, and interval growth is exponential growth during a 
-#'     specified interval}
-#'     \item{days}{Number of days to estimate interval growth. Only required 
-#'     if output.var includes "interval_growth"}
-#'     \item{wt.df}{wt.df = Data.frame containing length-weight parameters. 
-#'     Only required if output.var includes "interval_growth"}
-#'     \item{dry.wt}{Optional dry weight conversion factor. Only required 
-#'     if output.var includes "interval_growth". Default = 1}
-#'     \item{parallel}{T or F. Use multiple cores. Only should be used on 
-#'     Linux and MacOS. Default is F.}
-#'     \item{mc.cores}{Number of core for parallel processing if parallel = T
-#'     Default is NULL}
-#'   }
-#'   
-#'Required arguments for stacked parameter estimates include:
-#'   \describe{
-#'     \item{truncate.inf}{Truncate negative values of the inflection 
-#'     parameter to zero (i.e., faster growth at birth). Default is F. }
-#'   }
-#'   
-#' @details Function extract parameter posterior distributions based on model  
-#' names provided with stacking weights. Combines posterior distributions for 
-#' predictions based on model stacking weights. Summarizes posterior 
-#' distributions for predictions with mean or median, and 95% credible intervals. 
-#' Wrapper for .param_extract, .prediction_sampler, .parameter_sampler, and 
-#' .boot_summary
-#' 
-#' @returns Data.frame with a row for every input (age or length) and grouping
-#' combination. Contains columns for age or length, grouping index, and columns 
-#' for prediction summary statistics (mean or median, lower, and upper 
-#' credible interval) for each output variable.
-#' 
-#' @export
-
-# REQUIRES: abind
-
-growth_stackR <- function(stack.df, mod.dir, group.id, sim,type,sum.fun, ...){
-  
-  # Prediction or parameters?
-  fun_name = paste0(".",type,"_sampler")
-  fun = get(fun_name)
-  
-  # Retain models with 
-  stack <- stack.df %>% 
-    mutate(n_sim = round(sim*stack_wt)) %>% 
-    filter(n_sim >0)
-  
-  # Load it model parameters
-  mods<- stack$model
-  
-  # Select desired groupings
-  mod_list <- lapply(mods,.param_extract,mod.dir,group.id)
-
-  # prepare prediction inputs
-  sim_list = stack$n_sim
-  g_mod_list <- substr(mods,1,2)
-  
-  # Run prediction function
-  pred_list <-Map(function(x,y,z) fun(model.out = x,
-                                      g.mod = y, 
-                                      n.sim = z, 
-                                      ...=...),
-                  mod_list, g_mod_list, sim_list)
-  
-  # Bind results into 3d array
-  out <- abind::abind(pred_list, along = 3)
-  
-  # Set grouping for summary function
-  args <- list(...)
-  if("input.var" %in% names(args)){
-    group_var <- c("group_id",args$input.var)
-  } else {
-    group_var <- c("group_id")
-  }
-  
-  # Summarize into data.frame
-  .boot_summary(
-    out,
-    sum.fun=sum.fun,
-    group.var=group_var
-  )
-  
-}
-
-
 # curve_predictR  --------------------------------------------------------------
 
-#' Candidate model predictions and growth parameters
+#' Stacked and individual model predictions and growth parameters
 #' 
-#' @description Create group specific growth curve predictions 
+#' @description Create group-specific growth curve predictions 
 #' or growth parameters estimates with credible intervals for each candidate
-#' model used in model stacking. 
+#' model, or a stacked model based on imputed model weights.
 #' 
 #' 
 #' @param stack.df Data.frame containing model file names and stacking wts. 
-#' Must have columns "model" and "stack_wt
+#' Must have columns "model" and an optional column: "stack_wt if creating 
+#' model stacked predictions.
 #' @param mod.dir  File path for Stan model output files
 #' @param group.id Character ("cat","mu", "site") indicating the grouping 
 #' level of model parameters to extract.
-#' @param n.sim Number of posterior draws for stacking
 #' @param type Character ("parameter" or "prediction"), model stack growth 
-#' predictions or parameters
+#' curve predictions or model parameters parameters
+#' @param pred.input vector containing age or length input data if creating
+#' predicted growth curves. Default is NULL
+#' @param pred.group Vector containing numeric identifies for model groupings.
+#' Must have equal or less groupings then groupings in model. Groupings 
+#' identifiers must match those in the model. If NULL (default), then each model
+#' grouping will be assigned each value of pred.input.
+#' @param stack T or F. Create model stacked predictions or parameter estimates
+#' (T), or candidate model specific outputs (F). Default is FALSE
+#' @param sim Number of posterior draws for predictions or parameter estimates
 #' @param type sum.fun Character ("mean" or "median) for type of summary 
-#' statistic of posterior distribution. Default is mean 
+#' statistic of posterior distribution. Default is "mean". 
 #' @param ... = Additional arguments passed to .prediction_sampler or 
 #' .parameter_sampler auxiliary functions. Required arguments for stacked growth 
 #' curve predictions include:
 #'   \describe{
-#'     \item{input.df}{Data.frame with a column ("input) for prediction input  
-#'      data (length or age) and an optional column ("group_id") for a grouping 
-#'     variable}
 #'     \item{input.var}{Character ("length" or "age") to indicate if prediction 
 #'     is made using length or age data}
 #'     \item{output.var}{Character ("length","age","growth","interval_growth") 
@@ -256,177 +71,288 @@ growth_stackR <- function(stack.df, mod.dir, group.id, sim,type,sum.fun, ...){
 #'   }
 #'   
 #' @details Function extract parameter posterior distributions based on model  
-#' names provided with stacking weights. Summarizes posterior distributions for 
-#' predictions with mean or median, and 95% credible intervals for each 
-#' candidate model. Wrapper for .param_extract, .prediction_sampler, 
-#' .parameter_sampler, and .boot_summary
+#' names provided with optional stacking weights. Parmeters are then either
+#' summarized or used to make predicted growth curves using inpute age or 
+#' length data. Individual model parameters or predictions then are summarized
+#' with the option to combine the posterior distributions into model stacked
+#' parameter estimates or growth curves.
 #' 
 #' @returns Data.frame with a row for every input (age or length), grouping,
-#' and model combination. Contains columns for age or length, model name, 
-#' grouping index, and columns for prediction summary statistics (mean or 
+#' and model combination (if stack = F). Contains columns for age or length, 
+#' model name, grouping index, and prediction summary statistics (mean or 
 #' median, lower-lwr, and upper-upr credible interval) for each output variable.
 #' 
 #' @export
 
 # REQUIRES: purrr
 
-curve_predictR <- function(stack.df, mod.dir, group.id,n.sim, type,sum.fun="mean", ...){
+curve_predictR <- function(stack.df, mod.dir,type, group.id,pred.input=NULL,
+                           pred.group = NULL,stack=F,sim,sum.fun, ...){
+  
+  ### Prepare inputs ###
   
   # Prediction or parameters?
   fun_name = paste0(".",type,"_sampler")
-  fun = get(fun_name)
+  .fun = get(fun_name)
   
-  # Load it model parameters
-  mods<- stack.df$model
+  # If model stacking, only retain models with stacking weight and sample
+  # distributions based on weight.
+  if(stack) {
+    stack_df <- stack.df %>% 
+      mutate(n_sim = round(sim*stack_wt)) %>% 
+      filter(n_sim >0)
+  } else{
+    
+    # Sampling models evenly
+    stack_df <- stack.df %>% 
+      mutate(n_sim = sim)
+  }
   
-  # Extract posterior distributions
-  mod_list <- lapply(mods,.param_extract,mod.dir,group.id)
-  
-  # prepare prediction inputs
+  # Model details and number of samples
+  mods<- stack_df$model
+  sim_list = stack_df$n_sim
   g_mod_list <- substr(mods,1,2)
   
-  # Run prediction function
-  pred_list <-Map(function(x,y) fun(model.out = x,
-                                    g.mod = y, 
-                                    n.sim = n.sim,
-                                    ...),
-                  mod_list, g_mod_list)
-  names(pred_list) <- mods
+  # Load in parameter samples
+  mod_list <- lapply(mods,.param_extract,mod.dir,group.id)
+  
+  
+  ### Compare parameter groupings across models  ###
+  
+  # number of groupings per model
+  n_groups <- sapply(mod_list, function(x) dim(x)[1])
+  max_group <- max(n_groups)
+  
+  # Make sure each model has the same number of groupings if model stacking.
+  # Differences in grouping are only acceptable if models that differ only have
+  # one grouping (i.e. population mean). These can be duplicated to match the 
+  # maximum number of groups
+  if(dplyr::n_distinct(n_groups) != 1 & stack){
+    
+    # How many groups are missing in each model
+    group_diff <- max_group -n_groups
+    
+    # Duplicate population parameters to create equal group sizes for 
+    # mode stacking
+    mod_list <- purrr::map2(mod_list,group_diff, function(x,y){
+      
+      # If model has all groups, return model
+      if(y==0) return(x)
+      
+      # How many parameter groups do the models have
+      n <- max_group-y
+      # If models without grouping have more than one group, hault function
+      if(n != 1) stop("Models have unequeal number of groupings")
+      
+      # Create sequance of missing groups
+      group_seq <- (n+1):max_group
+      
+      # Duplicate parameter value for model by the number of missing groups
+      pop_list <-lapply(group_seq, function(z){
+        
+        # Extract the population parameters
+        pop_mat <-x
+        
+        # change group id to missing groupings
+        pop_mat[,"group_id",] <- z
+        pop_mat
+      })
+      abind::abind(c(list(x),pop_list),along=1)
+    })
+  }
+  
+  ### Create preditions ###
+  
+  if(type == "prediction") {
+    
+    if(!is.null(pred.group)){
+      #If groupings provided combine age/length data with provided groupings
+      
+      # Check if all provided groupings are within model groupings
+      if(max(pred.group) > max_group) {
+      stop("User provided groupings exceed number of groupings in model")}
+      
+      # Create input data
+      pred_input <- data.frame(
+        group_id = pred.group,
+        input_id = 1:length(pred.input),
+        input = pred.input
+        )
+    
+    } else {
+      # If prediction groupings are not provided, Create prediction data.frame 
+      # with a user specified range of input (age or length) data for each 
+      # grouping. 
+      pred_input <- data.frame(group_id = 1:max_group) %>% 
+        tidyr::crossing(input = pred.input) %>% 
+        select(group_id,input)
+      pred_input$input_id <- 1:nrow(pred_input)
+    }
+
+    # create predictions
+    pred_list <-Map(
+      function(x,y,z){
+        .fun(
+          model.out = x,
+          g.mod = y, 
+          n.sim = z,
+          input = pred_input,
+          ...=...
+        )
+      },
+      mod_list, 
+      g_mod_list, 
+      sim_list)
+    names(pred_list) <- mods
+    
+  } else{
+    
+    ### Extract parameters  ###
+    pred_list <-Map(
+      function(x,y,z){
+        .fun(
+          model.out = x,
+          ...=...
+        )
+      },
+      mod_list, 
+      g_mod_list, 
+      sim_list)
+    names(pred_list) <- mods
+  }
+  
+  ### Summarize posterior predictive distributions  ###
   
   # Set grouping for summary function
   args <- list(...)
   if("input.var" %in% names(args)){
-    group_var <- c("group_id",args$input.var)
+    group_var <- c("group_id","input_id",args$input.var)
   } else {
     group_var <- c("group_id")
   }
   
-  # Extract means
-  pred_summary <- lapply(pred_list, .boot_summary,sum.fun=sum.fun, group.var=group_var)
+  if(stack){
+    
+    # Bind results into 3d array if stacking
+    out <- abind::abind(pred_list, along = 3)
+    
+    # Summarize into data.frame
+    out_summary <- .boot_summary(
+      out,
+      sum.fun=sum.fun,
+      group.var=group_var
+    )
+    
+  } else{
+    # Otherwise summarize models seperatley and combine into one data.frame
+    # Extract means
+    out <- lapply(pred_list, .boot_summary,sum.fun=sum.fun, group.var=group_var)
+    
+    # Add model name
+    out <- purrr::map2(
+      out,
+      names(out),
+      function(x,y) x %>% mutate(mod =y)
+    )
+    
+    # Combine into one data.frame
+    out_summary <- bind_rows(out)
+    
+  }
   
-  # Add model name
-  pred_summary <- purrr::map2(pred_summary,names(pred_summary),
-                              function(x,y) x %>% mutate(mod =y))
+  # remove temporary prediction id, if applicaple
+  if(!is.null(out_summary$input_id)){
+    out_summary <- out_summary %>% 
+      select(-input_id)
+  } 
   
-  # Combine into one data.frame
-  bind_rows(pred_summary)
+  # Rename group_id to approiape grouping name
+  group_name <- group.id
+  if(group.id == "site") group_name <- "sample_id"
+  if(group.id == "cat") group_name <- "cat_id"
+  old_name <- "group_id"
   
+  out_summary %>% 
+    rename({{ group_name }} := !! sym(old_name)) 
 }
 
 
 # len_R2  ----------------------------------------------------------------------
 
-#' R-sqaured estimation for candidate models.
+#' R-squared estimation for length-at-age predictions
 #' 
-#' @description Estimates r-squared of length predictions of all candidate 
-#' models in stacking output. 
+#' @description Estimates r-squared of length predictions of all candidate or
+#' stacked models. 
 #' 
 #' @param stack.df Data.frame containing model file names and stacking wts. 
 #' Must have columns "model" and "stack_wt
 #' @param mod.dir File path for Stan model output files
-#' @param group.id Character ("cat","mu", "site") indicating the grouping 
-#' level of model parameters to extract.
-#' @param n.sims Number of posterior draws
+#' @param data Data.frame containing actual length-at-age data with appropriate
+#' sampling id. Must have columns: age, length, and sample_id.
+#' @param stack T or F. Create model stacked predictions or parameter estimates
+#' (T), or candidate model specific outputs (F). Default is FALSE
+#' @param sim Number of posterior draws
 #' @param sp Character for name of species of which to estimate r-squared
 #' @param sum.fun Character ("mean" or "median) for type of summary 
 #' statistic of posterior distribution. Default is mean 
-#' @param ... = Additional arguments passed to .prediction_sampler or 
-#' .parameter_sampler auxiliary functions. Required arguments for stacked growth 
-#' curve predictions include:
-#'   \describe{
-#'     \item{input.df}{Data.frame with a column ("input) for prediction input  
-#'      data (length or age) and an optional column ("group_id") for a grouping 
-#'     variable}
-#'     \item{parallel}{T or F. Use multiple cores. Only should be used on 
-#'     Linux and MacOS. Default is F.}
-#'     \item{mc.cores}{Number of core for parallel processing if parallel = T.
-#'     Default is NULL.}
-#'   }
 #'
-#' 
-#' @details Function extract parameter posterior distributions for each model and 
-#' predicts the length at age for each grouping. R-squared is then estimated 
-#' for each model. Wrapper for .param_extract and .prediction_sampler.
+#' @details Function predicts the length at age for each random grouping. 
+#' R-squared is then estimated for each candidate or the stacked model. 
 #' 
 #' @returns Data.frame containing r-squared and adjusted r-squared for each 
 #' model
 #' @export
 
-# REQUIRES: purrr
+len_R2 <- function(stack.df,mod.dir,data,stack,sim,sum.fun) {
+  
+  # model names
+  if(stack) mods <- "stacked"
+  if(!stack) mods <- stack.df$model
+  
+  # Predict length at age
+  pred_df <-curve_predictR(
+    stack.df = stack.df, 
+    mod.dir = mod.dir,
+    type = "prediction",
+    group.id = "site",
+    pred.input = data$age,
+    pred.group = data$sample_id,
+    stack=stack,
+    sim=sim,
+    sum.fun = sum.fun,
+    input.var = "age",
+    output.var = "length")
 
-## ADD FISH_DF TO AURGMENTS
-
-len_R2 <- function(stack.df, mod.dir, group.id, n.sim,sp,sum.fun="mean", ...){
-  
-  # Load it model parameters
-  mods<- stack.df$model
-  
-  # Extract posterior distributions
-  mod_list <- lapply(mods,.param_extract,mod.dir,group.id)
-  
-  # prepare prediction inputs
-  g_mod_list <- substr(mods,1,2)
-  
-  # Run prediction function
-  pred_list <-Map(function(x,y) 
-    .prediction_sampler(model.out = x,
-       g.mod = y, 
-       n.sim = n.sim,
-       input.var = "age",
-       output.var = "length",
-       ...),
-    mod_list, 
-    g_mod_list)
-  names(pred_list) <- mods
-  
-  # Extract means
-  pred_summary <- lapply(
-    pred_list, 
-    .boot_summary,
-    sum.fun = sum.fun, 
-    group.var=c("group_id","age")
-    )
-  
-  # Add model name
-  pred_summary <- purrr::map2(pred_summary,names(pred_summary),
-                              function(x,y) x %>% mutate(mod =y))
-  
-  # Combine into one data.frame
-  pred_df <- bind_rows(pred_summary)
-  
-  # Connect group id to site info
-  bridge_df <- curve_id_bridge %>% 
-    filter (species == sp) %>% 
-    left_join(sample_bridge, by = join_by(species,sample_id)) %>% 
-    right_join(pred_df,by = join_by(group_id))%>%
-    select(-group_id,-sample_id)
-  
-  # Link to actual values
-  actual_df <- fish_df %>% 
-    filter(species == sp) %>% 
+  # Link predictions to actual data
+  linked_df <- pred_df %>% 
     left_join(
-      bridge_df, 
-      by = join_by(wateryear,region,site,age,species),
-      relationship = "many-to-many"
-      )
-  
-  # Calculate r2 values of predictions for each model
+      data,
+      by = join_by(sample_id, age),
+      multiple = "first"
+    )
+
+  # R-squared function
   r2_list <- lapply(mods, function (x) {
     
     # subset data for select mode
-    df <- actual_df %>% 
-      filter(mod == x)
+    if(stack) df <- linked_df 
+    if(!stack) df <- linked_df %>% filter(mod == x)
+    
+    # assign mean or median prediction
+    if(sum.fun == "mean") df$pred <- df$length_pred_mean
+    if(sum.fun == "median") df$pred <- df$length_pred_median
     
     # Estimate r2
-    out <- lm(length_pred_median ~ length,df)
+    out <- lm(pred ~ length,df)
     data.frame(
       model = x,
       r2 = summary(out)$r.squared, 
       adj_r2 = summary(out)$adj.r.squared
-      )
+    )
   }) 
   bind_rows(r2_list)
 }
+
 
 
 # linear_pred_stackR  ----------------------------------------------------------

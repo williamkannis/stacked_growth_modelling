@@ -58,6 +58,9 @@ sp_out <- lapply(sp_dir,list.files,pattern = "linear|random")
 # are there 3 models in each?
 sapply(sp_out,n_distinct)
 
+# Format mean lengths
+mean_lengths <- mean_lengths[order(names(mean_lengths))]
+
 
 # loo and model stacking  ------------------------------------------------------
 
@@ -74,175 +77,124 @@ sp_loo_compare <- lapply(sp_loo,loo_compare)
 sp_stack_wt <- lapply(sp_loo,stack_format,cores = n.cores)
 
 
-# Prepare prediction input data  -----------------------------------------------
-# Creates sampling-event specific input data (i.e. ages 0-max.age) to be used
-# to create model stacked and candidate model prediction curves
-
-# How many sampling events exist per species?
-group_size_list <- lapply(sp, function(sp) {
-  g <- fish_df %>% 
-    group_by(species) %>% 
-    summarise(n_sample = n_distinct(wateryear,region,site)) %>% 
-    filter(species == sp)
-  c(g$n_sample)
-})
-names(group_size_list) <- sp
-
-# Data frames containing input ages for sampling-event level predictions. 
-input_bridge <- purrr::map2(
-  group_size_list,names(group_size_list),
-  grouping_predDF,
-  min.pred=0,
-  max.pred=360,
-  group.id = c("site")
-  )
-input_bridge <- purrr::transpose(input_bridge)
-
-# Extract sampling event and age inputs
-input_list <- input_bridge$prediction
-
-# Create population input using one group idea
-input_list_mu <-lapply(input_list, function(x) x %>% filter(group_id ==1))
-
-# Extract mean age used for inst. growth predictions
-mean_length_input <- lapply(
-  mean_lengths, 
-  function(x) data.frame(group_id=1, input =x)
-  )
-mean_length_input <- mean_length_input[order(names(mean_length_input))]
-
-# DF to link group id back to organizational data
-curve_id_bridge <- bind_rows(input_bridge$id_bridge)
-
-
 # Create prediction arrays  ----------------------------------------------------
 # Batch run functions designed to extract parameters for each candidate model
 # to create prediction curves for growth and length at a range of input ages.
 # First, curves are created for each candidate model, then stacking weights 
 # are used to created model stacked prediction curves.
 
+pred_input <- 0:360
+
 ### Individual model predictions  ###
 
 # Length and instantaneous growth at age predictions - population level
-ind_mu_curve_list <- Map(function(x,d,z) 
-  curve_predictR(
-    stack.df = x,
-    mod.dir = d,
-    group.id="mu",
-    n.sim = stack.iter,
+ind_mu_curve_list <- purrr::map2(
+  sp_stack_wt,
+  sp_dir,
+  curve_predictR,
     type = "prediction",
-    input.df = z,
+    group.id="mu",
+    sim = stack.iter,
+    stack=F,
+    pred.input = pred_input,
     input.var = "age",
     output.var = c("length","growth"),
     sum.fun="median",
     parallel = T,
-    mc.cores = n.cores),
-  sp_stack_wt,
-  sp_dir,
-  input_list)
+    mc.cores = n.cores
+)
 
 # Inst. growth at mean age
-ind_mean_growth_list <- Map(function(x,d,z) 
+ind_mean_growth_list <- Map(function(x,y,z) 
   curve_predictR(
     stack.df = x,
-    mod.dir = d,
-    group.id="mu",
-    n.sim = stack.iter,
+    mod.dir = y,
     type = "prediction",
-    input.df = z,
+    group.id="mu",
+    sim = stack.iter,
+    stack=F,
+    pred.input = z,
     input.var = "length",
-    output.var = c("growth"),
-    sum.fun ="median",
-    parallel = T,
-    mc.cores = n.cores),
-  sp_stack_wt,
-  sp_dir,
-  mean_length_input)
-
-# Estimate R2 of candidate curves
-r2_list <- lapply(1:length(sp_stack_wt),
-  function(i) len_R2(
-    stack.df = sp_stack_wt[[i]],
-    mod.dir = sp_dir[[i]],
-    group.id="site",
-    n.sim = stack.iter,
-    sp = names(sp_stack_wt)[i],
-    input.df = input_list[[i]],
+    output.var = "growth",
     sum.fun="median",
     parallel = T,
-    mc.cores = n.cores)
-  )
-names(r2_list) <- names(sp_stack_wt)
+    mc.cores = n.cores
+  ),
+  sp_stack_wt,
+  sp_dir,
+  mean_lengths
+)
 
 
 ### Model stacked predictions  ###
 
 # Length and instantaneous growth at age predictions - sampling-event level
-curve_list <- Map(function(x,y,z) 
-  growth_stackR(
-    stack.df = x,
-    mod.dir = y,
+site_curve_list <- purrr::map2(
+  sp_stack_wt,
+  sp_dir,
+  curve_predictR,
     group.id="site",
     sim = stack.iter,
+    stack=T,
     type = "prediction",
-    input.df = z,
+    pred.input = pred_input,
     input.var = "age",
     output.var = c("length","growth"),
+    sum.fun="median",
     parallel = T,
-    mc.cores = n.cores,
-    sum.fun="median"),
-  sp_stack_wt,
-  sp_dir,
-  input_list)
+    mc.cores = n.cores
+)
 
 # Length and instantaneous growth at age predictions - population level
-mu_curve_list <- Map(
-  function(x,y,z) growth_stackR(
-    stack.df = x,
-    mod.dir = y,
-    group.id="mu",
+mu_curve_list <- purrr::map2(
+  sp_stack_wt,
+  sp_dir,
+  curve_predictR,
+    group.id = "mu",
     sim = stack.iter,
+    stack = T,
     type = "prediction",
-    input.df = z,
+    pred.input = pred_input,
     input.var = "age",
     output.var = c("length","growth"),
+    sum.fun = "median",
     parallel = T,
-    mc.cores = n.cores,
-    sum.fun="median"),
-  sp_stack_wt,
-  sp_dir,
-  input_list_mu)
+    mc.cores = n.cores
+)
 
 # Inst. growth at mean age
-mean_growth_list <- Map(
-  function(x,y,z) growth_stackR(
+mean_growth_list <- Map(function(x,y,z) 
+  curve_predictR(
     stack.df = x,
     mod.dir = y,
+    type = "prediction",
     group.id="mu",
     sim = stack.iter,
-    type = "prediction",
-    input.df = z,
+    stack=T,
+    pred.input = z,
     input.var = "length",
-    output.var = c("growth"),
+    output.var = "growth",
+    sum.fun="median",
     parallel = T,
-    mc.cores = n.cores,
-    sum.fun="median"),
+    mc.cores = n.cores
+  ),
   sp_stack_wt,
   sp_dir,
-  mean_length_input)
+  mean_lengths
+)
 
 # Population means of parameters
-param_list <- Map(function(x,y) 
-  growth_stackR(
-    stack.df = x,
-    mod.dir = y,
-    group.id="mu",
+param_list <- purrr::map2(
+  sp_stack_wt,
+  sp_dir,
+  curve_predictR,
+    group.id = "mu",
     sim = stack.iter,
+    stack = T,
     type = "parameter",
     truncate.inf = F,
-    sum.fun="median"),
-  sp_stack_wt,
-  sp_dir)
+    sum.fun = "median"
+)
 
 # Parameter and inst. growth linear predictions
 pred_list <- purrr::map2(
@@ -253,52 +205,90 @@ pred_list <- purrr::map2(
     sum.fun = "median"
   )
 
+### Model R-squared  ###
+r2_list <- lapply(sp,function(x){
+  
+  # Subset data
+  data <- fish_df %>% 
+    left_join(
+      sample_bridge,
+      by = join_by(wateryear, region, site, species)
+    ) %>% 
+    filter(species == x) %>% 
+    select(sample_id,length,age)
+  
+  # Candidate model R2
+  ind_r2 <- len_R2(
+    stack.df = sp_stack_wt[[x]],
+    mod.dir = sp_dir[[x]],
+    data = data,
+    stack = F,
+    sim = stack.iter,
+    sum.fun = "median"
+  )
+  
+  # Stack model R2
+  stack_r2 <- len_R2(
+    stack.df = sp_stack_wt[[x]],
+    mod.dir = sp_dir[[x]],
+    data = data,
+    stack = T,
+    sim = stack.iter,
+    sum.fun = "median"
+  )
+  
+  # bind into one data.frame
+  rbind(ind_r2,stack_r2)
+  
+})
+names(r2_list) <- sp
+
 
 # Format predictions into data frames  -----------------------------------------
 
 # Add species names to data frames
-pred_list <- purrr::map2(
-  pred_list,names(pred_list),
+ind_mu_curve_list <- purrr::map2(
+  ind_mu_curve_list,names(ind_mu_curve_list),
   function(x,y) x %>% mutate(species =y)
-  )
-curve_list <- purrr::map2(
-  curve_list,names(curve_list), 
+)
+site_curve_list <- purrr::map2(
+  site_curve_list,names(site_curve_list), 
   function(x,y) x %>% mutate(species =y)
   )
 mu_curve_list <- purrr::map2(
   mu_curve_list,names(mu_curve_list), 
   function(x,y) x %>% mutate(species =y)
   )
-ind_mu_curve_list <- purrr::map2(
-  ind_mu_curve_list,names(ind_mu_curve_list),
+ind_mean_growth_list <- purrr::map2(
+  ind_mean_growth_list,names(ind_mean_growth_list), 
   function(x,y) x %>% mutate(species =y)
-  )
+)
+mean_growth_list <- purrr::map2(
+  mean_growth_list,names(mean_growth_list), 
+  function(x,y) x %>% mutate(species =y)
+)
+param_list <- purrr::map2(
+  param_list,names(param_list), 
+  function(x,y) x %>% mutate(species =y)
+)
+pred_list <- purrr::map2(
+  pred_list,names(pred_list),
+  function(x,y) x %>% mutate(species =y)
+)
 r2_list <- purrr::map2(
   r2_list,names(r2_list), 
   function(x,y) x %>% mutate(species =y)
   )
-param_list <- purrr::map2(
-  param_list,names(param_list), 
-  function(x,y) x %>% mutate(species =y)
-  )
-mean_growth_list <- purrr::map2(
-  mean_growth_list,names(mean_growth_list), 
-  function(x,y) x %>% mutate(species =y)
-  )
-ind_mean_growth_list <- purrr::map2(
-  ind_mean_growth_list,names(ind_mean_growth_list), 
-  function(x,y) x %>% mutate(species =y)
-  )
 
-# Create one dataframe for all species
-pred_df <- bind_rows(pred_list)
-curve_df <- bind_rows(curve_list)
-mu_curve_df <- bind_rows(mu_curve_list)
+# Create one data.frame for all species
 ind_mu_curve_df <- bind_rows(ind_mu_curve_list)
-r2_df <- bind_rows(r2_list)
-param_df <- bind_rows(param_list)
+site_curve_df <- bind_rows(site_curve_list)
+mu_curve_df <- bind_rows(mu_curve_list)
 mean_growth_df <- bind_rows(mean_growth_list)
 ind_mean_growth_df <- bind_rows(ind_mean_growth_list)
+param_df <- bind_rows(param_list)
+pred_df <- bind_rows(pred_list)
+r2_df <- bind_rows(r2_list)
 
 
 # Link predictions to labels  -------------------------------------------------- 
@@ -329,20 +319,11 @@ pred_bridged <- pred_df %>%
   select(-pred_id)
 
 ### link sampling event info to curves  ###
-
-# Add hydro and sampling info to bridge df
-bridge_df <- curve_id_bridge %>% 
-  left_join(sample_bridge, by = join_by(species,sample_id)) %>% 
-  mutate(group_name = case_when(
-    #!is.na(mu) ~ "population",
-    !is.na(sample_id) ~ paste(region,site,wateryear)
-  )) %>% 
-  select(species,group_id,sample_id,group_name)
-
-# Link to predictions
-curve_bridged <-curve_df %>% 
-  left_join(bridge_df,by = join_by(species,group_id))%>%
-  select(-group_id)
+site_curve_bridged <-site_curve_df %>% 
+  left_join(
+    sample_bridge,
+    by = join_by(species,sample_id)
+    )
 
 
 # Export  ----------------------------------------------------------------------
@@ -356,7 +337,7 @@ saveRDS(r2_df, file.path(export_dir,paste0("ind_model_r2_",Sys.Date(),".rds")))
 saveRDS(param_df, file.path(export_dir,paste0("stacked_mu_parameters_",Sys.Date(),".rds")))
 
 # For plots, export length and growth-at-age predictions and bridge tables
-saveRDS(curve_bridged, file.path(export_dir,paste0("stacked_curves_",Sys.Date(),".rds")))
+saveRDS(site_curve_bridged, file.path(export_dir,paste0("stacked_curves_",Sys.Date(),".rds")))
 saveRDS(mu_curve_df, file.path(export_dir,paste0("stacked_mu_curves_",Sys.Date(),".rds")))
 saveRDS(ind_mu_curve_df, file.path(export_dir,paste0("ind_mu_curves_",Sys.Date(),".rds")))
 saveRDS(pred_bridged, file.path(export_dir,paste0("stacked_growth_predictions_",Sys.Date(),".rds")))
