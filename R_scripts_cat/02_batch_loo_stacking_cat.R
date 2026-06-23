@@ -342,7 +342,7 @@ saveRDS(r2_df, file.path(export_dir,paste0("model_r2_",Sys.Date(),".rds")))
 saveRDS(param_df, file.path(export_dir,paste0("stacked_cat_parameters_",Sys.Date(),".rds")))
 
 # For plots, export length and growth-at-age predictions and bridge tables
-saveRDS(site_curve_bridged, file.path(export_dir,paste0("categorical_stacked_site_curves_",Sys.Date(),".rds")))
-saveRDS(cat_curve_bridged, file.path(export_dir,paste0("categorical_stacked_cat_curves_",Sys.Date(),".rds")))
-saveRDS(mu_curve_df, file.path(export_dir,paste0("categorical_stacked_mu_curves_",Sys.Date(),".rds")))
-saveRDS(ind_mu_curve_df, file.path(export_dir,paste0("categorical_ind_mu_curves_",Sys.Date(),".rds")))
+saveRDS(site_curve_bridged, file.path(export_dir,paste0("stacked_site_curves_",Sys.Date(),".rds")))
+saveRDS(cat_curve_bridged, file.path(export_dir,paste0("stacked_cat_curves_",Sys.Date(),".rds")))
+saveRDS(mu_curve_df, file.path(export_dir,paste0("stacked_mu_curves_",Sys.Date(),".rds")))
+saveRDS(ind_mu_curve_df, file.path(export_dir,paste0("ind_mu_curves_",Sys.Date(),".rds")))

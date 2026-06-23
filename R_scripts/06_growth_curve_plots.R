@@ -33,12 +33,12 @@ fun_dir <- "functions"
 source(file.path(fun_dir,"growth_summary_functions.R"))
 
 # Load data
-sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-06-16.rds"))
-curve_df <- readRDS(file.path(loo_dir,"stacked_curves_2026-06-16.rds"))
-mu_curve_df <- readRDS(file.path(loo_dir,"stacked_mu_curves_2026-06-16.rds"))
-ind_mu_curve_df <- readRDS(file.path(loo_dir,"ind_mu_curves_2026-06-16.rds"))
-pred_bridged <- readRDS(file.path(loo_dir,"stacked_growth_predictions_2026-06-16.rds"))
-pred_df <-readRDS(file.path(pred_dir,"fsgrw_predictors_2026-04-23.rds"))
+sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-06-22.rds"))
+curve_df <- readRDS(file.path(loo_dir,"stacked_curves_2026-06-22.rds"))
+mu_curve_df <- readRDS(file.path(loo_dir,"stacked_mu_curves_2026-06-22.rds"))
+ind_mu_curve_df <- readRDS(file.path(loo_dir,"ind_mu_curves_2026-06-22.rds"))
+pred_bridged <- readRDS(file.path(loo_dir,"stacked_growth_predictions_2026-06-22.rds"))
+pred_df <-readRDS(file.path(pred_dir,"fsgrw_predictors_2026-06-17.rds"))
 age_df <- readRDS(file.path(pred_dir,"fsage_cleaned_2026-06-18.rds"))
 
 # Species specific directories

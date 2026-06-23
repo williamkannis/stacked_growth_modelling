@@ -33,13 +33,12 @@ fun_dir <- "functions"
 source(file.path(fun_dir,"growth_summary_functions.R"))
 
 # Load data
-sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-06-16.rds"))
-sp_loo_compare <- readRDS(file.path(loo_dir,"loo_out_2026-06-16.rds"))
-ind_r2_df <- readRDS(file.path(loo_dir,"ind_model_r2_2026-06-16.rds"))
-stack_param_df <- readRDS(file.path(loo_dir,"stacked_mu_parameters_2026-06-16.rds"))
-ind_gmean_df <- readRDS(file.path(loo_dir,"ind_mean_growth_predictions_2026-06-16.rds"))
-stack_gmean_df <- readRDS(file.path(loo_dir,"stacked_meand_growth_predictions_2026-06-16.rds"))
-curve_df <- readRDS(file.path(loo_dir,"stacked_curves_2026-04-23.rds"))
+sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-06-22.rds"))
+sp_loo_compare <- readRDS(file.path(loo_dir,"loo_out_2026-06-22.rds"))
+r2_df <- readRDS(file.path(loo_dir,"model_r2_2026-06-22.rds"))
+stack_param_df <- readRDS(file.path(loo_dir,"stacked_mu_parameters_2026-06-22.rds"))
+ind_gmean_df <- readRDS(file.path(loo_dir,"ind_mean_growth_predictions_2026-06-22.rds"))
+stack_gmean_df <- readRDS(file.path(loo_dir,"stacked_mean_growth_predictions_2026-06-22.rds"))
 age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 
 # Species specific directories
@@ -78,12 +77,16 @@ age_df %>%
 ### Candidate model summary ###
 
 # Extract means and CI
-ind_mean_list <- lapply(1:length(sp_stack_wt), function (i) {
-  mean_ci_batch(
-    sp_stack_wt[[i]],
-    sp_dir[i],
-    digits=3,
-    mc.cores = 6)} )
+ind_mean_list <- lapply(
+  1:length(sp_stack_wt), 
+  function (i) {
+    mean_ci_batch(
+      sp_stack_wt[[i]],
+      sp_dir[i],
+      digits=3,
+      mc.cores = 6)
+    } 
+  )
 names(ind_mean_list) <- names(sp_stack_wt)
 
 # Add species names
@@ -147,38 +150,6 @@ mean_growth_df <-stack_gmean_df %>%
   select(species,model,mean_growth)
 
 
-
-# age-length curves R2  --------------------------------------------------------
-
-
-### Estimate R2 of model stacked curves  ###
-
-# Prepare observed data
-actual_df <- age_df %>% 
-  mutate(group_name = paste(region,site,wateryear)) %>% 
-  left_join(curve_df,join_by(species,group_name,age))
-
-# R2 function
-stack_r2_list <- lapply(unique(actual_df$species), function (x) {
-  
-  # subset data for select mode
-  df <- actual_df %>% 
-    filter(species == x)
-  
-  # Estimate r2
-  out <- lm(length_pred_median ~ length,df)
-  data.frame(species = x,
-             model = "stacked",
-             r2 = summary(out)$r.squared, 
-             adj_r2 = summary(out)$adj.r.squared)
-}) 
-
-# Combine into data frame
-stack_r2_df <- bind_rows(stack_r2_list)
-
-### Bind stack and indv r2 data frames  ###
-combined_r2_df <- stack_r2_df %>% bind_rows(ind_r2_df) 
-
 # Format Loo tables  -----------------------------------------------------------
 
 # Add species names
@@ -207,7 +178,7 @@ stack_df <- bind_rows(sp_stack_wt) %>%
 # Join all results
 out_table <- combined_mean_df %>% 
   left_join(mean_growth_df) %>% 
-  left_join(combined_r2_df) %>% 
+  left_join(r2_df) %>% 
   left_join(loo_compare_df) %>% 
   left_join(stack_df) %>% 
   mutate(model = case_when(
