@@ -207,7 +207,7 @@ out_table_export <-out_table[,out_order]
 write.csv(out_table_export,file.path(fig_dir,"cat_model_selection_table.csv"))
 
 
-# Format and export full model outputs (Table sXX)------------------------------
+# Format and export full model outputs (Appendix 4)------------------------------
 
 lapply(1:length(sp_stack_wt), function (i) {
   
