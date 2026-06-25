@@ -32,15 +32,26 @@
 #' curve predictions or model parameters parameters
 #' @param pred.input vector containing age or length input data if creating
 #' predicted growth curves. Default is NULL
+#' @param create.input T or F. Create input data in each supplied groupings 
+#' and/or interval lengths? If TRUE (default), each user supplied grouping, or 
+#' all groupings (if pred.group = NULL) will be assigned each value from 
+#' pred.input., If FALSE, pred.input, pred.group, and pred.interval must be 
+#' same length.
 #' @param pred.group Vector containing numeric identifies for model groupings.
 #' Must have equal or less groupings then groupings in model. Groupings 
 #' identifiers must match those in the model. If NULL (default), then each model
 #' grouping will be assigned each value of pred.input.
+#' @param pred.interval Vector containing values for the interval length used
+#' to predict interval growth. Only requized if output.vars = "interval_growth".
+#' Default is NULL.
 #' @param stack T or F. Create model stacked predictions or parameter estimates
 #' (T), or candidate model specific outputs (F). Default is FALSE
 #' @param sim Number of posterior draws for predictions or parameter estimates
-#' @param type sum.fun Character ("mean" or "median) for type of summary 
-#' statistic of posterior distribution. Default is "mean". 
+#' @param summarize T or F. Summarize posterior distributions of predictions? If
+#' T, returns data.frame. If false, returns 3d array with slice for each 
+#' posterior draw. Default is T.
+#' @param sum.fun Character ("mean" or "median) for type of summary 
+#' statistic of posterior distribution. Default is NULL. 
 #' @param ... = Additional arguments passed to .prediction_sampler or 
 #' .parameter_sampler auxiliary functions. Required arguments for stacked growth 
 #' curve predictions include:
@@ -52,8 +63,6 @@
 #'     multiple prediction columns will be created. Growth indicates 
 #'     instantaneous growth, and interval growth is exponential growth during a 
 #'     specified interval}
-#'     \item{days}{Number of datys to estimate interval growth. Only required 
-#'     if output.var includes "interval_growth"}
 #'     \item{wt.df}{wt.df = Data.frame containing length-weight parameters. 
 #'     Only required if output.var includes "interval_growth"}
 #'     \item{dry.wt}{Optional dry weight conversion factor. Only required 
@@ -77,17 +86,21 @@
 #' with the option to combine the posterior distributions into model stacked
 #' parameter estimates or growth curves.
 #' 
-#' @returns Data.frame with a row for every input (age or length), grouping,
-#' and model combination (if stack = F). Contains columns for age or length, 
+#' @returns Data.frame (Summarized = T) with a row for every input (age or length), 
+#' grouping, and model combination (if stack = F). Contains columns for age or length, 
 #' model name, grouping index, and prediction summary statistics (mean or 
 #' median, lower-lwr, and upper-upr credible interval) for each output variable.
+#' Returns a 3 dimensional array (Summarized = F) containing above rows and 
+#' columns, with each slice representing one draw from posterior distribution.
 #' 
 #' @export
 
 # REQUIRES: purrr
 
 curve_predictR <- function(stack.df, mod.dir,type, group.id,pred.input=NULL,
-                           pred.group = NULL,stack=F,sim,sum.fun, ...){
+                           create.input = T, pred.group = NULL,
+                           pred.interval =NULL,stack=F,sim,
+                           summarize=T,sum.fun=NULL, ...){
   
   ### Prepare inputs ###
   
@@ -161,34 +174,25 @@ curve_predictR <- function(stack.df, mod.dir,type, group.id,pred.input=NULL,
     })
   }
   
-  ### Create preditions ###
+  ### Create predictions ###
   
   if(type == "prediction") {
     
+    # If groupings are provided, make sure they are groupings in models
     if(!is.null(pred.group)){
-      #If groupings provided combine age/length data with provided groupings
-      
-      # Check if all provided groupings are within model groupings
       if(max(pred.group) > max_group) {
-      stop("User provided groupings exceed number of groupings in model")}
-      
-      # Create input data
-      pred_input <- data.frame(
-        group_id = pred.group,
-        input_id = 1:length(pred.input),
-        input = pred.input
-        )
-    
-    } else {
-      # If prediction groupings are not provided, Create prediction data.frame 
-      # with a user specified range of input (age or length) data for each 
-      # grouping. 
-      pred_input <- data.frame(group_id = 1:max_group) %>% 
-        tidyr::crossing(input = pred.input) %>% 
-        select(group_id,input)
-      pred_input$input_id <- 1:nrow(pred_input)
+        stop("User provided groupings exceed number of groupings in model")}
     }
-
+    
+    # Create input data based on types of user supplied data
+    pred_input <- .pred_data_prep(
+      create.input = create.input,
+      pred.input = pred.input,
+      max_group =max_group,
+      pred.group = pred.group,
+      pred.interval = pred.interval
+    )
+    
     # create predictions
     pred_list <-Map(
       function(x,y,z){
@@ -236,6 +240,9 @@ curve_predictR <- function(stack.df, mod.dir,type, group.id,pred.input=NULL,
     # Bind results into 3d array if stacking
     out <- abind::abind(pred_list, along = 3)
     
+    # Return raw values
+    if(!summarize) return(out)
+    
     # Summarize into data.frame
     out_summary <- .boot_summary(
       out,
@@ -244,7 +251,10 @@ curve_predictR <- function(stack.df, mod.dir,type, group.id,pred.input=NULL,
     )
     
   } else{
-    # Otherwise summarize models seperatley and combine into one data.frame
+    # Return raw values
+    if(!summarize) return(pred_list)
+    
+    # Otherwise summarize models separate and combine into one data.frame
     # Extract means
     out <- lapply(pred_list, .boot_summary,sum.fun=sum.fun, group.var=group_var)
     
@@ -260,13 +270,13 @@ curve_predictR <- function(stack.df, mod.dir,type, group.id,pred.input=NULL,
     
   }
   
-  # remove temporary prediction id, if applicaple
+  # remove temporary prediction id, if applicable
   if(!is.null(out_summary$input_id)){
     out_summary <- out_summary %>% 
       select(-input_id)
   } 
   
-  # Rename group_id to approiape grouping name
+  # Rename group_id to appropriate grouping name
   group_name <- group.id
   if(group.id == "site") group_name <- "sample_id"
   if(group.id == "cat") group_name <- "cat_id"
@@ -587,6 +597,109 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
 }
 
 
+# Curve prediction input data helpers  -----------------------------------------
+
+# Takes user inputed arguments and creates a data.frame used with curve 
+# prediction helpers to estimate age, length, growth, or interval growth using
+# inputed age or length data. Also throws error messages to ensure users have
+# supplied the appropriate data for the predictions of their choice.
+
+.pred_data_prep <- function(create.input,pred.input,max_group,pred.group=NULL,pred.interval=NULL){
+  
+  ### Create prediction input data using  user supplied groupings/intervals ###
+  if(create.input){
+    
+    # Create input data for each possible grouping, without suppling interval
+    # lengths
+    if(all(is.null(pred.group),is.null(pred.interval))) {
+      pred_input <- data.frame(group_id = 1:max_group) %>% 
+        tidyr::crossing(input = pred.input) %>% 
+        select(group_id,input)
+      pred_input$input_id <- 1:nrow(pred_input)
+    }
+    
+    # Create input data for user supplied groupings without supplying pred.interval
+    # lengths
+    if(!is.null(pred.group) & is.null(pred.interval)) {
+      pred_input <- data.frame(group_id = pred.group) %>% 
+        tidyr::crossing(input = pred.input) %>% 
+        select(group_id,input)
+      pred_input$input_id <- 1:nrow(pred_input)
+    }
+    
+    # Create prediction input data using supplied groupings and interval lengths
+    if(all(!is.null(pred.group),!is.null(pred.interval))){
+      
+      # Check if provided data is of the same length
+      if(length(pred.group) != length(pred.interval)){
+        stop("Please ensure pred.group and pred.interval are the same length")
+      }
+      
+      # Create input data
+      pred_input <- data.frame(
+        group_id = pred.group,
+        pred.interval = pred.interval
+      ) %>% 
+        tidyr::crossing(input = pred.input) %>% 
+        select(group_id,pred.interval,input)
+      pred_input$input_id <- 1:nrow(pred_input)
+    }
+    
+    # Create input data for each interval length across each grouping and 
+    # input
+    if(is.null(pred.group) & !is.null(pred.interval)){
+      pred_input <- data.frame(group_id = 1:max_group) %>% 
+        tidyr::crossing(
+          input = pred.input,
+          pred.interval =pred.interval) %>% 
+        select(group_id,pred.interval,input)
+      pred_input$input_id <- 1:nrow(pred_input)
+    }
+  } else {
+    
+    ### Prepare prediction input data using only user supplied data ###
+    
+    # Check inputs are the same lengths
+    if(length(pred.group) != length(pred.input)){
+      stop(paste0(
+        "pred.group and pred.input must be of the same length if ",
+        "create.input = F")
+      )
+    }
+    if(!is.null(pred.interval)){
+      if(length(pred.group) != length(pred.interval)){
+        stop(paste0(
+          "pred.group, pred.input, and pred.interval must all be of the same ",
+          "length if create.input = F")
+        )
+      }
+    }
+    
+    # Prepare data without pred.interval lengths
+    if(!is.null(pred.group) & is.null(pred.interval)){
+      pred_input <- data.frame(
+        group_id = pred.group,
+        input = pred.input,
+        input_id = 1:length(pred.input)
+      )
+    }
+    
+    # Prepare data with pred.interval lengths (for interval growth)
+    if(!is.null(pred.group) & !is.null(pred.interval)){
+      pred_input <- data.frame(
+        group_id = pred.group,
+        input = pred.input,
+        pred.interval = pred.interval,
+        input_id = 1:length(pred.input)
+      )
+    }
+  }
+  
+  # Return input data.frame
+  pred_input
+}
+
+
 # Curve prediction helpers  ----------------------------------------------------
 
 # Creates group-specific growth curve predictions using length or 
@@ -618,6 +731,17 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
 }
 
 .growth_predictR <- function(model.out,g.mod,input.df,input.var,output.var,wt.df = NULL,dry.wt=1){
+  
+  # CHeck input data
+  if(length(input.var) > 1){
+    stop("Please only provide one entry for input.var")
+  }
+  if(is.null(input.var)){
+    stop("Please provide one input variable type")
+  }
+  if(is.null(output.var)){
+    stop("Please provide at least one output variable type")
+  }
   
   # Does model output have groupings?
   if(nrow(model.out)==1){
@@ -651,14 +775,20 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
       )
       
       # add additional arguments for helper functions
-      if("days" %in% names(formals(fun))){
-        stopifnot("Days missing in input data" = "days" %in% colnames(out_df))
-        args$days = out_df$days
+      if("interval" %in% names(formals(fun))){
+        if("pred.interval" %in% colnames(out_df)){
+          stop("Please provide pred.interval  for interval_growth prediction")
+        }
+        args$interval = out_df$pred.interval
       }
       
       if("wt.df" %in% names(formals(fun))){
-        stopifnot("Weight-length parameters missing. Please provide dataframe with conversions" = 
-                    "days" %in% colnames(out_df))
+        if(is.null(wt.df)){
+          stop(paste0(
+            "Weight-length parameters missing. Please provide dataframe with ",
+            "conversions")
+            )
+        }
         args$wt.df <-wt.df
         args$dry.wt <- dry.wt
       }
@@ -774,19 +904,19 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
 
 # REQUIRES: NA
 
-.length2interval_growth <- function(input,...,days,wt.df,dry.wt=1){
+.length2interval_growth <- function(input,...,interval,wt.df,dry.wt=1){
   
   # Forecast length at end of interval
-  length_t <- .length_forcast(input,days,...)
+  length_t <- .length_forcast(input,interval,...)
   
   # Estimate growth using weights
   dry_wt = .length2wt(input,wt.df,dry.wt)
   dry_wt_t = .length2wt(length_t,wt.df,dry.wt)
-  .exp_growth(dry_wt,dry_wt_t,days)
+  .exp_growth(dry_wt,dry_wt_t,interval)
   
 }
 
-.length_forcast <- function(input,days,...) {
+.length_forcast <- function(input,interval,...) {
   
   # estimate current age
   age = .length2age(input,...)
@@ -795,7 +925,7 @@ linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
   # All length >= Linf have inf age, meaning all lengths >=Linf
   # would have length_t = Linf and negative growth. To correct
   # this, change all infinite ages to have length_t=length
-  age_t <- age + days
+  age_t <- age + interval
   ifelse(is.infinite(age),
          input,
          .age2length(age_t,...))
