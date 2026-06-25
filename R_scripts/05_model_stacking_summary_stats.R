@@ -145,7 +145,15 @@ mean_growth_df <-stack_gmean_df %>%
     growth_pred_median = round(growth_pred_median,2),
     growth_pred_lwr = round(growth_pred_lwr,2),
     growth_pred_upr = round(growth_pred_upr,2),
-    mean_growth = paste0(growth_pred_median," (",growth_pred_lwr,", ",growth_pred_upr,")")) %>% 
+    mean_growth = paste0(
+      growth_pred_median,
+      " (",
+      growth_pred_lwr,
+      ", ",
+      growth_pred_upr,
+      ")"
+      )
+    ) %>% 
   rename(model = mod) %>% 
   select(species,model,mean_growth)
 
@@ -153,8 +161,11 @@ mean_growth_df <-stack_gmean_df %>%
 # Format Loo tables  -----------------------------------------------------------
 
 # Add species names
-sp_loo_compare <- purrr::map2(sp_loo_compare,names(sp_loo_compare), 
-                             function(x,y) as.data.frame(x) %>% mutate(species =y))
+sp_loo_compare <- purrr::map2(
+  sp_loo_compare,
+  names(sp_loo_compare), 
+  function(x,y) as.data.frame(x) %>% mutate(species =y)
+  )
 
 # Format loo data and estimate CIs for elpd_diff
 loo_compare_df <- bind_rows(sp_loo_compare) %>% 
@@ -176,7 +187,7 @@ stack_df <- bind_rows(sp_stack_wt) %>%
       )
 
 
-# Format and export summarized outputs (Table XX)  -----------------------------
+# Format and export summarized outputs (Table 2)  ------------------------------
 
 # Join all results
 out_table <- combined_mean_df %>% 
@@ -206,7 +217,7 @@ out_table_export <-out_table[,out_order]
 write.csv(out_table_export,file.path(fig_dir,"model_selection_table.csv"))
 
 
-# Format and export full model outputs (Table sXX)------------------------------
+# Format and export full model outputs (Appendix 4)------------------------------
 
 lapply(1:length(sp_stack_wt), function (i) {
   
