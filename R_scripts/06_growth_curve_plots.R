@@ -110,51 +110,114 @@ for(i in 1:length(sp)){
   line_vec <- c(2,3,4,1)[1:n.mods]
   
   # Length at age plot
-  length_compare <-ggplot(data=mod_compare_sp,aes(x = age,y=length_pred_median,group = mod,linetype = mod,colour = top_mod))+
+  length_compare <-ggplot(
+    data=mod_compare_sp,
+    aes(
+      x = age,
+      y=length_pred_median,
+      group = mod,
+      linetype = mod,
+      colour = top_mod
+      )
+    )+
     geom_line() +
-    geom_ribbon(aes(ymin=length_pred_lwr, ymax=length_pred_upr,colour = top_mod), linetype=0, alpha=0.1)+
-    # geom_point(data = actual_df %>% filter(species == sp[i]),aes(x=age,y = length),size = point.size,inherit.aes = F)+
-    geom_rug(data=actual_df %>% filter(species == sp[i]),aes(x=age),inherit.aes  = F)+
+    geom_ribbon(
+      aes(
+        ymin=length_pred_lwr, 
+        ymax=length_pred_upr,
+        colour = top_mod
+        ), 
+      linetype=0, 
+      alpha=0.1
+      )+
+    # geom_point(
+    #   data = actual_df %>% filter(species == sp[i]),
+    #   aes(x=age,y = length),
+    #   size = point.size,
+    #   inherit.aes = F
+    #   )+
+    geom_rug(
+      data=actual_df %>% filter(species == sp[i]),
+      aes(x=age),
+      inherit.aes  = F
+      )+
     scale_linetype_manual(values =line_vec) +
     scale_color_manual(values =top_mod_color)+
     xlab("")+
     ylab("")+
     xlim(c(0,max_age_mu))+
     theme_classic(base_size = base.size.mu)+ 
-    theme(legend.position="none") +
-    theme(panel.border = element_rect(color = "black", fill = NA, size = border.size))
+    theme(
+      legend.position="none",
+      panel.border = element_rect(
+        color = "black", 
+        fill = NA, 
+        size = border.size)
+      )
   print(length_compare)
 
   # Growth at age plot
-  growth_compare <- ggplot(data=mod_compare_sp,aes(x = age,y=growth_pred_median,group = mod,linetype = mod, colour = top_mod))+
+  growth_compare <- ggplot(
+    data=mod_compare_sp,
+    aes(
+      x = age,
+      y=growth_pred_median,
+      group = mod,
+      linetype = mod,
+      colour = top_mod
+      )
+    )+
     geom_line() +
-    geom_ribbon(aes(ymin=growth_pred_lwr, ymax=growth_pred_upr,group = mod,colour = top_mod), linetype=0, alpha=0.1)+
-    geom_rug(data=actual_df %>% filter(species == sp[i]),aes(x=age),inherit.aes  = F)+
+    geom_ribbon(
+      aes(
+        ymin=growth_pred_lwr,
+        ymax=growth_pred_upr,
+        group = mod,
+        colour = top_mod
+        ), 
+      linetype=0,
+      alpha=0.1
+      )+
+    geom_rug(
+      data=actual_df %>% filter(species == sp[i]),
+      aes(x=age),
+      inherit.aes  = F
+      )+
     scale_linetype_manual(values =line_vec) +
     scale_color_manual(values =top_mod_color)+
     xlab("")+
     ylab("")+
     xlim(c(0,max_age_mu))+
     theme_classic(base_size = base.size.mu)+ 
-    theme(legend.position="none") +
-    theme(panel.border = element_rect(color = "black", fill = NA, size = border.size))
+    theme(
+      legend.position="none",
+      panel.border = element_rect(
+        color = "black", 
+        fill = NA, 
+        size = border.size
+        )
+      )
   print(growth_compare)
   
   # Export length
   length_compare_name <- paste0("length_age_compare_plot_",sp[i],".png")
-  ggplot2::ggsave(file.path(mu_dir,length_compare_name),
-                  length_compare,
-                  width = 10,
-                  height = 8,
-                  dpi = 300)
+  ggplot2::ggsave(
+    file.path(mu_dir,length_compare_name),
+    length_compare,
+    width = 10,
+    height = 8,
+    dpi = 300
+    )
 
   # Export growth
   growth_compare_name <- paste0("growth_age_compare_plot_",sp[i],".png")
-  ggplot2::ggsave(file.path(mu_dir,growth_compare_name),
-                  growth_compare,
-                  width = 10,
-                  height = 8,
-                  dpi = 300)
+  ggplot2::ggsave(
+    file.path(mu_dir,growth_compare_name),
+    growth_compare,
+    width = 10,
+    height = 8,
+    dpi = 300
+    )
   
 }
 
@@ -219,18 +282,45 @@ for(i in 1:6){
   max_length <- plyr::round_any(max(l_plot_df$length_pred_upr),5,ceiling)
   
   # Create plot
-  p <-ggplot(data=l_plot_df,aes(x = age,y=length_pred_median,group = group_name,colour = PC1))+
+  p <-ggplot(
+    data=l_plot_df,
+    aes(
+      x = age,
+      y=length_pred_median,
+      group = group_name,
+      colour = PC1
+      )
+    )+
     geom_line() +
-    geom_ribbon(aes(ymin=length_pred_lwr, ymax=length_pred_upr,fill = PC1), linetype=0, alpha=0.1)+
-    geom_point(data = l_fish_plot,aes(x=age,y = length,group = group_name, colour = PC1),size = point.size)+
+    geom_ribbon(
+      aes(
+        ymin=length_pred_lwr, 
+        ymax=length_pred_upr,
+        fill = PC1
+        ), 
+      linetype=0, 
+      alpha=0.1
+      )+
+    geom_point(
+      data = l_fish_plot,
+      aes(
+        x=age,
+        y = length,
+        group = group_name, 
+        colour = PC1
+        ),
+      size = point.size
+      )+
     scale_color_gradient(
       low = min_col,
       high = max_col,
-      limits = c(min_grad, max_grad))+
+      limits = c(min_grad, max_grad)
+      )+
     scale_fill_gradient(
       low = min_col,
       high = max_col,
-      limits = c(min_grad, max_grad))+
+      limits = c(min_grad, max_grad)
+      )+
     xlab("")+
     ylab("")+
     scale_y_continuous(
@@ -239,19 +329,31 @@ for(i in 1:6){
       )+
     xlim(c(0,max_age))+
     theme_classic(base_size = base.size)+ 
-    theme(legend.position="none") +
-    theme(panel.border = element_rect(color = "black", fill = NA, size = border.size)) 
+    theme(
+      legend.position="none",
+      panel.border = element_rect(
+        color = "black", 
+        fill = NA, 
+        size = border.size
+        )
+      ) 
   print(p)
   
   # Create file name based on species
-  length_plot_name <- paste0("length_at_age_plots/",sp[i],"_length_age_plot.png")
+  length_plot_name <- paste0(
+    "length_at_age_plots/",
+    sp[i],
+    "_length_age_plot.png"
+    )
   
   # Export plot
-  ggplot2::ggsave(file.path(export_dir,length_plot_name),
-                  p,
-                  width = 10,
-                  height = 8,
-                  dpi = 300)
+  ggplot2::ggsave(
+    file.path(export_dir,length_plot_name),
+    p,
+    width = 10,
+    height = 8,
+    dpi = 300
+    )
   
 }
 
@@ -282,18 +384,42 @@ for(i in 1:6){
 
   # Plotting
   library(ggplot2)
-  p <-ggplot(data=g_plot_df,aes(x = age,y=growth_pred_median,group = group_name,color=PC1))+
+  p <-ggplot(
+    data=g_plot_df,
+    aes(
+      x = age,
+      y=growth_pred_median,
+      group = group_name,
+      color=PC1
+      )
+    )+
     geom_line() +
-    geom_ribbon(aes(ymin=growth_pred_lwr, ymax=growth_pred_upr,group = group_name,fill=PC1), linetype=0, alpha=0.1)+
-    geom_rug(data=g_fish_plot,aes(x=age,colour = PC1),inherit.aes  = F,line.width = rug.size)+
+    geom_ribbon(
+      aes(
+        ymin=growth_pred_lwr, 
+        ymax=growth_pred_upr,
+        group = group_name,
+        fill=PC1
+        ), 
+      linetype=0, 
+      alpha=0.1
+      )+
+    geom_rug(
+      data=g_fish_plot,
+      aes(x=age,colour = PC1),
+      inherit.aes  = F,
+      line.width = rug.size
+      )+
     scale_color_gradient(
       low = min_col,
       high = max_col,
-      limits = c(min_grad, max_grad))+
+      limits = c(min_grad, max_grad)
+      )+
     scale_fill_gradient(
       low = min_col,
       high = max_col,
-      limits = c(min_grad, max_grad))+
+      limits = c(min_grad, max_grad)
+      )+
     xlab("")+
     ylab("")+
     xlim(c(0,max_age))+
@@ -302,19 +428,30 @@ for(i in 1:6){
       #breaks = growth_break
     )+
     theme_classic(base_size = base.size)+ 
-    theme(legend.position="none") +
-    theme(panel.border = element_rect(color = "black", fill = NA, size = border.size)) 
+    theme(
+      legend.position="none",
+      panel.border = element_rect(
+        color = "black", 
+        fill = NA, 
+        size = border.size)
+      ) 
   print(p)
   
   # Create file name based on species
-  growth_plot_name <- paste0("growth_at_age_plots/",sp[i],"_growth_age_plot.png")
+  growth_plot_name <- paste0(
+    "growth_at_age_plots/",
+    sp[i],
+    "_growth_age_plot.png"
+    )
   
   # export
-  ggplot2::ggsave(file.path(export_dir,growth_plot_name),
-                  p,
-                  width = 10,
-                  height = 8,
-                  dpi = 300)
+  ggplot2::ggsave(
+    file.path(export_dir,growth_plot_name),
+    p,
+    width = 10,
+    height = 8,
+    dpi = 300
+    )
   
 }
 
@@ -323,42 +460,107 @@ for(i in 1:6){
 # Population curves - all species (Fig 5)  -------------------------------------
 
 # Age at length
-mu_l_plot <-ggplot(data=mu_curve_df,aes(x = age,y=length_pred_median,group = species,colour = species))+
+mu_l_plot <-ggplot(
+  data=mu_curve_df,
+  aes(
+    x = age,
+    y=length_pred_median,
+    group = species,
+    colour = species
+    )
+  )+
   geom_line() +
-  geom_ribbon(aes(ymin=length_pred_lwr, ymax=length_pred_upr,fill = species), linetype=0, alpha=0.1)+
-  geom_rug(data=actual_df,aes(x=age,colour = species),inherit.aes  = F)+
-  # geom_point(data = actual_df,aes(x=age,y = length,group = group_name, colour = species),size = point.size)+
+  geom_ribbon(
+    aes(
+      ymin=length_pred_lwr, 
+      ymax=length_pred_upr,
+      fill = species
+      ), 
+    linetype=0, 
+    alpha=0.1
+    )+
+  geom_rug(
+    data=actual_df,
+    aes(x=age,colour = species),
+    inherit.aes  = F
+    )+
+  # geom_point(
+  #   data = actual_df,
+  #   aes(
+  #     x=age,
+  #     y = length,
+  #     group = group_name, 
+  #     colour = species
+  #     ),
+  #   size = point.size
+  #   )+
   scale_color_manual(values =sp.colors)+
   xlab("")+
   ylab("")+
   xlim(c(0,max_age_mu))+
   theme_classic(base_size = base.size.mu)+ 
-  theme(legend.position="none") +
-  theme(panel.border = element_rect(color = "black", fill = NA, size = border.size))
-ggplot2::ggsave(file.path(mu_dir,"mu_length_age_plot.png"),
-                mu_l_plot,
-                width = 10,
-                height = 8,
-                dpi = 300)
+  theme(
+    legend.position="none",
+    panel.border = element_rect(
+      color = "black", 
+      fill = NA, 
+      size = border.size
+      )
+    )
+ggplot2::ggsave(
+  file.path(mu_dir,"mu_length_age_plot.png"),
+  mu_l_plot,
+  width = 10,
+  height = 8,
+  dpi = 300
+  )
 
 
 # growth at age
-mu_g_plot <-ggplot(data=mu_curve_df,aes(x = age,y=growth_pred_median,group = species,color=species))+
+mu_g_plot <-ggplot(
+  data=mu_curve_df,
+  aes(
+    x = age,
+    y=growth_pred_median,
+    group = species,
+    color=species
+    )
+  )+
   geom_line() +
-  geom_ribbon(aes(ymin=growth_pred_lwr, ymax=growth_pred_upr,group = species,fill=species), linetype=0, alpha=0.1)+
-  geom_rug(data=actual_df,aes(x=age,colour = species),inherit.aes  = F)+
+  geom_ribbon(
+    aes(
+      ymin=growth_pred_lwr, 
+      ymax=growth_pred_upr,
+      group = species,
+      fill=species
+      ), 
+    linetype=0, 
+    alpha=0.1
+    )+
+  geom_rug(
+    data=actual_df,
+    aes(x=age,colour = species),
+    inherit.aes  = F
+    )+
   scale_color_manual(values =sp.colors)+
   xlab("")+
   ylab("")+
   xlim(c(0,max_age_mu))+
   theme_classic(base_size = base.size.mu)+ 
-  theme(legend.position="none") +
-  theme(panel.border = element_rect(color = "black", fill = NA, size = border.size)) 
-ggplot2::ggsave(file.path(mu_dir,"mu_growth_age_plot.png"),
-                mu_g_plot,
-                width = 10,
-                height = 8,
-                dpi = 300)
+  theme(
+    legend.position="none",
+    panel.border = element_rect(
+      color = "black", 
+      fill = NA, 
+      size = border.size
+      )
+    ) 
+ggplot2::ggsave(
+  file.path(mu_dir,"mu_growth_age_plot.png"),
+  mu_g_plot,
+  width = 10,
+  height = 8,
+  dpi = 300)
 
 
 # Beta coefficient plot (Fig 6)  -----------------------------------------------
@@ -386,8 +588,12 @@ beta_df <- bind_rows(beta_list) %>%
     predictor = paste0("pc",pca_id),
     # group = interaction(predictor, species, mod, sep = " | "),
     group = interaction(predictor, species, sep = " | "),
-    group = factor(group, levels = unique(group[order(predictor, species,decreasing = T)])),
-    overlap_zero = lwr <= 0 & upr >= 0)
+    group = factor(
+      group, 
+      levels = unique(group[order(predictor, species,decreasing = T)])
+      ),
+    overlap_zero = lwr <= 0 & upr >= 0
+    )
 
 # Assign species colors
 sp.colors_sub <- c("#b5a331","#339d38","#c26a77","#2f2585","#2b695c")
@@ -406,14 +612,24 @@ lapply(c("Linf","g","t"),function(i){
     )
   
   # Plot
-  p <- ggplot(data=plot_df, aes(y=y_pos,x=mean,color = species,alpha = overlap_zero)) +
+  p <- ggplot(
+    data=plot_df, 
+    aes(
+      y=y_pos,
+      x=mean,
+      color = species,
+      alpha = overlap_zero)
+    ) +
     geom_vline(xintercept = 0, color = "red",linewidth =2) +
-    geom_errorbarh(aes(xmin = lwr, xmax = upr),
-                   linewidth = 2,height =0)+
-    geom_point(aes(shape = mod),
-               size = 5)+
-    scale_alpha_manual(values = c(`TRUE` = 0.3, `FALSE` = 1),
-                       guide = "none") +
+    geom_errorbarh(
+      aes(xmin = lwr, xmax = upr),
+      linewidth = 2,height =0
+      )+
+    geom_point(aes(shape = mod),size = 5)+
+    scale_alpha_manual(
+      values = c(`TRUE` = 0.3, `FALSE` = 1),
+      guide = "none"
+      ) +
     scale_color_manual(values =sp.colors_sub)+
     xlab("")+
     theme(legend.position="none")+
@@ -509,8 +725,18 @@ for (j in 1:length(sp)) {
       # Plotting
       p <- ggplot(data=plot_df,aes(x = pred,y=mean))+
         geom_line(color = sp.colors[j]) +
-        geom_ribbon(aes(ymin=lwr, ymax=upr), linewidth=0, alpha=ribbon.alpha,fill = sp.colors[j])+
-        geom_rug(data = rug_df,aes(x = rug,size=rug.size),inherit.aes = F,color = sp.colors[j])+
+        geom_ribbon(
+          aes(ymin=lwr, ymax=upr), 
+          linewidth=0, 
+          alpha=ribbon.alpha,
+          fill = sp.colors[j]
+          )+
+        geom_rug(
+          data = rug_df,
+          aes(x = rug,size=rug.size),
+          inherit.aes = F,
+          color = sp.colors[j]
+          )+
         #ylim(c(min_y,max_y))+
         #xlim(xmins[[k]],xmaxs[[k]])+
         xlab("")+
@@ -519,22 +745,38 @@ for (j in 1:length(sp)) {
           limits = c(xmins[[k]],xmaxs[[k]]),
           breaks = x_breaks[[k]],
           labels = scales::label_number(accuracy = 0.01),
-          guide = guide_axis(check.overlap = FALSE))+
+          guide = guide_axis(check.overlap = FALSE)
+          )+
         scale_y_continuous(limits = c(min_y,max_y))+
         theme_classic(base_size = base.size)+ 
-        theme(legend.position="none") +
-        theme(panel.border = element_rect(color = "black", fill = NA, size = border.size)) 
+        theme(legend.position="none",
+              panel.border = element_rect(
+                color = "black", 
+                fill = NA, 
+                ize = border.size)
+              ) 
       print(p)
       
       # Create file name based on response, predictor, and species
-      beta_plot_name <- paste0(pred_vec[i],"_beta_plots/",sp[j],"_PC",k,"_",pred_vec[i],"_beta_plot.png")
+      beta_plot_name <- paste0(
+        pred_vec[i],
+        "_beta_plots/",
+        sp[j],
+        "_PC",
+        k,
+        "_",
+        pred_vec[i],
+        "_beta_plot.png"
+        )
       
       # Export plot
-      ggplot2::ggsave(file.path(export_dir,beta_plot_name),
-                      p,
-                      width = 10,
-                      height = 8,
-                      dpi = 300)
+      ggplot2::ggsave(
+        file.path(export_dir,beta_plot_name),
+        p,
+        width = 10,
+        height = 8,
+        dpi = 300
+        )
     }
   }
 }
