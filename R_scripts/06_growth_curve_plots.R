@@ -208,9 +208,11 @@ for(i in 1:6){
   max_age <-plyr::round_any(max(l_fish_plot$age),25,f=ceiling)
   max_age <- 360
   l_plot_df <- curve_df %>% 
-    filter(!is.na(sample_id),
-           species == sp[i],
-           age <=max_age) %>% 
+    filter(
+      species == sp[i],
+      age <=max_age
+      ) %>% 
+    mutate(group_name = paste(region,site,wateryear)) %>% 
     left_join(l_fish_plot %>% distinct(group_name,PC1))
   
   # Set y axis limits
@@ -265,9 +267,11 @@ for(i in 1:6){
   max_age <-plyr::round_any(max(g_fish_plot$age),25,f=ceiling)
   max_age <- 360
   g_plot_df <- curve_df %>% 
-    filter(!is.na(sample_id),
-           species == sp[i],
-           age <= max_age)%>% 
+    filter(
+      species == sp[i],
+      age <=max_age
+    ) %>% 
+    mutate(group_name = paste(region,site,wateryear)) %>% 
     left_join(g_fish_plot %>% distinct(group_name,PC1)) 
   
   # Set y axis limits

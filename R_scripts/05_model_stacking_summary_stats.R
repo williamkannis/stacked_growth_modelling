@@ -170,7 +170,10 @@ loo_compare_df <- bind_rows(sp_loo_compare) %>%
 
 # merge into table
 stack_df <- bind_rows(sp_stack_wt) %>% 
-    mutate(species = substr(model,11,16))
+    mutate(
+      species = substr(model,11,16),
+      stack_wt = round(stack_wt,2)
+      )
 
 
 # Format and export summarized outputs (Table XX)  -----------------------------
@@ -181,10 +184,13 @@ out_table <- combined_mean_df %>%
   left_join(r2_df) %>% 
   left_join(loo_compare_df) %>% 
   left_join(stack_df) %>% 
-  mutate(model = case_when(
-    model != "stacked" ~ substr(model,1,2),
-    T ~ model
-  )) %>% 
+  mutate(
+    model = case_when(
+      model != "stacked" ~ substr(model,1,2),
+      T ~ model
+      ),
+    adj_r2 = round(adj_r2,3)
+    ) %>% 
   arrange(species,desc(elpd_diff))
 
 # Pretty up NAs
@@ -192,8 +198,7 @@ out_table[is.na(out_table)] <- "-"
 
 # Reorder table
 out_order <-c("species","model",
-              "mu_Linf","mu_g","mu_t",
-              "mean_growth","sigma_length",
+              "mu_Linf","mu_g","mu_t","mean_growth",
               "adj_r2","delta_elpd","stack_wt")
 out_table_export <-out_table[,out_order]
 
