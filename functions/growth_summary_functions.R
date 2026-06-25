@@ -124,7 +124,8 @@ mean_ci_batch <- function(mod.df,mod.dir,parallel = F,mc.cores=NULL,
 .mean_ci_helper <- function(param,mod_out,mod.file,digits,ci) {
   
   # Set number of digits
-  digit_1 <- c("mu_Linf","mu_ti","mu_t0","sigma_length")
+  digit_1 <- c("mu_Linf","mu_ti","mu_t0",
+               "cat_Linf","cat_ti","cat_t0")
   digit_2 <- c("sigma_length")
   
   if(param %in% digit_1) digits <- 1

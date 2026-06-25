@@ -112,7 +112,7 @@ ind_mean_growth_list <- Map(function(x,y,z)
     stack.df = x,
     mod.dir = y,
     type = "prediction",
-    group.id="mu",
+    group.id="cat",
     sim = stack.iter,
     stack=F,
     pred.input = z,
