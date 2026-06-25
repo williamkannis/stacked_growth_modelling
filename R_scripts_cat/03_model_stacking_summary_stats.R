@@ -23,7 +23,7 @@ library(tidyverse)
 
 # Directories
 fig_dir <- "figures_cat"
-supp_dir <- "figures/supp_tables"
+supp_dir <- "figures_cat/supp_tables"
 loo_dir <- "loo_outputs_cat"
 out_dir <- "stan_outputs/model_out"
 input_dir <-"input_data"

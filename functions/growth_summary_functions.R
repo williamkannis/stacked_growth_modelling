@@ -195,7 +195,7 @@ mean_ci_batch <- function(mod.df,mod.dir,parallel = F,mc.cores=NULL,
 #' Rhat value.
 #' 
 #' @export 
-
+mod.df<-sp_stack_wt[[1]];mod.dir <- sp_dir[[1]]
 supp_table_format <- function(mod.df,mod.dir) {
   
   # Load in model names
@@ -252,6 +252,7 @@ supp_table_format <- function(mod.df,mod.dir) {
     arrange(match(parameter,params)) %>% 
     mutate(
       across(-parameter, round, digits = 3),
+      n_eff = round(n_eff,0),
       mod = mod_type,
     )
 }
