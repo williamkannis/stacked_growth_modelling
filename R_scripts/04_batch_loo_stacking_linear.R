@@ -38,10 +38,14 @@ source(file.path(fun_dir,"stan_loo_batch_functions.R"))
 source(file.path(fun_dir,"growth_prediction_functions.R"))
 
 # Load in data
-fish_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
-sample_bridge <- readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-06-16.rds"))
-pred_lables <- readRDS(file.path(plot_dir,"fsgwh_pred_labels_2026-06-16.rds"))
-mean_lengths <- readRDS(file.path(plot_dir,"fsgwh_mean_lengths_2026-06-16.rds"))
+fish_df <- 
+  readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
+sample_bridge <- 
+  readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-06-16.rds"))
+pred_lables <- 
+  readRDS(file.path(plot_dir,"fsgwh_pred_labels_2026-06-16.rds"))
+mean_lengths <- 
+  readRDS(file.path(plot_dir,"fsgwh_mean_lengths_2026-06-16.rds"))
 n.cores <- 6
 stack.iter <- 10000
 
@@ -328,17 +332,57 @@ site_curve_bridged <-site_curve_df %>%
 
 # Export  ----------------------------------------------------------------------
 
-# For summary stats, export loo, stacking weights, growth rates, r2, and parameters
-saveRDS(sp_loo_compare,file.path(export_dir,paste0("loo_out_",Sys.Date(),".rds")))
-saveRDS(sp_stack_wt,file.path(export_dir,paste0("stack_wt_out_",Sys.Date(),".rds")))
-saveRDS(mean_growth_df, file.path(export_dir,paste0("stacked_mean_growth_predictions_",Sys.Date(),".rds")))
-saveRDS(ind_mean_growth_df, file.path(export_dir,paste0("ind_mean_growth_predictions_",Sys.Date(),".rds")))
-saveRDS(r2_df, file.path(export_dir,paste0("model_r2_",Sys.Date(),".rds")))
-saveRDS(param_df, file.path(export_dir,paste0("stacked_mu_parameters_",Sys.Date(),".rds")))
+# For summary stats, export loo, stacking weights, growth rates, r2, 
+# and parameters
+saveRDS(
+  sp_loo_compare,
+  file.path(export_dir,paste0("loo_out_",Sys.Date(),".rds"))
+  )
+saveRDS(
+  sp_stack_wt,
+  file.path(export_dir,paste0("stack_wt_out_",Sys.Date(),".rds"))
+  )
+saveRDS(
+  mean_growth_df, 
+  file.path(
+    export_dir,
+    paste0("stacked_mean_growth_predictions_",Sys.Date(),".rds")
+    )
+  )
+saveRDS(
+  ind_mean_growth_df, 
+  file.path(
+    export_dir,
+    paste0("ind_mean_growth_predictions_",Sys.Date(),".rds")
+    )
+  )
+saveRDS(
+  r2_df, 
+  file.path(export_dir,paste0("model_r2_",Sys.Date(),".rds"))
+  )
+saveRDS(
+  param_df, 
+  file.path(export_dir,paste0("stacked_mu_parameters_",Sys.Date(),".rds"))
+  )
 
 # For plots, export length and growth-at-age predictions and bridge tables
-saveRDS(site_curve_bridged, file.path(export_dir,paste0("stacked_curves_",Sys.Date(),".rds")))
-saveRDS(mu_curve_df, file.path(export_dir,paste0("stacked_mu_curves_",Sys.Date(),".rds")))
-saveRDS(ind_mu_curve_df, file.path(export_dir,paste0("ind_mu_curves_",Sys.Date(),".rds")))
-saveRDS(pred_bridged, file.path(export_dir,paste0("stacked_growth_predictions_",Sys.Date(),".rds")))
+saveRDS(
+  site_curve_bridged, 
+  file.path(export_dir,paste0("stacked_curves_",Sys.Date(),".rds"))
+  )
+saveRDS(
+  mu_curve_df, 
+  file.path(export_dir,paste0("stacked_mu_curves_",Sys.Date(),".rds"))
+  )
+saveRDS(
+  ind_mu_curve_df, 
+  file.path(export_dir,paste0("ind_mu_curves_",Sys.Date(),".rds"))
+  )
+saveRDS(
+  pred_bridged, 
+  file.path(
+    export_dir,
+    paste0("stacked_growth_predictions_",Sys.Date(),".rds")
+    )
+  )
 

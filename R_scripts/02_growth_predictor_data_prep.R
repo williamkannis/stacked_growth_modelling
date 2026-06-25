@@ -8,11 +8,12 @@
 
 # CREATED: Feb 26, 2026
 
-# DESCRIPTION: Compiles and formats data for use as predictor variables for growth
-# parameters in hierarchical growth models. The Predictor variables were highly 
-# inter-correlated, so we performed principle components analysis to reduce 
-# predictors into three composite variables. We also provide hydroperiod (i.e, #
-# of days flooded) classifications for use in categorical second-level effects.
+# DESCRIPTION: Compiles and formats data for use as predictor variables for 
+# growth parameters in hierarchical growth models. The Predictor variables were  
+# highly inter-correlated, so we performed principle components analysis to  
+# reduce predictors into three composite variables. We also provide hydroperiod 
+# (i.e, # of days flooded) classifications for use in categorical second-level 
+# effects.
 
 
 # Housekeeping  ----------------------------------------------------------------
@@ -23,7 +24,10 @@ library(dplyr)
 library(vegan)
 
 # Directories
-data_dir <- "~/Documents/Work/Everglades post-doc/Data analysis/Data cleaning/cleaned_data"
+data_dir <- paste0(
+  "~/Documents/Work/Everglades post-doc/",
+  "Data analysis/Data cleaning/cleaned_data"
+)
 input_dir <- "input_data"
 
 # Data
@@ -44,9 +48,9 @@ samp_df <- age_df %>%
 # age data were collected during October, which means fish were collected in
 # the middle of a water year. To have an accurate one year lag in fish/physical
 # predictors we need to create a new year column for the growth measures. Hydro
-# data has annual lags for each period, so this is okay. Some data were collected
-# in calender year 2025 but this is not enough for a growth year so remove 2025
-# from all annual estimations for now
+# data has annual lags for each period, so this is okay. Some data were 
+# collected in calender year 2025 but this is not enough for a growth year so 
+# remove 2025 from all annual estimations for now
 
 grow_year <- phy_df %>% 
   distinct(wateryear,year,period,region,site) %>% 
@@ -157,12 +161,20 @@ fsden_year %>%
   group_by(wateryear,region,site) %>% 
   filter(n()>1)
 
-setdiff(fsden_per %>% distinct(wateryear,region,site),fsden_year %>% distinct(wateryear,region,site)) %>% print(n=50)
-setdiff(fsden_year %>% distinct(wateryear,region,site),fsden_per %>% distinct(wateryear,region,site)) %>% print(n=50)
-# The period data doesnt hav water 2025 and naanual doesnt have 1995, this is okay as we it is an artifact of
-# how the data were collected starting the start of the 1996 calender year, half betweent he wateryear.
-# we are not using these data fro growth so this is okay, but will need to think about
-# this in the future
+setdiff(
+  fsden_per %>% distinct(wateryear,region,site),
+  fsden_year %>% distinct(wateryear,region,site)
+  ) %>% 
+  print(n=50)
+setdiff(
+  fsden_year %>% distinct(wateryear,region,site),
+  fsden_per %>% distinct(wateryear,region,site)
+  ) %>% print(n=50)
+# The period data doesn't have water 2025 and annual doesn't have 1995, this is 
+# okay as we it is an artifact of how the data were collected starting the 
+# start of the 1996 calender year, half between the wateryear. we are not using 
+# these data fro growth so this is okay, but will need to think about this in 
+# the future
 
 # Hydrology  -------------------------------------------------------------------
 
@@ -228,11 +240,14 @@ pca_out <- rda(pca_input,scale = T)
 summary(pca_out)
 pca_out$CA$v
 
-# Extract pcs that explain atleast 75% of varaition and create dataframe with
+# Extract pcs that explain atleast 75% of variation and create data.frame with
 # sample event identifiers
 n_axes <- 3
-pca_id <- hydro_df %>% select(wateryear,period,region,site) %>% filter(period==4) %>% 
-  right_join(pis_df_all) %>%select(-pisc_index)
+pca_id <- hydro_df %>% 
+  select(wateryear,period,region,site) %>% 
+  filter(period==4) %>% 
+  right_join(pis_df_all) %>%
+  select(-pisc_index)
 # pca_result <- pca_out$CA$u[,1:n_axes] 
 pca_result <-scores(pca_out,choices = c(1,2,3),display = "sites")
 pca_df <- cbind(pca_id,pca_result)
@@ -243,7 +258,10 @@ pred_df <- comp_df %>%
   left_join(pca_df)
 
 # Export
-saveRDS(pred_df,file.path(input_dir,paste0("fsgrw_predictors_",Sys.Date(),".rds")))
+saveRDS(
+  pred_df,
+  file.path(input_dir,paste0("fsgrw_predictors_",Sys.Date(),".rds"))
+  )
 
 
 # PCA plotting (Fig 2) ---------------------------------------------------------
@@ -255,7 +273,11 @@ site_score_df <- scores(pca_out,choices = c(1,2,3),display = "sites")
 
 # Add identify for sites in growth study
 plot_id <- pca_id %>% 
-  left_join(comp_df %>% select(wateryear,region,period,site) %>% mutate(in_study = 1)) %>% 
+  left_join(
+    comp_df %>% 
+      select(wateryear,region,period,site) %>% 
+      mutate(in_study = 1)
+    ) %>% 
   mutate(in_study = case_when(
     is.na(in_study) ~ 0,
     T~ in_study
@@ -298,25 +320,40 @@ for (i in 1:ncol(pca_ax)) {
   pca_file <- paste0("pca_plot_",pca_ax[1,i],"-",pca_ax[2,i],".png")
   
   # Plot
-  p <-ggplot(data = point_df, aes(x= x,y=y,colour = in_study))+
+  p <-ggplot(
+    data = point_df, 
+    aes(x= x,y=y,colour = in_study)
+    )+
     geom_point(size=3)+
     scale_color_manual(values = c("grey","black"))+
     geom_vline(xintercept = 0, linetype = "dashed")+
     geom_hline(yintercept = 0, linetype = "dashed")+
-    geom_text(data = label_df,aes(x=x,y=y,label=label),inherit.aes = F,color = "darkblue")+
+    geom_text(
+      data = label_df,
+      aes(x=x,y=y,label=label),
+      inherit.aes = F,
+      color = "darkblue"
+      )+
     xlim(xlims[[i]])+
     xlab("")+
     ylab("")+
     theme_classic(base_size = 30)+
-    theme(panel.border = element_rect(color = "black", fill = NA, size = 3)) +
-    theme(legend.position="none")
+    theme(
+      legend.position="none",
+      panel.border = element_rect(
+        color = "black", 
+        fill = NA, 
+        size = 3
+        )
+      )
   print(p)
   
-  ggsave(filename = file.path("figures/pca_plot",pca_file),
-         plot = p,
-         width = 10,
-         height = 8,
-         dpi = 300)
+  ggsave(
+    filename = file.path("figures/pca_plot",pca_file),
+     plot = p,
+     width = 10,
+     height = 8,
+     dpi = 300)
 }
 
 ## Correlation plot ##

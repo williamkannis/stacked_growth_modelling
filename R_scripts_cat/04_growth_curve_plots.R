@@ -32,12 +32,18 @@ fun_dir <- "functions"
 source(file.path(fun_dir,"growth_summary_functions.R"))
 
 # Load data
-curve_df <- readRDS(file.path(loo_dir,"stacked_site_curves_2026-06-22.rds"))
-cat_curve_df <- readRDS(file.path(loo_dir,"stacked_cat_curves_2026-06-22.rds"))
-mu_curve_df <- readRDS(file.path(loo_dir,"stacked_mu_curves_2026-06-22.rds"))
-ind_mu_curve_df <- readRDS(file.path(loo_dir,"ind_mu_curves_2026-06-22.rds"))
-pred_df <-readRDS(file.path(pred_dir,"fsgrw_predictors_2026-06-17.rds"))
-age_df <- readRDS(file.path(pred_dir,"fsage_cleaned_2026-06-18.rds"))
+curve_df <- 
+  readRDS(file.path(loo_dir,"stacked_site_curves_2026-06-22.rds"))
+cat_curve_df <- 
+  readRDS(file.path(loo_dir,"stacked_cat_curves_2026-06-22.rds"))
+mu_curve_df <- 
+  readRDS(file.path(loo_dir,"stacked_mu_curves_2026-06-22.rds"))
+ind_mu_curve_df <- 
+  readRDS(file.path(loo_dir,"ind_mu_curves_2026-06-22.rds"))
+pred_df <-
+  readRDS(file.path(pred_dir,"fsgrw_predictors_2026-06-17.rds"))
+age_df <- 
+  readRDS(file.path(pred_dir,"fsage_cleaned_2026-06-18.rds"))
 
 
 # JORFLO DATA  ----------------------------------------------------------------
@@ -113,8 +119,12 @@ for(i in 1:length(sp)){
     ))
   
   # In the species without stacking, highlight top model
-  if (sp[i] == "POELAT") mod_compare_sp$top_mod[mod_compare_sp$mod == "lg"] <- 1
-  if (sp[i] == "HETFOR") mod_compare_sp$top_mod[mod_compare_sp$mod == "vb"] <- 1
+  if (sp[i] == "POELAT") {
+    mod_compare_sp$top_mod[mod_compare_sp$mod == "lg"] <- 1
+    }
+  if (sp[i] == "HETFOR") {
+    mod_compare_sp$top_mod[mod_compare_sp$mod == "vb"] <- 1
+    }
   
   # Assign color scheme
   mod_compare_sp$top_mod <- factor(mod_compare_sp$top_mod,levels = c(0,1))

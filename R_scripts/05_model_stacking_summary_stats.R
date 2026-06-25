@@ -33,13 +33,20 @@ fun_dir <- "functions"
 source(file.path(fun_dir,"growth_summary_functions.R"))
 
 # Load data
-sp_stack_wt <- readRDS(file.path(loo_dir,"stack_wt_out_2026-06-22.rds"))
-sp_loo_compare <- readRDS(file.path(loo_dir,"loo_out_2026-06-22.rds"))
-r2_df <- readRDS(file.path(loo_dir,"model_r2_2026-06-22.rds"))
-stack_param_df <- readRDS(file.path(loo_dir,"stacked_mu_parameters_2026-06-22.rds"))
-ind_gmean_df <- readRDS(file.path(loo_dir,"ind_mean_growth_predictions_2026-06-22.rds"))
-stack_gmean_df <- readRDS(file.path(loo_dir,"stacked_mean_growth_predictions_2026-06-22.rds"))
-age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
+sp_stack_wt <- 
+  readRDS(file.path(loo_dir,"stack_wt_out_2026-06-22.rds"))
+sp_loo_compare <- 
+  readRDS(file.path(loo_dir,"loo_out_2026-06-22.rds"))
+r2_df <- 
+  readRDS(file.path(loo_dir,"model_r2_2026-06-22.rds"))
+stack_param_df <- 
+  readRDS(file.path(loo_dir,"stacked_mu_parameters_2026-06-22.rds"))
+ind_gmean_df <- 
+  readRDS(file.path(loo_dir,"ind_mean_growth_predictions_2026-06-22.rds"))
+stack_gmean_df <- 
+  readRDS(file.path(loo_dir,"stacked_mean_growth_predictions_2026-06-22.rds"))
+age_df <- 
+  readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 
 # Species specific directories
 sp <- names(sp_stack_wt)

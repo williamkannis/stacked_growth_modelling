@@ -31,13 +31,13 @@ age_length_df <- read_excel(file.path(raw_dir,"gatto_age_length.xlsx"))
 
 # Clean data -------------------------------------------------------------------
 
-# Data contains some lengths for males, but this is not consistent across sampling
-# events or specie and can bias growth estimates. Here, males are removed. In 
-# in addition other missing data are removed
+# Data contains some lengths for males, but this is not consistent across 
+#  sampling events or specie and can bias growth estimates. Here, males are 
+# removed. Other missing data are also removed.
 
 age_length_clean <- age_length_df %>% 
   
-  # CLean up names
+  # Clean up names
   clean_names() %>% 
   rename(age = ring_count) %>% 
   
@@ -52,9 +52,11 @@ age_length_clean <- age_length_df %>%
   ) %>% 
   
   # Remove males and missing data
-  filter(sex != "M",
-       !is.na(age),
-       !is.na(length))  %>% 
+  filter(
+    sex != "M",
+    !is.na(age),
+    !is.na(length)
+    )  %>% 
   select(wateryear,period,region,site,species,sex,age,length)
 
 

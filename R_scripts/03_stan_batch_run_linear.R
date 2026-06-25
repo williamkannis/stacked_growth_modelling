@@ -22,7 +22,10 @@ library(rstan)
 
 # Directories
 fun_dir <-"functions"
-len_dir <- "~/Documents/Work/Everglades post-doc/Data analysis/Data cleaning/cleaned_data"
+len_dir <- paste0(
+  "~/Documents/Work/Everglades post-doc/",
+  "Data analysis/Data cleaning/cleaned_data"
+)
 input_dir <- "input_data"
 plot_dir <- "stan_outputs/plotting_info"
 out_dir <- "stan_outputs/model_out"
@@ -72,9 +75,18 @@ mean_lengths <- prep_list_t$mean_length  # mean length used to estimate inst. gr
 input_list <- prep_list_t$stan_data   # data for stan analysis
 
 # Export plotting data
-saveRDS(id_bridge,file.path(plot_dir,paste0("fsgwh_sampleid_bridge_",Sys.Date(),".rds")))
-saveRDS(pred_lables,file.path(plot_dir,paste0("fsgwh_pred_labels_",Sys.Date(),".rds")))
-saveRDS(mean_lengths,file.path(plot_dir,paste0("fsgwh_mean_lengths_",Sys.Date(),".rds")))
+saveRDS(
+  id_bridge,
+  file.path(plot_dir,paste0("fsgwh_sampleid_bridge_",Sys.Date(),".rds"))
+  )
+saveRDS(
+  pred_lables,
+  file.path(plot_dir,paste0("fsgwh_pred_labels_",Sys.Date(),".rds"))
+  )
+saveRDS(
+  mean_lengths,
+  file.path(plot_dir,paste0("fsgwh_mean_lengths_",Sys.Date(),".rds"))
+  )
 
 
 # LUCGOO model runs  -----------------------------------------------------------
