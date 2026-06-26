@@ -12,6 +12,8 @@
 # the use in tables and figures.
 
 
+##### USE @inheritParams IN FUNCTION WITH SIMIALR PARAMETERS
+
 # mean_ci_batch  ---------------------------------------------------------------
 
 #' Batch median and 95% credible interval summary
@@ -72,7 +74,7 @@ mean_ci_batch <- function(mod.df,mod.dir,parallel = F,mc.cores=NULL,
   
   
   # Combine into single data.frame
-  bind_rows(mean_ci_list)
+  dplyr::bind_rows(mean_ci_list)
   
 }
 
@@ -205,8 +207,8 @@ supp_table_format <- function(mod.df,mod.dir) {
   format_list <- lapply(mods,.supp_table_format_helper,mod.dir=mod.dir)
   
   # Combine into single data.frame
-  bind_rows(format_list) %>% 
-    arrange(match(mod,c("vb","gz","lg")))
+  dplyr::bind_rows(format_list) %>% 
+    dplyr::arrange(match(mod,c("vb","gz","lg")))
 }
 
 .supp_table_format_helper <- function(mod.dir,mod.file) {
@@ -239,18 +241,18 @@ supp_table_format <- function(mod.df,mod.dir) {
   
   # Format for supp info table
   mod_summary %>% 
-    select(mean,sd,`50%`,`2.5%`,`97.5%`,n_eff,Rhat) %>% 
+    dplyr::select(mean,sd,`50%`,`2.5%`,`97.5%`,n_eff,Rhat) %>% 
     tibble::rownames_to_column("parameter") %>% 
-    rename(
+    dplyr::rename(
       median = `50%`,
       lwr = `2.5%`,
       upr = `97.5%`
     ) %>% 
-    filter(
+    dplyr::filter(
       parameter %in% params
     ) %>% 
-    arrange(match(parameter,params)) %>% 
-    mutate(
+    dplyr::arrange(match(parameter,params)) %>% 
+    dplyr::mutate(
       across(-parameter, round, digits = 3),
       n_eff = round(n_eff,0),
       mod = mod_type,
@@ -292,8 +294,8 @@ beta_mean_ci_batch <- function(stack.df, wt.cutoff = T, mod.dir,
   # Filter based on wt
   if(wt.cutoff){
     stack.df <-stack.df %>% 
-      mutate(n_samp = stack_wt*1000) %>% 
-      filter(n_samp >1)
+      dplyr::mutate(n_samp = stack_wt*1000) %>% 
+      dplyr::filter(n_samp >1)
   }
   
   # Load in model names
@@ -318,7 +320,7 @@ beta_mean_ci_batch <- function(stack.df, wt.cutoff = T, mod.dir,
   }
   
   # Combine into single data.frame
-  bind_rows(mean_ci_list)
+  dplyr::bind_rows(mean_ci_list)
   
 }
 
@@ -350,7 +352,7 @@ beta_mean_ci_batch <- function(stack.df, wt.cutoff = T, mod.dir,
     )
   
   # Combine into one data.frame
-  mean_ci_df <-bind_rows(mean_ci_list)
+  mean_ci_df <-dplyr::bind_rows(mean_ci_list)
   
   # Format parameter names to match across model types
   mean_ci_df$parameter <- gsub("g1|g2|g3","g",mean_ci_df$parameter)
