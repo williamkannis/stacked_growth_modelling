@@ -11,6 +11,7 @@
 # DESCRIPTION: Functions used to simulate length-at-age data and to test models
 # performance based on simulated data.
 
+### UPDATE WITH GROWTH MODEL HELPER FUNCTIONS
 
 # ageLengthSim  ----------------------------------------------------------------
 
@@ -319,14 +320,14 @@ model_sim_test <- function(input,params,mod.form,fixed.effects="none",...) {
   params[grep("_t", params)] <- paste0(params[grep("_t", params)],t_id)
   
   ### Run model ###
-  out <- stan(
+  out <- rstan::stan(
     file = file.path(mod_dir,mod),  # Stan program
     data = input,            # named list of data
     ... = ...
   )
   
   ### Extract model output summary ###
-  out_sum <- summary(out)[[1]]
+  out_sum <- rstan::summary(out)[[1]]
   
   ### Check for sampling issues  ###
   # Check for convergence
@@ -334,7 +335,7 @@ model_sim_test <- function(input,params,mod.form,fixed.effects="none",...) {
   
   # check for divergent ts
   # Extract sampler parameters after warmup
-  sampler.params.post.list <- get_sampler_params(out, inc_warmup = FALSE)
+  sampler.params.post.list <- rstan::get_sampler_params(out, inc_warmup = FALSE)
   sampler.params.post.df <-as.data.frame(do.call(rbind,sampler.params.post.list))
   n.diverg <- sum(sampler.params.post.df[,"divergent__"])  # Divergence transitions
   

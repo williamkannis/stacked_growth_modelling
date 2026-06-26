@@ -16,6 +16,7 @@ Imports:
     dplyr,
     loo,
     magrittr,
+    MASS,
     purrr,
     rstan,
     stringr,

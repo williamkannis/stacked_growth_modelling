@@ -14,9 +14,9 @@
 # outputs and perform multimodal inference by estimation leave-one-out cross
 # validation and estimating stacking weights.
 
-# Requires: dplyr (full), tibble, parallel, rstan (full), loo
-
 ## MAYBE COMBINE DATA PREP AND MODEL RUN. AND CREATE A SEPERATE DIAGNTIC FUNCTION ##
+##### USE @inheritParams IN FUNCTION WITH SIMIALR PARAMETERS
+#### COMBINE TOGEHTER HELP DOUCMENTS FOR SIMILAR FUNCTIONS
 
 # stan_data_prep  --------------------------------------------------------------
 
@@ -77,6 +77,7 @@
 #' @export
 
 # CHANGE FIXED EFFECTS TO INCUDE NONE INSTEAT OF NULL
+# COMBINE THIS AND STAN FUNCITON TOGETHER
 
 stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,   
                            fixed.effect = NULL,category = NULL, predictors = NULL,  
@@ -357,7 +358,7 @@ stan_diag_batch <- function(mod.forms = c("vb","gz","lg"),fixed.effects = NULL,
   
 }
 
-
+#### UODATE TO USE LOO DIAG FUNCTION WITHIN
 # Helper function
 .stan_diag <- function(data,model,model.dir,export.dir,sp,...){
   
