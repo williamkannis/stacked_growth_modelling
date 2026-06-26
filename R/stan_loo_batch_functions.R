@@ -76,10 +76,6 @@
 #' 
 #' @export
 
-# REQUIRES: dplyr (full), tidyr
-
-
-
 # CHANGE FIXED EFFECTS TO INCUDE NONE INSTEAT OF NULL
 
 stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,   
@@ -88,23 +84,27 @@ stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,
   
   # Filter to species of interest and create numeric sample event ids
   sp_df <- age.df %>% 
-    filter(species == sp) %>% 
-    group_by(across(tidyr::all_of(sample.groups))) %>% 
-    mutate(sample_id = cur_group_id()) %>% 
-    ungroup() %>% 
-    arrange(sample_id)
+    dplyr::filter(species == sp) %>% 
+    dplyr::group_by(across(tidyr::all_of(sample.groups))) %>% 
+    dplyr::mutate(sample_id = cur_group_id()) %>% 
+    dplyr::ungroup() %>% 
+    dplyr::arrange(sample_id)
   
   # Create table to bridge species specific sample_ids to years and sites
   sample_id_bridge <- sp_df %>% 
-    distinct(across(all_of(c(sample.groups,"species", "sample_id"))))
+    dplyr::distinct(
+      dplyr::across(
+        tidyr::all_of(c(sample.groups,"species", "sample_id"))
+        )
+      )
   
   # Average length, to compare growth rates among groupings
   # If no size structure data.set provided, use lengths from age.df
   if(is.null(len.df)) len.df <- age.df
   length_m <- len.df %>% 
-    filter(species == sp) %>% 
-    summarise(n = mean(length,na.rm = T)) %>% 
-    pull()
+    dplyr::filter(species == sp) %>% 
+    dplyr::summarise(n = mean(length,na.rm = T)) %>% 
+    dplyr::pull()
   
   # Arrange data into input list for Stan analysis
   input_data <- list(
@@ -128,22 +128,25 @@ stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,
   # If fixed effects are specified, summarized predictor or categroical data
   # at sampling event level
   sample_df<- sp_df %>% 
-    select(tidyr::all_of(c("sample_id",category,predictors))) %>% 
-    distinct() %>% 
-    arrange(sample_id)
+    dplyr::select(tidyr::all_of(c("sample_id",category,predictors))) %>% 
+    dplyr::distinct() %>% 
+    dplyr::arrange(sample_id)
   
   # Add categorical second-level predictors if applicable
   if(fixed.effect == "categorical") {
     
     # check if correct type of predictors are provided
-    if(!is.null(predictors)) stop("Linear predictors are not possibe with the
-                                  categorical model")
-    if(linear.predictions) stop("Cannot provide linear predictions with the
-                                categorical model")
+    if(!is.null(predictors)) {
+    stop("Linear predictors are not possibe with thecategorical model")
+      }
+    if(linear.predictions) {
+    stop("Cannot provide linear predictions with the categorical model")
+      }
     if(is.null(category)) stop("Please provide category for grouping")
 
     # select category grouping
-    cat_id <- sample_df %>% pull(category)
+    cat_id <- sample_df %>% 
+      dplyr::pull(category)
     
     # if category not provided as factor, create factor
     if(!is.factor(cat_id)) cat_id <- factor(cat_id)
@@ -156,7 +159,7 @@ stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,
       cat = sample_df[,category],
       cat_id = cat_id
     ) %>% 
-      distinct()
+      dplyr::distinct()
     
     # Arrange data into input list for Stan analysis
     cat_data <- list(
@@ -187,7 +190,7 @@ stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,
     # Scale and center ?
     if(scale) {
       x_df <- x_df_raw %>% 
-        mutate(across(everything(),~as.numeric(scale(.x))))
+        dplyr::mutate(across(everything(),~as.numeric(scale(.x))))
     } else {
       x_df <- x_df_raw
     }
@@ -300,7 +303,6 @@ stan_data_prep <- function(sp, age.df, len.df = NULL,sample.groups,
 #' 
 #' @export
 
-# REQUIRES: dplyr, parallel,
 
 stan_diag_batch <- function(mod.forms = c("vb","gz","lg"),fixed.effects = NULL,
                             data,sp=NULL,export.dir,...,parallel = F,mc.cores=NULL){
@@ -390,15 +392,18 @@ stan_diag_batch <- function(mod.forms = c("vb","gz","lg"),fixed.effects = NULL,
   mod.summary <- as.data.frame(summary(mod.out)[[1]])
   
   # number of parameters that did not converge (anything >0 is unacceptable)
-  no.conv <- nrow(mod.summary %>% filter(Rhat >1.1))
+  no.conv <- nrow(mod.summary %>% 
+                    dplyr::filter(Rhat >1.1))
   
   # Bulk effective sample size
-  low.eff <- nrow(mod.summary %>% filter(n_eff < 400))
+  low.eff <- nrow(mod.summary %>% 
+                    dplyr::filter(n_eff < 400))
   
   ### Check for sampler issues ###
   
   # Extract sampler parameters after warmup
-  sampler.params.post.list <- get_sampler_params(mod.out, inc_warmup = FALSE)
+  sampler.params.post.list <- 
+    rstan::get_sampler_params(mod.out, inc_warmup = FALSE)
   
   # Convert from list to dataframe
   sampler.params.post.df <-as.data.frame(
@@ -420,7 +425,7 @@ stan_diag_batch <- function(mod.forms = c("vb","gz","lg"),fixed.effects = NULL,
     )
   high_k <- loo$diagnostics$pareto_k[loo$diagnostics$pareto_k >thres]
 
-  ### Export model output if convergance is reached ###
+  ### Export model output if convergence is reached ###
   if (no.conv+low.eff +n.diverg == 0){
     
     # Add a species name to file name and directory
@@ -467,8 +472,6 @@ stan_diag_batch <- function(mod.forms = c("vb","gz","lg"),fixed.effects = NULL,
 #' @returns A list of psis-objects
 #' 
 #' @export
-
-# REQUIRES: parallel loo
 
 
 loo_batch <- function(out.files = NULL ,out.dir,mc.cores =1) {
@@ -573,8 +576,8 @@ stack_format <- function(loo_list,cores) {
   # Change stack_wt into dataframe
   stack_df <- as.data.frame(stack) %>% 
     tibble::rownames_to_column("model") %>% 
-    rename(stack_wt = x) %>% 
-    arrange(desc(stack_wt)) 
+    dplyr::rename(stack_wt = x) %>% 
+    dplyr::arrange(desc(stack_wt)) 
   
   # Calculate cumulative model weights
   cum_wt = 0
