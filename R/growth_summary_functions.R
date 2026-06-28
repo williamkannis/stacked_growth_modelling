@@ -21,18 +21,11 @@
 #' @description Summarizes the median and 95% credible intervals of posterior
 #' distribution of parameters from a set of models for use in tables.
 #' 
-#' @param mod.df Data.frame containing model file names. Must have column 
-#' "model".
-#' @param mod.dir File path for Stan model output files
-#' @param parallel T or F. Use multiple cores. Only should be used on Linux and 
-#' MacOS. Default is F.
-#' @param mc.cores Number of core for parallel processing if parallel = T. 
-#' Default is NULL.
+#' @inheritParams summary_args
+#' @inheritParams parallel_args
 #' @param params Vector containing parameters to summarize c("mu","tau","beta",
 #' "sigma_length").
-#' @param digits Number of digits to round values. Default is 3 digits.
-#' @param ci Vector containing lower and upper percentiles used for credible 
-#' intervals. Default is c(0.025,0.975).
+
 #' 
 #' @details Posterior distribution for select parameters are extracted from a 
 #' list of models. Posterior distributions are summarized into median and 95% 
@@ -187,9 +180,7 @@ mean_ci_batch <- function(mod.df,mod.dir,parallel = F,mc.cores=NULL,
 #'
 #' @description Summarizes model outputs for a set of models into one table.
 #' 
-#' @param mod.df Data.frame containing model file names. Must have column
-#' named "model".
-#' @param mod.dir File path for Stan model output files
+#' @inheritParams summary_args
 #' 
 #' @details Exports a csv file with rows for model parameters for each model
 #' type. Includes mean, sd, median, and 95% credible intervals of each 
@@ -267,17 +258,11 @@ supp_table_format <- function(mod.df,mod.dir) {
 #' @description Summarizes the median and 95% credible intervals of posterior
 #' distribution of beta coefficients from a set of models for use in plotting.
 #' 
-#' @param stack.df Data.frame containing model file names and stacking weights. 
-#' Must have columns "model" and "stack_wt
+#' @inheritParams stack_args
 #' @param wt.cutoff T or F: only include models that have non-zero stacking 
-#' weigths? Default is T.
-#' @param mod.dir File path for Stan model output files
-#' @param ci Vector containing lower and upper percentiles used for credible 
-#' intervals. Default is c(0.025,0.975).
-#' @param parallel T or F. Use multiple cores. Only should be used on Linux and 
-#' MacOS. Default is F.
-#' @param mc.cores Number of core for parallel processing if parallel = T. 
-#' Default is NULL.
+#' weights? Default is T.
+#' @inheritParams summary_args
+#' @inheritParams parallel_args
 #' 
 #' @details Posterior distribution for beta coefficients are extracted from a 
 #' list of models. Posterior distributions are summarized into median and 95% 
@@ -288,8 +273,14 @@ supp_table_format <- function(mod.df,mod.dir) {
 #' 
 #' @export 
 
-beta_mean_ci_batch <- function(stack.df, wt.cutoff = T, mod.dir,  
-                               ci=c(0.025,0.975),parallel = F,mc.cores=NULL) {
+beta_mean_ci_batch <- function(
+    stack.df, 
+    wt.cutoff = T, 
+    mod.dir,  
+    ci=c(0.025,0.975),
+    parallel = F,
+    mc.cores=NULL
+    ) {
   
   # Filter based on wt
   if(wt.cutoff){

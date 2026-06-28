@@ -2,7 +2,7 @@
 #' 
 #' @param mod.forms Vector containing selected growth model forms ("vb" - von 
 #' Bertalanffy, "gz" - Gompertz, "lg" - Logistic). Default is c("vb","gz","lg).
-#' @param NU Numeric indicating the degrees of freedom for student's t error
+#' @param nu Numeric indicating the degrees of freedom for student's t error
 #' distributions of lengths. If zero is selected (default), then length error is 
 #' modeled using a normal distributions
 #' @param fixed.effect Character ("categorical", "linear","random") indicating 
@@ -47,3 +47,44 @@ NULL
 #' 
 #' @name loo_args
 NULL
+
+#' Stacking function arguments
+#' 
+#' @param stack.df Data.frame containing model file names and stacking weights. 
+#' Must have columns "model" and "stack_wt. Models must include predictions of
+#' instantaneous growth (inst_growth) and asymptotic length (Linf) across a 
+#' range of predictor variables.
+#' @param mod.dir File path for Stan model output files
+#' @param sim Number of posterior draws for stacking
+#' @param summarize T or F. Summarize posterior distributions of predictions? If
+#' T, returns data.frame. If false, returns 3d array with slice for each 
+#' posterior draw. Default is T.
+#' @param sum.fun Character ("mean" or "median) for type of summary 
+#' statistic of posterior distribution. Default is mean. 
+#' 
+#' @name stack_args
+NULL
+
+#' Summary function arguments
+#' 
+#' @param mod.df Data.frame containing model file names. Must have column
+#' named "model".
+#' @param mod.dir File path for Stan model output files
+#' @param digits Number of digits to round values. Default is 3 digits.
+#' @param ci Vector containing lower and upper percentiles used for credible 
+#' intervals. Default is c(0.025,0.975).
+#' 
+#' @name summary_args
+NULL
+
+#' Parallel processing arguments 
+#' 
+#' @param mc.cores Number of core for parallel processing if parallel = T. 
+#' Default is NULL.
+#' @param params Vector containing parameters to summarize c("mu","tau","beta",
+#' "sigma_length").
+#' 
+#' @name parallel_args
+NULL
+
+

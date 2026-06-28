@@ -16,12 +16,9 @@ mean_ci_batch(
 }
 \arguments{
 \item{mod.df}{Data.frame containing model file names. Must have column
-"model".}
+named "model".}
 
 \item{mod.dir}{File path for Stan model output files}
-
-\item{parallel}{T or F. Use multiple cores. Only should be used on Linux and
-MacOS. Default is F.}
 
 \item{mc.cores}{Number of core for parallel processing if parallel = T.
 Default is NULL.}

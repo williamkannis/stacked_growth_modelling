@@ -7,6 +7,9 @@
 curve_predictR(
   stack.df,
   mod.dir,
+  sim,
+  summarize = T,
+  sum.fun = NULL,
   type,
   group.id,
   pred.input = NULL,
@@ -14,18 +17,25 @@ curve_predictR(
   pred.group = NULL,
   pred.interval = NULL,
   stack = F,
-  sim,
-  summarize = T,
-  sum.fun = NULL,
   ...
 )
 }
 \arguments{
-\item{stack.df}{Data.frame containing model file names and stacking wts.
-Must have columns "model" and an optional column: "stack_wt if creating
-model stacked predictions.}
+\item{stack.df}{Data.frame containing model file names and stacking weights.
+Must have columns "model" and "stack_wt. Models must include predictions of
+instantaneous growth (inst_growth) and asymptotic length (Linf) across a
+range of predictor variables.}
 
 \item{mod.dir}{File path for Stan model output files}
+
+\item{sim}{Number of posterior draws for stacking}
+
+\item{summarize}{T or F. Summarize posterior distributions of predictions? If
+T, returns data.frame. If false, returns 3d array with slice for each
+posterior draw. Default is T.}
+
+\item{sum.fun}{Character ("mean" or "median) for type of summary
+statistic of posterior distribution. Default is mean.}
 
 \item{type}{Character ("parameter" or "prediction"), model stack growth
 curve predictions or model parameters parameters}
@@ -53,15 +63,6 @@ Default is NULL.}
 
 \item{stack}{T or F. Create model stacked predictions or parameter estimates
 (T), or candidate model specific outputs (F). Default is FALSE}
-
-\item{sim}{Number of posterior draws for predictions or parameter estimates}
-
-\item{summarize}{T or F. Summarize posterior distributions of predictions? If
-T, returns data.frame. If false, returns 3d array with slice for each
-posterior draw. Default is T.}
-
-\item{sum.fun}{Character ("mean" or "median) for type of summary
-statistic of posterior distribution. Default is NULL.}
 
 \item{...}{= Additional arguments passed to .prediction_sampler or
 .parameter_sampler auxiliary functions. Required arguments for stacked growth

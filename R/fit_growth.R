@@ -16,8 +16,8 @@
 #' 
 #' Currently, this function can call Bayesian growth models with the three-
 #' parameter von Bertalanffy, Gompertz, and logistic growth forms. Length can
-#' be modeled using normally distributed errors (NU = 0) or using the student's
-#' T distribution with user specified degrees of freedom (NU > 0). MORE DETAILS
+#' be modeled using normally distributed errors (nu = 0) or using the student's
+#' T distribution with user specified degrees of freedom (nu > 0). MORE DETAILS
 #' 
 #' Supported effect structures are random effects only, categorical, or linear
 #' second-level effect predictors. In all models, each growth parameter can 
@@ -56,7 +56,7 @@
 
 fit_growth <- function(
     mod.forms = c("vb","gz","lg"),
-    NU=0,
+    nu=0,
     fixed.effect = "random",
     sample.groups,
     category = NULL, 
@@ -77,7 +77,7 @@ fit_growth <- function(
     sp=sp, 
     age.df=age.df, 
     len.df = len.df,
-    NU=NU,
+    nu=nu,
     sample.groups = sample.groups,   
     fixed.effect = fixed.effect,
     category = category, 
@@ -126,19 +126,54 @@ fit_growth <- function(
 
 
 # Data prep helper function  ---------------------------------------------------
-
+## CHECK FOR LENGTH NAs
 .prep_stan_data <- function(
     sp, 
     age.df, 
     len.df = NULL,
-    NU = 0,
+    nu = 0,
     sample.groups,
-    fixed.effect = NULL,
+    fixed.effect = "random",
     category = NULL, 
     predictors = NULL,  
     scale = T,
     linear.predictions = F,  
     pred.len = 100){
+  
+  # Verify age.df has proper coumns and formating
+  if(!"species" %in% names(age.df)) {
+    stop("Please make sure age.df has a column called 'species'")
+  }
+  if(!sp %in% age.df$species) {
+    stop("Please provide a species name for sp that is included in age.df")
+  }
+  if(!"length" %in% names(age.df)) {
+    stop("Please make sure age.df has a column called 'length'")
+  }
+  if(!"age" %in% names(age.df)) {
+    stop("Please make sure age.df has a column called 'age'")
+  }
+  if(any(!sample.groups %in% names(age.df))) {
+    stop("Please provide column names for sample.groups that appear in age.df")
+  }
+  
+  # If provided, make sure len.df has proper columns and formatting
+  if(!is.null(len.df)){
+    if(!"species" %in% names(len.df)) {
+      stop("Please make sure len.df has a column called 'species'")
+    }
+    if(!sp %in% len.df$species) {
+      stop("Please provide a species name for sp that is included in len.df")
+    }
+    if(!"length" %in% names(len.df)) {
+      stop("Please make sure len.df has a column called 'length'")
+    }
+  }
+  
+  # Verify input arguments are valid
+  if(!fixed.effect %in% c("random","linear","categorical")) {
+    stop('fixed effect must be "random","linear",or "categorical"')
+  }
   
   # Filter to species of interest and create numeric sample event ids
   sp_df <- age.df %>% 
@@ -172,11 +207,17 @@ fit_growth <- function(
     AGE =sp_df$age,
     ID = sp_df$sample_id,
     LENGTH_M = length_m,
-    NU = NU
+    NU = nu
   )
   
   # Return data if no fixed effects are indicated
   if(fixed.effect == "random") {
+    
+    if(linear.predictions) {
+      stop(
+        "Cannot provide linear predictions with the random effect only model"
+        )
+    }
     
     # Return input data and bridge table as a list
     out <-list(input_data,sample_id_bridge,length_m)
@@ -196,7 +237,7 @@ fit_growth <- function(
     
     # check if correct type of predictors are provided
     if(!is.null(predictors)) {
-    stop("Linear predictors are not possibe with thecategorical model")
+    stop("Linear predictors are not possibe with the categorical model")
       }
     if(linear.predictions) {
     stop("Cannot provide linear predictions with the categorical model")
@@ -239,8 +280,9 @@ fit_growth <- function(
   if(fixed.effect == "linear"){
     
     # check if correct type of predictors are provided
-    if(!is.null(category)) stop("Categorical predictors are not possibe with 
-                                  the linear model")
+    if(!is.null(category)) {
+    stop("Categorical predictors are not possibe with the linear model")
+      }
     if(is.null(predictors)) stop("Please provide names of linear predictors")
 
     # select predictors of choice

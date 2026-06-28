@@ -22,13 +22,7 @@
 #' 
 #' @param sim.input Named list containing the appropriate model parameter values
 #' for selected model structure. See details for more information.
-#' @param nu Number of degrees of freedom for student's t errors. If zero,
-#' error will be simulated using a normal distribution.
-#' @param mod.form Vector containing selected growth model forms ("vb" - von 
-#' Bertalanffy, "gz" - Gompertz, "lg" - Logistic).
-#' @param fixed.effects Character ("categorical", "linear", "none) indicating  
-#' the type of second level effects present in model. Default is no second-
-#' level effects (none).
+#' @inheritParams growth_mod_args
 #' @param equal.cat T or F. If categorical fixed effects are simulated, should
 #' each category be represented by an equal number of sites. Default is T.
 #' 
@@ -102,7 +96,13 @@
 
 #ADD LINEAR PREDICTION INPUTS
 
-ageLengthSim <- function(sim.input,mod.form,nu=0,fixed.effects="none",equal.cat=T) {
+simulate_length <- function(
+    sim.input,
+    mod.form,
+    nu=0,
+    fixed.effects="random",
+    equal.cat=T
+    ) {
   
   ### Prepare input data  ###
   
@@ -276,11 +276,7 @@ ageLengthSim <- function(sim.input,mod.form,nu=0,fixed.effects="none",equal.cat=
 #' @param params Vector containing names of parameter posterior means to 
 #' extract. Must match parameter names in Stan model. See details for all
 #' possible parameters.
-#' @param mod.form Vector containing selected growth model forms ("vb" - von 
-#' Bertalanffy, "gz" - Gompertz, "lg" - Logistic).
-#' @param fixed.effects Character ("categorical", "linear", "none) indicating  
-#' the type of second level effects present in model. Default is no second-
-#' level effects (none).
+#' @inheritParams growth_mod_args
 #' @param ... Additional arguments to be passed to stan. See documentation for 
 #' stan function in rstan.
 #' 
@@ -292,7 +288,7 @@ ageLengthSim <- function(sim.input,mod.form,nu=0,fixed.effects="none",equal.cat=
 #' 
 #' Possible parameters to summarize: "sigma_length", "mu_Linf", "mu_g", "mu_t", 
 #' "cat_Linf", "cat_g", "cat_t", "tau", "beta_Linf", "beta_g", and "beta_t".
-#' See the details section of ageLengthSim for more parameter descriptions.
+#' See the details section of simulate_lengths for more parameter descriptions.
 #' 
 #' @returns Names list containing a table of parameter means ("means") and
 #' a table indicating if a  parameter's credible intervals overlap with zero 
@@ -300,11 +296,16 @@ ageLengthSim <- function(sim.input,mod.form,nu=0,fixed.effects="none",equal.cat=
 #' 
 #' @export
 
-model_sim_test <- function(input,params,mod.form,fixed.effects="none",...) {
+model_sim_test <- function(
+    input,
+    params,
+    mod.form,
+    fixed.effects="random",
+    ...
+    ) {
   
   ### Model specific configuration  ###
-  if(fixed.effects == "none") fixed.effects <- "random"
-  
+
   # model name
   mod <- paste0(mod.form,"_",fixed.effects,".stan")
   mod_dir <- "stan_scripts"

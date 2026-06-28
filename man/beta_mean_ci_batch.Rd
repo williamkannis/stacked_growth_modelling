@@ -15,18 +15,17 @@ beta_mean_ci_batch(
 }
 \arguments{
 \item{stack.df}{Data.frame containing model file names and stacking weights.
-Must have columns "model" and "stack_wt}
+Must have columns "model" and "stack_wt. Models must include predictions of
+instantaneous growth (inst_growth) and asymptotic length (Linf) across a
+range of predictor variables.}
 
 \item{wt.cutoff}{T or F: only include models that have non-zero stacking
-weigths? Default is T.}
+weights? Default is T.}
 
 \item{mod.dir}{File path for Stan model output files}
 
 \item{ci}{Vector containing lower and upper percentiles used for credible
 intervals. Default is c(0.025,0.975).}
-
-\item{parallel}{T or F. Use multiple cores. Only should be used on Linux and
-MacOS. Default is F.}
 
 \item{mc.cores}{Number of core for parallel processing if parallel = T.
 Default is NULL.}
