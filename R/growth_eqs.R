@@ -96,6 +96,18 @@
 # to the end of the growth interval and Growth rates are provided in 
 # terms of fish weight based on provided length-weight parameters
 
+.age2interval_growth <- function(input,...,interval,wt.df,dry.wt=1){
+  
+  # Forecast length at beginning and end of interval
+  length <- .age2length(input,...)
+  length_t <- .age2length(input+interval,...)
+  
+  # Estimate growth using weights
+  dry_wt = .length2wt(length,wt.df,dry.wt)
+  dry_wt_t = .length2wt(length_t,wt.df,dry.wt)
+  .exp_growth(dry_wt,dry_wt_t,interval)
+}
+
 
 .length2interval_growth <- function(input,...,interval,wt.df,dry.wt=1){
   
