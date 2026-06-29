@@ -3,12 +3,44 @@
 #' @description Runs multiple user-specified Bayesian hierarchical growth models 
 #' of differing model forms and effect structures.
 #' 
-#' @inheritParams growth_mod_args
+#' @param mod.form Vector containing selected growth model forms ("vb" - von 
+#' Bertalanffy, "gz" - Gompertz, "lg" - Logistic). Default is c("vb","gz","lg).
+#' @param nu Numeric indicating the degrees of freedom for student's t error
+#' distributions of lengths. If zero is selected (default), then length error is 
+#' modeled using a normal distributions
+#' @param fixed.effect Character ("categorical", "linear","random") indicating 
+#' the type of second level effects present in model. Default is no second-level
+#' effects (random).
+#' @param sample.groups Vector containing the column names used to designate an
+#' individual sampling event (e.g site and date) used for random effects. Used
+#' to create a single sampling identifier.
+#' @param category Name of column containing categorical predictor variable. 
+#' Should contain category as a factor. Only necessary if fixed.effects == 
+#' "category" Default is NULL.
+#' @param predictors Vector with column names of chosen predictor variables. 
+#' Only necessary if fixed.effects == "linear". Default is NULL
+#' @param scale T or F: scale and center predictors? Only necessary if 
+#' fixed.effects == "linear". Default is T.
+#' @param linear.predictions T or F. Create predictions of growth parameters and
+#' and rates across the range of linear predictor variables? Only possible if 
+#' fixed.effects == "linear". Default is F.
+#' @param pred.len Number of predictions to make along range of predictor 
+#' variables. Only necessary if linear.predictions == T. Default is 100.
+#' @param sp Character containing species name for data filtering.
+#' @param age.df Data.frame containing age-length data for a set of species, 
+#' dates, and sites. Must have columns for species name (species), individual
+#' lengths (length), and ages (age). Additional columns for groupings are 
+#' required for random effects. If second level fixed effects of selected, data
+#' must include columns for categorical groupings, or linear predictors.
+#' @param len.df Data.frame with fish size structure. Used for average length 
+#' for inst.growth comparisons across groupings. Must have columns for species 
+#' names (species) and lengths (length). If NULL (default), lengths from 
+#' age-length data will be used.
 #' @param ... Additional arguments to be passed to stan. See documentation for 
 #' stan function in rstan.
 #' @param parallel T or F. Run multiple model forms in parallel? Warning, if T,
 #' it is recommended to set the stan cores augment to zero.
-#' @param mc.core Number of cores used for parallel processing.
+#' @param mc.cores Number of cores used for parallel processing.
 #' 
 #' @details Reads in pre-created Stan model scripts based on user-specified 
 #' growth model forms and fixed effect structures. Models are then ran with the 
@@ -55,7 +87,7 @@
 #' @export
 
 fit_growth <- function(
-    mod.forms = c("vb","gz","lg"),
+    mod.form = c("vb","gz","lg"),
     nu=0,
     fixed.effect = "random",
     sample.groups,
@@ -89,7 +121,7 @@ fit_growth <- function(
   data <- input_list$stan_data
   
   # Load in appropiate stan scripts
-  mods <- sapply(mod.forms,.extract_stan_file,fixed.effect)
+  mods <- sapply(mod.form,.extract_stan_file,fixed.effect)
   
   
   # Run all Stan models in parallel
@@ -179,7 +211,7 @@ fit_growth <- function(
   sp_df <- age.df %>% 
     dplyr::filter(species == sp) %>% 
     dplyr::group_by(across(tidyr::all_of(sample.groups))) %>% 
-    dplyr::mutate(sample_id = cur_group_id()) %>% 
+    dplyr::mutate(sample_id = dplyr::cur_group_id()) %>% 
     dplyr::ungroup() %>% 
     dplyr::arrange(sample_id)
   
@@ -202,7 +234,7 @@ fit_growth <- function(
   # Arrange data into input list for Stan analysis
   input_data <- list(
     N = nrow(sp_df),
-    N_SITES = n_distinct(sp_df$sample_id),
+    N_SITES = dplyr::n_distinct(sp_df$sample_id),
     LENGTH = sp_df$length,
     AGE =sp_df$age,
     ID = sp_df$sample_id,
@@ -263,7 +295,7 @@ fit_growth <- function(
     
     # Arrange data into input list for Stan analysis
     cat_data <- list(
-      N_CAT = n_distinct(cat_id),
+      N_CAT = dplyr::n_distinct(cat_id),
       CAT = cat_id
       )
     

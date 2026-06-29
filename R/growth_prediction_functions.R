@@ -21,7 +21,17 @@
 #' or growth parameters estimates with credible intervals for each candidate
 #' model, or a stacked model based on imputed model weights.
 #' 
-#' @inheritParams stack_args
+#' @param stack.df Data.frame containing model file names and stacking weights. 
+#' Must have columns "model" and "stack_wt. Models must include predictions of
+#' instantaneous growth (inst_growth) and asymptotic length (Linf) across a 
+#' range of predictor variables.
+#' @param mod.dir File path for Stan model output files
+#' @param sim Number of posterior draws for stacking
+#' @param summarize T or F. Summarize posterior distributions of predictions? If
+#' T, returns data.frame. If false, returns 3d array with slice for each 
+#' posterior draw. Default is T.
+#' @param sum.fun Character ("mean" or "median) for type of summary 
+#' statistic of posterior distribution. Default is mean. 
 #' @param group.id Character ("cat","mu", "site") indicating the grouping 
 #' level of model parameters to extract.
 #' @param type Character ("parameter" or "prediction"), model stack growth 

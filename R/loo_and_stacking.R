@@ -46,9 +46,11 @@ loo_batch <- function(out.files = NULL ,out.dir,mc.cores =1) {
 #' @description Estimates model stacking weights, formats results into a 
 #' data.frame, and calculates cumulative model weights.
 #' 
-#' @inheritParams loo_args
+#' @inheritParams loo_diag
+#' @param cores Number of cores for parallel processing in the 
+#' loo_model_weights function in loo package.
 #' 
-#' @details Wrapper for loo::loo_model_weights.
+#' @details Wrapper for [loo::loo_model_weights].
 #' 
 #' @returns Data.frame containing model stacking weights and cumulative 
 #' stacking weights for each model 

@@ -8,8 +8,8 @@
 #' model forms, compiling convergence and sampling diagnostics, and exporting 
 #' stanfit objects of converged models
 #' 
-#' @param model.out stanfit object
-#' @inheritParams loo_args
+#' @param mod.out stanfit object
+#' @inheritParams loo_diag
 #' 
 #' @details Model convergence and sampling diagnostics are provided 
 #' in a summarized list. Convergence diagnostics include the number of 
@@ -83,7 +83,9 @@ stan_diag <- function(mod.out,k_limit){
 #'
 #' @description Runs diagnosis on a list of loo objects.
 #' 
-#' @inheritParams loo_args
+#' @param loo_list List of psis_loo objects from the loo function.
+#' @param k_limit Pareto K thresholds for psis-loo estimation. Default = 0.7.
+#' If k_limit = "ESS", threshold will be defined as 1/log(n_eff).
 #' 
 #' @details Determines if Pareto k statistics are less than a given threshold. 
 #' See loo documentation for more information.

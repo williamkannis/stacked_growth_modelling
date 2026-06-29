@@ -5,12 +5,11 @@
 #' @description Estimates r-squared of length predictions of all candidate or
 #' stacked models. 
 #' 
-#' @inheritParams stack_args
+#' @inheritParams curve_predictR
 #' @param data Data.frame containing actual length-at-age data with appropriate
 #' sampling id. Must have columns: age, length, and sample_id.
 #' @param stack T or F. Create model stacked predictions or parameter estimates
 #' (T), or candidate model specific outputs (F). Default is FALSE
-#' @param sp Character for name of species of which to estimate r-squared
 #'
 #' @details Function predicts the length at age for each random grouping. 
 #' R-squared is then estimated for each candidate or the stacked model. 

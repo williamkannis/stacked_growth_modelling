@@ -1,28 +1,22 @@
-#-------------------------------------------------------------------------------
-#
-#  Growth summary statistic functions
-#
-#-------------------------------------------------------------------------------
-
-# AUTHOR: William K. Annis
-
-# CREATED: 6/9/2026
-
-# DESCRIPTION: Functions that summarize the results from Stan model outputs for
-# the use in tables and figures.
-
-
-##### USE @inheritParams IN FUNCTION WITH SIMIALR PARAMETERS
-
-# mean_ci_batch  ---------------------------------------------------------------
+# ------------------------------------------------------------------------------
+#  Growth model summary functions
+# ------------------------------------------------------------------------------
 
 #' Batch median and 95% credible interval summary
 #'
 #' @description Summarizes the median and 95% credible intervals of posterior
 #' distribution of parameters from a set of models for use in tables.
 #' 
-#' @inheritParams summary_args
-#' @inheritParams parallel_args
+#' @param mod.df Data.frame containing model file names. Must have column
+#' named "model".
+#' @param mod.dir File path for Stan model output files
+#' @param digits Number of digits to round values. Default is 3 digits.
+#' @param ci Vector containing lower and upper percentiles used for credible 
+#' intervals. Default is c(0.025,0.975).
+#' @param parallel T or F. Run multiple model forms in parallel? Default is
+#' false.
+#' @param mc.cores Number of core for parallel processing if parallel = T. 
+#' Default is NULL.
 #' @param params Vector containing parameters to summarize c("mu","tau","beta",
 #' "sigma_length").
 
@@ -38,9 +32,15 @@
 #' 
 #' @export 
 
-mean_ci_batch <- function(mod.df,mod.dir,parallel = F,mc.cores=NULL,
-                          params = c("mu","tau","beta","sigma_length"),
-                          digits=3,ci = c(0.025,0.975)) {
+mean_ci_batch <- function(
+    mod.df,
+    mod.dir,
+    parallel = F,
+    mc.cores=NULL,
+    params = c("mu","tau","beta","sigma_length"),
+    digits=3,
+    ci = c(0.025,0.975)
+    ) {
   
   # Load in model names
   mods <- mod.df$model
@@ -174,13 +174,12 @@ mean_ci_batch <- function(mod.df,mod.dir,parallel = F,mc.cores=NULL,
 }
 
 
-# supp_table_format  -----------------------------------------------------------
-
+# ------------------------------------------------------------------------------
 #' Full Stan model output tables
 #'
 #' @description Summarizes model outputs for a set of models into one table.
 #' 
-#' @inheritParams summary_args
+#' @inheritParams mean_ci_batch
 #' 
 #' @details Exports a csv file with rows for model parameters for each model
 #' type. Includes mean, sd, median, and 95% credible intervals of each 
@@ -251,18 +250,16 @@ supp_table_format <- function(mod.df,mod.dir) {
 }
 
 
-# beta_mean_ci_batch  ----------------------------------------------------------
-
+# ------------------------------------------------------------------------------
 #' Batch beta coefficient summary
 #'
 #' @description Summarizes the median and 95% credible intervals of posterior
 #' distribution of beta coefficients from a set of models for use in plotting.
 #' 
-#' @inheritParams stack_args
+#' @inheritParams curve_predictR
 #' @param wt.cutoff T or F: only include models that have non-zero stacking 
 #' weights? Default is T.
-#' @inheritParams summary_args
-#' @inheritParams parallel_args
+#' @inheritParams mean_ci_batch
 #' 
 #' @details Posterior distribution for beta coefficients are extracted from a 
 #' list of models. Posterior distributions are summarized into median and 95% 
@@ -376,7 +373,10 @@ beta_mean_ci_batch <- function(
   
   # Extract mean if more than one value per parameter (e.g., beta[1-n])
   if (out_dim ==2) {
-    estimate[[1]] <- sapply(1:ncol(mod_out), function(x) paste(param[1],x,sep="_"))
+    estimate[[1]] <- sapply(
+      1:ncol(mod_out), 
+      function(x) paste(param[1],x,sep="_")
+      )
     estimate[[2]] <- apply(mod_out,2,median)
     estimate[[3]] <- apply(mod_out,2,quantile, probs = ci[1])
     estimate[[4]] <- apply(mod_out,2,quantile, probs = ci[2])

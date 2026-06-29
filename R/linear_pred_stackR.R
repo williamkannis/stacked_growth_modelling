@@ -5,7 +5,7 @@
 #' @description Creates model-stacked predictions of instantaneous growth rate
 #' across a range of predictor variables.
 #' 
-#' @inheritParams stack_args
+#' @inheritParams curve_predictR
 #'
 #' @details Function extract prediction posterior distributions of instantaneous 
 #' growth rates across predictors based on model names provided with stacking 

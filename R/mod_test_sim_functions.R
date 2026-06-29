@@ -22,7 +22,7 @@
 #' 
 #' @param sim.input Named list containing the appropriate model parameter values
 #' for selected model structure. See details for more information.
-#' @inheritParams growth_mod_args
+#' @inheritParams fit_growth
 #' @param equal.cat T or F. If categorical fixed effects are simulated, should
 #' each category be represented by an equal number of sites. Default is T.
 #' 
@@ -100,7 +100,7 @@ simulate_length <- function(
     sim.input,
     mod.form,
     nu=0,
-    fixed.effects="random",
+    fixed.effect="random",
     equal.cat=T
     ) {
   
@@ -276,7 +276,7 @@ simulate_length <- function(
 #' @param params Vector containing names of parameter posterior means to 
 #' extract. Must match parameter names in Stan model. See details for all
 #' possible parameters.
-#' @inheritParams growth_mod_args
+#' @inheritParams fit_growth
 #' @param ... Additional arguments to be passed to stan. See documentation for 
 #' stan function in rstan.
 #' 
@@ -300,7 +300,7 @@ model_sim_test <- function(
     input,
     params,
     mod.form,
-    fixed.effects="random",
+    fixed.effect="random",
     ...
     ) {
   
