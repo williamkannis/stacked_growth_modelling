@@ -542,14 +542,14 @@ stack_predict <- function(
   mod_list <- .post_draw(model.out,n.sim)
   
   # run specified function using each random growth parameter draws
-  out_list <- lapply_fun(mod_list,.growth_predictR,...)
+  out_list <- lapply_fun(mod_list,.growth_predict,...)
   
   # Bind results into a 3d array
   abind::abind(out_list,along = 3)
   
 }
 
-.growth_predictR <- function(
+.growth_predict <- function(
     model.out,
     g.mod,
     input.df,
