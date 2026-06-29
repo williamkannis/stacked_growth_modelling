@@ -21,5 +21,5 @@ Estimates model stacking weights, formats results into a
 data.frame, and calculates cumulative model weights.
 }
 \details{
-Wrapper for loo::loo_model_weights.
+Wrapper for \link[loo:loo_model_weights]{loo::loo_model_weights}.
 }

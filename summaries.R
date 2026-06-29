@@ -256,7 +256,7 @@ supp_table_format <- function(mod.df,mod.dir) {
 #' @description Summarizes the median and 95% credible intervals of posterior
 #' distribution of beta coefficients from a set of models for use in plotting.
 #' 
-#' @inheritParams curve_predictR
+#' @inheritParams stack_predict
 #' @param wt.cutoff T or F: only include models that have non-zero stacking 
 #' weights? Default is T.
 #' @inheritParams mean_ci_batch

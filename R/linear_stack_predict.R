@@ -1,11 +1,9 @@
-# linear_pred_stackR  ----------------------------------------------------------
-
-#' Model-stacked instantaneous growth predictions
+#' Model-stacked instantaneous growth predictions across values of predictors
 #'
 #' @description Creates model-stacked predictions of instantaneous growth rate
 #' across a range of predictor variables.
 #' 
-#' @inheritParams curve_predictR
+#' @inheritParams stack_predict
 #'
 #' @details Function extract prediction posterior distributions of instantaneous 
 #' growth rates across predictors based on model names provided with stacking 
@@ -21,7 +19,7 @@
 #' @export
 
 
-linear_pred_stackR <- function(stack.df, mod.dir, sim,sum.fun){
+linear_stack_predict <- function(stack.df, mod.dir, sim,sum.fun){
   
   # Retain models with 
   stack <- stack.df %>% 

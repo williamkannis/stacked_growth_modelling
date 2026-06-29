@@ -8,7 +8,7 @@ simulate_length(
   sim.input,
   mod.form,
   nu = 0,
-  fixed.effects = "random",
+  fixed.effect = "random",
   equal.cat = T
 )
 }
@@ -16,9 +16,16 @@ simulate_length(
 \item{sim.input}{Named list containing the appropriate model parameter values
 for selected model structure. See details for more information.}
 
+\item{mod.form}{Vector containing selected growth model forms ("vb" - von
+Bertalanffy, "gz" - Gompertz, "lg" - Logistic). Default is c("vb","gz","lg).}
+
 \item{nu}{Numeric indicating the degrees of freedom for student's t error
 distributions of lengths. If zero is selected (default), then length error is
 modeled using a normal distributions}
+
+\item{fixed.effect}{Character ("categorical", "linear","random") indicating
+the type of second level effects present in model. Default is no second-level
+effects (random).}
 
 \item{equal.cat}{T or F. If categorical fixed effects are simulated, should
 each category be represented by an equal number of sites. Default is T.}

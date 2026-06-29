@@ -27,6 +27,9 @@ weights? Default is T.}
 \item{ci}{Vector containing lower and upper percentiles used for credible
 intervals. Default is c(0.025,0.975).}
 
+\item{parallel}{T or F. Run multiple model forms in parallel? Default is
+false.}
+
 \item{mc.cores}{Number of core for parallel processing if parallel = T.
 Default is NULL.}
 }

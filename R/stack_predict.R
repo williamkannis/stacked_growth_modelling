@@ -1,20 +1,3 @@
-#-------------------------------------------------------------------------------
-#
-# Growth curve and parameter prediction functions
-#
-#-------------------------------------------------------------------------------
-
-# AUTHOR: William K. Annis
-
-# CREATED: Feb 5, 2026
-
-# DESCRIPTION: Functions used to create both candidate and model-stacked growth
-# curve predictions using Stan growth model outputs. Functions also can model-
-# stack growth parameters across models. Script includes helper functions used
-# in main functions
-
-# curve_predictR  --------------------------------------------------------------
-
 #' Stacked and individual model predictions and growth parameters
 #' 
 #' @description Create group-specific growth curve predictions 
@@ -96,7 +79,7 @@
 #' @export
 
 
-curve_predictR <- function(
+stack_predict <- function(
     stack.df, 
     mod.dir,
     sim,
@@ -397,13 +380,21 @@ curve_predictR <- function(
 # draw.
 
 
-.parameter_sampler <- function (model.out,n.sim,truncate.inf = F,g.mod = NULL) {
+.parameter_sampler <- function (
+    model.out,
+    n.sim,
+    truncate.inf = F,
+    g.mod = NULL
+    ) {
   
   # Pull random samples from posterior
   mod_list <- .post_draw(model.out,n.sim)
   
   # Extract parameter of interest
-  out_list <- lapply(mod_list, function(x) as.data.frame(x[,c("group_id","Linf","inf")]))
+  out_list <- lapply(
+    mod_list, 
+    function(x) as.data.frame(x[,c("group_id","Linf","inf")])
+    )
   out <-abind::abind(out_list,along = 3)
   
   # For inf, truncate negative ages to zero, for these fish they 
@@ -421,8 +412,13 @@ curve_predictR <- function(
 # inputed age or length data. Also throws error messages to ensure users have
 # supplied the appropriate data for the predictions of their choice.
 
-.pred_data_prep <- function(create.input,pred.input,max_group,pred.group=NULL,
-                            pred.interval=NULL){
+.pred_data_prep <- function(
+    create.input,
+    pred.input,
+    max_group,
+    pred.group=NULL,
+    pred.interval=NULL
+    ){
   
   ### Create prediction input data using  user supplied groupings/intervals ###
   if(create.input){
@@ -527,7 +523,13 @@ curve_predictR <- function(
 # predictions. Each slice represents a random posterior draw.
 
 
-.prediction_sampler <-function(model.out,n.sim,...,parallel=F,mc.cores=NULL){
+.prediction_sampler <-function(
+    model.out,
+    n.sim,
+    ...,
+    parallel=F,
+    mc.cores=NULL
+    ){
   
   # Parallel processing?
   if (parallel == T) {

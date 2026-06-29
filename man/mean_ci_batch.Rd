@@ -20,6 +20,9 @@ named "model".}
 
 \item{mod.dir}{File path for Stan model output files}
 
+\item{parallel}{T or F. Run multiple model forms in parallel? Default is
+false.}
+
 \item{mc.cores}{Number of core for parallel processing if parallel = T.
 Default is NULL.}
 

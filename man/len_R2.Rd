@@ -24,8 +24,6 @@ sampling id. Must have columns: age, length, and sample_id.}
 
 \item{stack}{T or F. Create model stacked predictions or parameter estimates
 (T), or candidate model specific outputs (F). Default is FALSE}
-
-\item{sp}{Character for name of species of which to estimate r-squared}
 }
 \value{
 Data.frame containing r-squared and adjusted r-squared for each

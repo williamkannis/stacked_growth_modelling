@@ -7,10 +7,10 @@
 stan_diag(mod.out, k_limit)
 }
 \arguments{
+\item{mod.out}{stanfit object}
+
 \item{k_limit}{Pareto K thresholds for psis-loo estimation. Default = 0.7.
 If k_limit = "ESS", threshold will be defined as 1/log(n_eff).}
-
-\item{model.out}{stanfit object}
 }
 \value{
 List contain convergence and sampling diagnostics for each

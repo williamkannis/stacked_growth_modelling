@@ -5,7 +5,7 @@
 \title{Stan growth model batch run}
 \usage{
 fit_growth(
-  mod.forms = c("vb", "gz", "lg"),
+  mod.form = c("vb", "gz", "lg"),
   nu = 0,
   fixed.effect = "random",
   sample.groups,
@@ -23,7 +23,7 @@ fit_growth(
 )
 }
 \arguments{
-\item{mod.forms}{Vector containing selected growth model forms ("vb" - von
+\item{mod.form}{Vector containing selected growth model forms ("vb" - von
 Bertalanffy, "gz" - Gompertz, "lg" - Logistic). Default is c("vb","gz","lg).}
 
 \item{nu}{Numeric indicating the degrees of freedom for student's t error
@@ -74,7 +74,7 @@ stan function in rstan.}
 \item{parallel}{T or F. Run multiple model forms in parallel? Warning, if T,
 it is recommended to set the stan cores augment to zero.}
 
-\item{mc.core}{Number of cores used for parallel processing.}
+\item{mc.cores}{Number of cores used for parallel processing.}
 }
 \value{
 Named list containing a list of Stanfit objects for each model
