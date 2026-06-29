@@ -323,7 +323,9 @@ fit_growth <- function(
     # Scale and center ?
     if(scale) {
       x_df <- x_df_raw %>% 
-        dplyr::mutate(across(everything(),~as.numeric(scale(.x))))
+        dplyr::mutate(
+          dplyr::across(dplyr::everything(),~as.numeric(scale(.x)))
+          )
     } else {
       x_df <- x_df_raw
     }
