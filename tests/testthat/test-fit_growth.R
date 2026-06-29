@@ -28,7 +28,7 @@
 # missing length data from len.df (cant be all)
 
 
-## Linear predicotrs  ##
+## Linear predictors  ##
 
 ## Cat predictors
 
