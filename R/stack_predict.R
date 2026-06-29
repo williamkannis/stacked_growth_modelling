@@ -452,10 +452,10 @@ stack_predict <- function(
       # Create input data
       pred_input <- data.frame(
         group_id = pred.group,
-        pred.interval = pred.interval
+        interval = pred.interval
       ) %>% 
         tidyr::crossing(input = pred.input) %>% 
-        dplyr::select(group_id,pred.interval,input)
+        dplyr::select(group_id,interval,input)
       pred_input$input_id <- 1:nrow(pred_input)
     }
     
@@ -465,8 +465,8 @@ stack_predict <- function(
       pred_input <- data.frame(group_id = 1:max_group) %>% 
         tidyr::crossing(
           input = pred.input,
-          pred.interval =pred.interval) %>% 
-        dplyr::select(group_id,pred.interval,input)
+          interval =pred.interval) %>% 
+        dplyr::select(group_id,interval,input)
       pred_input$input_id <- 1:nrow(pred_input)
     }
   } else {
@@ -503,7 +503,7 @@ stack_predict <- function(
       pred_input <- data.frame(
         group_id = pred.group,
         input = pred.input,
-        pred.interval = pred.interval,
+        interval = pred.interval,
         input_id = 1:length(pred.input)
       )
     }
@@ -608,10 +608,10 @@ stack_predict <- function(
       
       # add additional arguments for helper functions
       if("interval" %in% names(formals(fun))){
-        if("pred.interval" %in% colnames(out_df)){
+        if(!"interval" %in% colnames(out_df)){
           stop("Please provide pred.interval for interval_growth prediction")
         }
-        args$interval = out_df$pred.interval
+        args$interval = out_df$interval
       }
       
       if("wt.df" %in% names(formals(fun))){
