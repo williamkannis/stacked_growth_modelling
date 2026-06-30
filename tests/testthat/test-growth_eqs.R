@@ -336,16 +336,52 @@ test_that("Returns numeric values length of input",{
 
 
 # .age2interval_growth  -------------------------------------------------------
-wt_df_helper <- function(){
-  data.frame(
-    a =-4.782,
-    b=3.042,
-    c= 1
-      )
+wt_df_helper <- function(x){
+  
+  if(x == "good"){
+    df <- data.frame(
+      a =-4.782,
+      b=3.042,
+      c= 1
+    )
+  }
+  
+  if(x == "bad"){
+    df <- data.frame(
+      x =-4.782,
+      y=3.042,
+      z= 1
+    )
+  }
+  
+  if(x == "missing_a"){
+    df <- data.frame(
+      x =-4.782,
+      b=3.042,
+      c= 1
+    )
+  }
+  
+  if(x == "missing_b"){
+    df <- data.frame(
+      a =-4.782,
+      x=3.042,
+      c= 1
+    )
+  }
+  
+  if(x == "missing_c"){
+    df <- data.frame(
+      a =-4.782,
+      b=3.042,
+      x= 1
+    )
+  }
+  df
 }
 # output format
 test_that("Returns numeric values length of input",{
-  wt.df <- wt_df_helper()
+  wt.df <- wt_df_helper("good")
   interval = 30
   expect_true(
     is.numeric(
@@ -380,7 +416,7 @@ test_that("Returns numeric values length of input",{
 
 # output format
 test_that("Returns numeric values length of input",{
-  wt.df <- wt_df_helper()
+  wt.df <- wt_df_helper("good")
   interval = 30
   expect_true(
     is.numeric(
@@ -436,17 +472,15 @@ test_that("all growth forms return values for inputs below asympote",{
   Linf = 34
   g = 0.04
   inf = 10
-  
-  #
   input = 1:(Linf-1)
   
-  # input
-  
-  cond <- lapply(c("vb","gz","lg"), function(mod){
-    .length_forcast(input,20,mod,Linf,g,inf)
+  mods <- c("vb","gz","lg")
+  cond <- lapply(mods, function(mod){
+    g <-.length_forcast(input,20,mod,Linf,g,inf)
     
     list(
-      postive = all(g >= 0),  # negative ages can idicate sizes expected before birth
+      greater = all(g >= input),
+      postive = all(g >= 0),  
       not_na = all(!is.na(g)),
       not_nan = all(!is.nan(g)),
       finite = all(is.finite(g))
@@ -456,6 +490,7 @@ test_that("all growth forms return values for inputs below asympote",{
   
   names(cond) <- mods
   cond_t <- purrr::transpose(cond)
+  expect_all_true(unlist(cond_t$greater)) 
   expect_all_true(unlist(cond_t$postive)) 
   expect_all_true(unlist(cond_t$not_na))
   expect_all_true(unlist(cond_t$not_nan))
@@ -475,8 +510,62 @@ test_that("inputs at or above asympotote returns input",{
   expect_all_true(cond)
 })
 
+# check that function returns correct length
+test_that("correct length is returned", {
+  cond <- sapply(c("vb","gz","lg"), function(mod) {
+    Linf = 34
+    g = 0.04
+    inf = 10
+    input <- 0:200
+    interval <- 30
+    end_age <- input+interval
+    
+    int_len <- .age2length(input,mod,Linf,g,inf)
+    end_len <- .age2length(end_age,mod,Linf,g,inf)
+    fun_len <- .length_forcast(int_len,interval,mod,Linf,g,inf)
+    
+    all(round(fun_len,10) == round(end_len,10))
+  })
+  expect_all_true(cond)
+})
 
 
+# .length2wt  ------------------------------------------------------------------
+
+# output structure
+test_that("returns numeric value length of input",{
+  input <- 1:34
+  wt.df <- wt_df_helper("good")
+  wt <- .length2wt(input,wt.df,1)
+  expect_true(is.numeric(wt))
+  expect_all_equal(length(wt),length(input))
+})
+
+# data.frame names
+test_that("throws error if any of column names are missing",{
+  wt_list <- lapply(c("bad","missing_a","missing_b","missing_c"),function(x){
+    wt.df <- wt_df_helper(x)
+    expect_error(.length2wt(20,wt.df,1))
+  })
+})
+
+# dry weight values
+test_that("dry weigth is numeric and greater than zero",{
+  expect_no_error(.length2wt(20,wt_df_helper("good"),1))
+  expect_error(.length2wt(20,wt_df_helper("good"),-1))
+  expect_error(.length2wt(20,wt_df_helper("good"),0))
+  expect_error(.length2wt(20,wt_df_helper("good"),"x"))
+}
+)
 
 
+# .exp_growth  -----------------------------------------------------------------
+test_that(paste0(
+  "returns numeric postive values when end>start and the converse when ",
+  "end<start"
+),{
+  expect_true(is.numeric(.exp_growth(20,30,10)))
+  expect_true(.exp_growth(20,30,10) > 0)
+  expect_true(.exp_growth(30,20,10) < 0)
+})
 

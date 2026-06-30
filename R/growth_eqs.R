@@ -149,6 +149,15 @@
 }
 
 .length2wt <- function(input, wt.df, dry=1) {
+  
+  stopifnot(
+    'wt.df must contain columns for paremters "a", "b", and "c" ' =
+      all(c("a","b","c") %in% names(wt.df))
+      )
+  stopifnot(
+    "dry must be a postive numeric value greater than 0"=
+     is.numeric(dry) & dry >0)
+  
   wt = 10^(wt.df$a + wt.df$b * log10(input*wt.df$c))  # length to weight equation
   dry_wt = wt*dry  # and convert to dry weight (default = 1 so no conversion)
   return(dry_wt)
@@ -157,3 +166,4 @@
 .exp_growth <- function(intial,final,t) {
   log(final/intial)/t
 }
+
