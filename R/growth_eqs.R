@@ -11,6 +11,9 @@
   stopifnot('Growth model must be from the following models "vb" 
             (von Bertalanffy), "gz" (Gompertz), 
             or "lg" (logistic).'=g.mod %in% c("vb","gz","lg"))  
+  stopifnot("input length must be postive and non-zero" = all(input > 0))
+  stopifnot("Linf must be postive and non-zero" = Linf > 0)
+  stopifnot("g must be postiveand non-zero" = g > 0)
   
   ## von Bertalanffy  ##
   if(g.mod == "vb"){
@@ -22,10 +25,12 @@
     growth <- g*input*log(Linf/input)
   }  # end GZ if statement
   
+  
   ## Logistic  ##
   if(g.mod == "lg"){
     growth = g*input*(1-input/Linf)
   }  # end LG if statement
+
   
   # Fish above Linf will have negative growth, change this to zero
   growth[growth<0] <- 0
@@ -37,26 +42,35 @@
   
   stopifnot('Growth model must be from the following models "vb" 
             (von Bertalanffy), "gz" (Gompertz), 
-            or "lg" (logistic).'=g.mod %in% c("vb","gz","lg"))  
+            or "lg" (logistic).'=g.mod %in% c("vb","gz","lg")) 
+  # stopifnot("input length must be postive and non-zero" = all(input > 0))
+  stopifnot("Linf must be postive  and non-zero" = Linf > 0)
+  stopifnot("g must be postive  and non-zero" = g > 0)
   
   ## von Bertalanffy  ##
   if(g.mod == "vb"){
-    age = ifelse(input > Linf,
-                 Inf,
-                 inf-log(1-(input/Linf))/g)
+    age = ifelse(
+      input > Linf,
+      Inf,
+      inf-log(1-(input/Linf))/g
+      )
   }
   
   ## Gompertz  ##
   if(g.mod == "gz"){
-    age = ifelse(input > Linf,
-                 Inf,
-                 inf + -log(-log(input/Linf))/g)
+    age = ifelse(
+      input > Linf,
+      Inf,
+      inf + -log(-log(input/Linf))/g
+      )
   }  # end GZ if statement
   
   if(g.mod == "lg"){
-    age = ifelse(input > Linf,
-                 Inf,
-                 inf-log((Linf/input)-1)/g)
+    age = ifelse(
+      input > Linf,
+      Inf,
+      inf-log((Linf/input)-1)/g
+      )
   }  # end LG if statement
   age
 }
@@ -66,6 +80,9 @@
   stopifnot('Growth model must be from the following models "vb" 
             (von Bertalanffy), "gz" (Gompertz), 
             or "lg" (logistic).'=g.mod %in% c("vb","gz","lg"))  
+  # stopifnot("input age must be postive" = all(input >= 0))
+  stopifnot("Linf must be postive and non-zero" = Linf > 0)
+  stopifnot("g must be postiveand non-zero" = g > 0)
   
   ## von Bertalanffy  ##
   if(g.mod == "vb"){
@@ -123,6 +140,8 @@
 
 .length_forcast <- function(input,interval,...) {
   
+  ## THIS CAN POSSIBLY BE DISBALED, BUT BLOCK THIS FOR NOW
+  stopifnot("Interval must be postive" = interval >=0)
   # estimate current age
   age = .length2age(input,...)
   
