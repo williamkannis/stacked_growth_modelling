@@ -47,31 +47,24 @@
   stopifnot("Linf must be postive  and non-zero" = Linf > 0)
   stopifnot("g must be postive  and non-zero" = g > 0)
   
+  # Create index to only estimate valid inputs (those below aysmpote), and 
+  # return Inf for those that are invlaid
+  age <- rep(Inf,length(input))
+  idx <- input <= Linf
+  
   ## von Bertalanffy  ##
   if(g.mod == "vb"){
-    age = ifelse(
-      input > Linf,
-      Inf,
-      inf-log(1-(input/Linf))/g
-      )
+    age[idx] <- inf-log(1-(input[idx]/Linf))/g
   }
   
   ## Gompertz  ##
   if(g.mod == "gz"){
-    age = ifelse(
-      input > Linf,
-      Inf,
-      inf + -log(-log(input/Linf))/g
-      )
-  }  # end GZ if statement
+    age[idx] <- inf + -log(-log(input[idx]/Linf))/g
+  }  
   
   if(g.mod == "lg"){
-    age = ifelse(
-      input > Linf,
-      Inf,
-      inf-log((Linf/input)-1)/g
-      )
-  }  # end LG if statement
+    age[idx] <- inf-log((Linf/input[idx])-1)/g
+  }
   age
 }
 
