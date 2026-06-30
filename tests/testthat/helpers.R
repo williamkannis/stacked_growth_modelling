@@ -1,4 +1,25 @@
-# Create testing wt conversion data.frames
+
+# Create length and age input data frame ---------------------------------------
+.data_prep_test_helper <- function(){
+  
+  data.frame(
+    species = rep("a",300),
+    length = runif(300,5,40),
+    age = runif(300,0,360),
+    date = rep(rep(1:3,10),10),
+    site = rep(rep(1:10, each = 3),10),
+    cat_name = sample(1:3,300,T),
+    pred1 = rnorm(300,0,1),
+    pred2 = rnorm(300,0,1),
+    pred3 = rnorm(300,0,1)
+  )
+}
+
+
+
+
+
+# Create testing wt conversion data.frames  ------------------------------------
 wt_df_helper <- function(x){
   
   if(x == "good"){
