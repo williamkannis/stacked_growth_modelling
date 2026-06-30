@@ -336,49 +336,7 @@ test_that("Returns numeric values length of input",{
 
 
 # .age2interval_growth  -------------------------------------------------------
-wt_df_helper <- function(x){
-  
-  if(x == "good"){
-    df <- data.frame(
-      a =-4.782,
-      b=3.042,
-      c= 1
-    )
-  }
-  
-  if(x == "bad"){
-    df <- data.frame(
-      x =-4.782,
-      y=3.042,
-      z= 1
-    )
-  }
-  
-  if(x == "missing_a"){
-    df <- data.frame(
-      x =-4.782,
-      b=3.042,
-      c= 1
-    )
-  }
-  
-  if(x == "missing_b"){
-    df <- data.frame(
-      a =-4.782,
-      x=3.042,
-      c= 1
-    )
-  }
-  
-  if(x == "missing_c"){
-    df <- data.frame(
-      a =-4.782,
-      b=3.042,
-      x= 1
-    )
-  }
-  df
-}
+
 # output format
 test_that("Returns numeric values length of input",{
   wt.df <- wt_df_helper("good")
@@ -547,6 +505,13 @@ test_that("throws error if any of column names are missing",{
     wt.df <- wt_df_helper(x)
     expect_error(.length2wt(20,wt.df,1))
   })
+})
+
+# data.frame formating
+test_that("wt.df with multiple rows or are not data.frames throws error",{
+  expect_error(.length2wt(20,wt_df_helper("extra_rows"),1))
+  expect_error(.length2wt(20,c(1,2,3),1))
+  expect_error(.length2wt(20,2,1))
 })
 
 # dry weight values

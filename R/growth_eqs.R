@@ -151,9 +151,10 @@
 .length2wt <- function(input, wt.df, dry=1) {
   
   stopifnot(
-    'wt.df must contain columns for paremters "a", "b", and "c" ' =
+    'wt.df must be data.frame with columns for paremters "a", "b", and "c" ' =
       all(c("a","b","c") %in% names(wt.df))
       )
+  stopifnot('wt.df must be a data.frame with 1 row' = nrow(wt.df) == 1)
   stopifnot(
     "dry must be a postive numeric value greater than 0"=
      is.numeric(dry) & dry >0)
