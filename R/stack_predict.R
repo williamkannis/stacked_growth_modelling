@@ -355,12 +355,11 @@ stack_predict <- function(
   
   # Create id for group-specific parameter of interest
   param.group <-paste(group.id,param.select,sep="_")
-  # param.group <-paste0(group.id,param.select)
   
   # Extract the posterior draws for each
   out <- sim.list[[param.group]]
   
-  # transform to matrix if ony one group (e.g. mu) for consistent formating
+  # transform to matrix if ony one group (e.g. mu) for consistent formatting
   if(length(dim(out)) == 1) out <- matrix(out)
   
   # return parameter matrix
