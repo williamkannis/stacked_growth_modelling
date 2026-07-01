@@ -15,6 +15,18 @@
   stopifnot("Linf must be postive and non-zero" = Linf > 0)
   stopifnot("g must be postiveand non-zero" = g > 0)
   
+  if(any(length(Linf) > 1,length(g) > 1,length(inf) > 1)){
+    if(any(
+      length(input) != length(Linf),
+      length(input) != length(g),
+      length(input) != length(inf)
+    )){
+      stop(
+        "if growth parameters provided as vector, must be same length as input"
+      )
+    }
+  }
+  
   ## von Bertalanffy  ##
   if(g.mod == "vb"){
     growth = g*(Linf-input)
@@ -46,24 +58,52 @@
   # stopifnot("input length must be postive and non-zero" = all(input > 0))
   stopifnot("Linf must be postive  and non-zero" = Linf > 0)
   stopifnot("g must be postive  and non-zero" = g > 0)
+  if(any(length(Linf) > 1,length(g) > 1,length(inf) > 1)){
+    if(any(
+      length(input) != length(Linf),
+      length(input) != length(g),
+      length(input) != length(inf)
+    )){
+      stop(
+        "if growth parameters provided as vector, must be same length as input"
+      )
+    }
+  }
   
   # Create index to only estimate valid inputs (those below aysmpote), and 
   # return Inf for those that are invlaid
   age <- rep(Inf,length(input))
   idx <- input <= Linf
   
-  ## von Bertalanffy  ##
-  if(g.mod == "vb"){
-    age[idx] <- inf-log(1-(input[idx]/Linf))/g
-  }
-  
-  ## Gompertz  ##
-  if(g.mod == "gz"){
-    age[idx] <- inf + -log(-log(input[idx]/Linf))/g
-  }  
-  
-  if(g.mod == "lg"){
-    age[idx] <- inf-log((Linf/input[idx])-1)/g
+  if(any(length(Linf) > 1,length(g) > 1,length(inf) > 1)){
+    ## von Bertalanffy  ##
+    if(g.mod == "vb"){
+      age[idx] <- inf[idx]-log(1-(input[idx]/Linf[idx]))/g[idx]
+    }
+    
+    ## Gompertz  ##
+    if(g.mod == "gz"){
+      age[idx] <- inf[idx] + -log(-log(input[idx]/Linf[idx]))/g[idx]
+    }  
+    
+    if(g.mod == "lg"){
+      age[idx] <- inf[idx]-log((Linf[idx]/input[idx])-1)/g[idx]
+    }
+    age
+  }else {
+    ## von Bertalanffy  ##
+    if(g.mod == "vb"){
+      age[idx] <- inf-log(1-(input[idx]/Linf))/g
+    }
+    
+    ## Gompertz  ##
+    if(g.mod == "gz"){
+      age[idx] <- inf + -log(-log(input[idx]/Linf))/g
+    }  
+    
+    if(g.mod == "lg"){
+      age[idx] <- inf-log((Linf/input[idx])-1)/g
+    }
   }
   age
 }
@@ -76,6 +116,18 @@
   # stopifnot("input age must be postive" = all(input >= 0))
   stopifnot("Linf must be postive and non-zero" = Linf > 0)
   stopifnot("g must be postiveand non-zero" = g > 0)
+  
+  if(any(length(Linf) > 1,length(g) > 1,length(inf) > 1)){
+    if(any(
+      length(input) != length(Linf),
+      length(input) != length(g),
+      length(input) != length(inf)
+    )){
+      stop(
+        "if growth parameters provided as vector, must be same length as input"
+      )
+    }
+  }
   
   ## von Bertalanffy  ##
   if(g.mod == "vb"){

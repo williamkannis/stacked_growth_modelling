@@ -18,6 +18,50 @@ test_that("throws error when impossible model coefficnets given",{
   expect_error(.length2growth(20,"gz",34,-.002,10))
 })
 
+# Vector error
+test_that(
+  "throws error when parameters are given in vectors of differnt length",{
+    
+    input <- 1:33
+    
+    # param vectors
+    Linf_g = rep(34,length(input))
+    g_g = rep(0.04,length(input))
+    inf_g = rep(10,length(input))
+    Linf_b = rep(34,length(input)-1)
+    g_b = rep(0.04,length(input)-1)
+    inf_b = rep(10,length(input)-1)
+    
+    
+    cond_vec<- sapply(c("vb","gz","lg"), function(mod){
+      expect_no_error(.length2growth(input,mod,Linf_g,g_g,inf_g))
+      expect_error(.length2growth(input,mod,Linf_b,g_g,inf_g))
+      expect_error(.length2growth(input,mod,Linf_g,g_b,inf_g))
+      expect_error(.length2growth(input,mod,Linf_g,g_g,inf_b))
+    }
+    )
+  })
+
+# vector test
+test_that(
+  "Do repeated vectorized inputs give the same result for single input",
+  {
+    input <- 1:33
+    Linf = 34
+    g = 0.04
+    inf = 10
+    Linf_vec = rep(34,length(input))
+    g_vec = rep(0.04,length(input))
+    inf_vec = rep(10,length(input))
+    
+    cond_vec<- sapply(c("vb","gz","lg"), function(mod){
+      out <-.length2growth(input,mod,Linf,g,inf)
+      out_vec <-.length2growth(input,mod,Linf_vec,g_vec,inf_vec)
+      expect_equal(out,out_vec)
+    })
+  }
+)
+
 # model forms
 test_that(
   "accepted model forms return results and inccorect model forms return error",{
@@ -130,6 +174,51 @@ test_that(
     expect_error(.length2age(20,"gf",34,.002,10))
   })
 
+# Vector error
+test_that(
+  "throws error when parameters are given in vectors of differnt length",{
+    
+    input <- 1:33
+    
+    # param vectors
+    Linf_g = rep(34,length(input))
+    g_g = rep(0.04,length(input))
+    inf_g = rep(10,length(input))
+    Linf_b = rep(34,length(input)-1)
+    g_b = rep(0.04,length(input)-1)
+    inf_b = rep(10,length(input)-1)
+    
+  
+    cond_vec<- sapply(c("vb","gz","lg"), function(mod){
+      expect_no_error(.length2age(input,mod,Linf_g,g_g,inf_g))
+      expect_error(.length2age(input,mod,Linf_b,g_g,inf_g))
+      expect_error(.length2age(input,mod,Linf_g,g_b,inf_g))
+      expect_error(.length2age(input,mod,Linf_g,g_g,inf_b))
+    }
+    )
+  })
+
+# vector test
+test_that(
+  "Do repeated vectorized inputs give the same result for single input",
+  {
+    input <- 1:33
+    Linf = 34
+    g = 0.04
+    inf = 10
+    Linf_vec = rep(34,length(input))
+    g_vec = rep(0.04,length(input))
+    inf_vec = rep(10,length(input))
+    
+    cond_vec<- sapply(c("vb","gz","lg"), function(mod){
+      out <-.length2age(input,mod,Linf,g,inf)
+      out_vec <-.length2age(input,mod,Linf_vec,g_vec,inf_vec)
+      expect_equal(out,out_vec)
+      })
+  }
+)
+
+
 # output format
 test_that("Returns numeric values length of input",{
   expect_true(is.numeric(.length2age(20,"gz",34,.002,10)))
@@ -206,17 +295,32 @@ test_that("Values above and at asymopote return Inf",{
 # are correct values returned?
 test_that("Model returns correct results",{
   
+  # input
+  real_a <- 0:200
+  
   # params
   Linf = 34
   g = 0.04
   inf = 10
   
-  # input
-  real_a <- 0:200
+  # param vectors
+  Linf_vec = rep(34,length(real_a))
+  g_vec = rep(0.04,length(real_a))
+  inf_vec = rep(10,length(real_a))
+  
+ 
   
   cond <- sapply(c("vb","gz","lg"), function(mod){
     l <- .age2length(real_a,mod,Linf,g,inf)
     fun_age <- .length2age(l,mod,Linf,g,inf)
+    all(round(fun_age,10) == round(real_a,10))
+  }
+  )
+  expect_all_true(cond)
+  
+  cond_vec<- sapply(c("vb","gz","lg"), function(mod){
+    l <- .age2length(real_a,mod,Linf_vec,g_vec,inf_vec)
+    fun_age <- .length2age(l,mod,Linf_vec,g_vec,inf_vec)
     all(round(fun_age,10) == round(real_a,10))
   }
   )
@@ -246,6 +350,50 @@ test_that(
     )
     expect_error(.age2length(20,"gf",34,.002,10))
   })
+
+# Vector error
+test_that(
+  "throws error when parameters are given in vectors of differnt length",{
+    
+    input <- 0:200
+    
+    # param vectors
+    Linf_g = rep(34,length(input))
+    g_g = rep(0.04,length(input))
+    inf_g = rep(10,length(input))
+    Linf_b = rep(34,length(input)-1)
+    g_b = rep(0.04,length(input)-1)
+    inf_b = rep(10,length(input)-1)
+    
+    
+    cond_vec<- sapply(c("vb","gz","lg"), function(mod){
+      expect_no_error(.age2length(input,mod,Linf_g,g_g,inf_g))
+      expect_error(.age2length(input,mod,Linf_b,g_g,inf_g))
+      expect_error(.age2length(input,mod,Linf_g,g_b,inf_g))
+      expect_error(.age2length(input,mod,Linf_g,g_g,inf_b))
+    }
+    )
+  })
+
+# vector test
+test_that(
+  "Do repeated vectorized inputs give the same result for single input",
+  {
+    input <- 0:200
+    Linf = 34
+    g = 0.04
+    inf = 10
+    Linf_vec = rep(34,length(input))
+    g_vec = rep(0.04,length(input))
+    inf_vec = rep(10,length(input))
+    
+    cond_vec<- sapply(c("vb","gz","lg"), function(mod){
+      out <-.age2length(input,mod,Linf,g,inf)
+      out_vec <-.age2length(input,mod,Linf_vec,g_vec,inf_vec)
+      expect_equal(out,out_vec)
+    })
+  }
+)
 
 # output format
 test_that("Returns numeric values length of input",{
