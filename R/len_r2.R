@@ -20,7 +20,12 @@
 #' data.frame, and a data.frame containing predicted values and residuals for 
 #' each model.
 #' @export
-
+stack.df= sp_stack_wt[[1]];mod.dir =sp_dir[[1]]; sim =10;stack=F;data=age_df
+data <- age_df %>% 
+  dplyr::left_join(
+    sample_bridge,
+    by = dplyr::join_by(wateryear, region, site, species)
+  ) %>% dplyr::filter(species == sp[[1]])
 len_R2 <- function(
     stack.df,
     mod.dir,
@@ -42,6 +47,7 @@ len_R2 <- function(
     type = "prediction",
     group.id = "site",
     pred.input = data$age,
+    create.input = F,
     pred.group = data$sample_id,
     stack=stack,
     sim=sim,
@@ -51,12 +57,14 @@ len_R2 <- function(
   
   # Link predictions to actual data
   linked_df <- pred_df %>% 
+    dplyr::distinct(mod,sample_id,age,.keep_all = T) %>% 
     dplyr::left_join(
       data,
       by = dplyr::join_by(sample_id, age),
-      multiple = "first"
+      relationship = "many-to-many"
     )
   
+
   # assign mean or median prediction
   if(sum.fun == "mean") linked_df$pred <- linked_df$length_pred_mean
   if(sum.fun == "median") linked_df$pred <- linked_df$length_pred_median
@@ -89,7 +97,7 @@ len_R2 <- function(
   # Residuals
   res_df <- linked_df %>% 
     dplyr::mutate(resid = length-pred) %>% 
-    dplyr::select(mod,pred,resid)
+    dplyr::select(mod,age,length,pred,resid)
   
   out <- list(r2_df,res_df)
   names(out) <- c("rsquared","residuals")
