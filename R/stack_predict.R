@@ -241,7 +241,8 @@ stack_predict <- function(
       out,
       sum.fun=sum.fun,
       group.var=group_var
-    )
+    ) %>% 
+      dplyr::mutate(mod = "stacked")
     
   } else{
     # Return raw values
