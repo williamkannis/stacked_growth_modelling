@@ -111,7 +111,7 @@ stack_predict <- function(
     
     # Sampling models evenly
     stack_df <- stack.df %>% 
-      mutate(n_sim = sim)
+      dplyr::mutate(n_sim = sim)
   }
   
   # Model details and number of samples
@@ -277,7 +277,7 @@ stack_predict <- function(
   old_name <- "group_id"
   
   out_summary %>% 
-    dplyr::rename({{ group_name }} := !! sym(old_name)) 
+    dplyr::rename({{ group_name }} := !! rlang::sym(old_name)) 
 }
 
 
