@@ -88,6 +88,7 @@ mod_compare_df <- mu_curve_df %>%
   mutate(mod = substr(mod,1,2),
          mod = factor(mod,levels = c("vb","gz","lg","st")))
 
+
 # Species specific plotting loop
 for(i in 1:length(sp)){
   
@@ -113,7 +114,8 @@ for(i in 1:length(sp)){
   
   # Assign color scheme
   mod_compare_sp$top_mod <- factor(mod_compare_sp$top_mod,levels = c(0,1))
-  top_mod_color <- c("black","red")
+  top_mod_color_e <- c("darkgrey","#0072B2")
+  top_mod_color <- c("black","darkblue")
   
   # Assign line types for each model
   # Number of models, if 3 opposed to 4, then no stacked model
@@ -131,16 +133,16 @@ for(i in 1:length(sp)){
       colour = top_mod
       )
     )+
-    geom_line() +
     geom_ribbon(
       aes(
         ymin=length_pred_lwr, 
         ymax=length_pred_upr,
-        colour = top_mod
+        fill = top_mod
         ), 
       linetype=0, 
-      alpha=0.1
+      alpha=0.3
       )+
+    geom_line(aes(linewidth = top_mod)) +
     # geom_point(
     #   data = actual_df %>% filter(species == sp[i]),
     #   aes(x=age,y = length),
@@ -154,6 +156,8 @@ for(i in 1:length(sp)){
       )+
     scale_linetype_manual(values =line_vec) +
     scale_color_manual(values =top_mod_color)+
+    scale_fill_manual(values =top_mod_color_e)+
+    scale_linewidth_manual(values = c(2,2))+
     xlab("")+
     ylab("")+
     xlim(c(0,max_age_mu))+
@@ -178,17 +182,17 @@ for(i in 1:length(sp)){
       colour = top_mod
       )
     )+
-    geom_line() +
     geom_ribbon(
       aes(
         ymin=growth_pred_lwr,
         ymax=growth_pred_upr,
         group = mod,
-        colour = top_mod
+        fill = top_mod
         ), 
       linetype=0,
-      alpha=0.1
+      alpha=0.3
       )+
+    geom_line(aes(linewidth = top_mod)) +
     geom_rug(
       data=actual_df %>% filter(species == sp[i]),
       aes(x=age),
@@ -196,6 +200,8 @@ for(i in 1:length(sp)){
       )+
     scale_linetype_manual(values =line_vec) +
     scale_color_manual(values =top_mod_color)+
+    scale_fill_manual(values =top_mod_color_e)+
+    scale_linewidth_manual(values = c(2,2))+
     xlab("")+
     ylab("")+
     xlim(c(0,max_age_mu))+
@@ -237,9 +243,11 @@ for(i in 1:length(sp)){
 
 # Set gradient for colors
 min_grad <- pred_bridged %>% select(PC1) %>% min()
+med_grad <- median(pred_bridged %>% pull(PC1))
 max_grad <- pred_bridged %>% select(PC1) %>% max()
-min_col <- "#132B43"
-max_col <- "#56B1F7"
+min_col <- "gold"
+med_col <- "forestgreen"
+max_col <- "dodgerblue3"
 
 # Set y limits for length plots
 age_limit <- actual_df %>% 
@@ -302,7 +310,6 @@ for(i in 1:6){
       colour = PC1
       )
     )+
-    geom_line() +
     geom_ribbon(
       aes(
         ymin=length_pred_lwr, 
@@ -312,6 +319,7 @@ for(i in 1:6){
       linetype=0, 
       alpha=0.1
       )+
+    geom_line() +
     geom_point(
       data = l_fish_plot,
       aes(
@@ -322,16 +330,20 @@ for(i in 1:6){
         ),
       size = point.size
       )+
-    scale_color_gradient(
+    scale_color_gradient2(
       low = min_col,
+      mid = med_col,
       high = max_col,
-      limits = c(min_grad, max_grad)
+      midpoint = med_grad,
+      limits = c(min_grad,max_grad)
       )+
-    scale_fill_gradient(
+    scale_fill_gradient2(
       low = min_col,
+      mid = med_col,
       high = max_col,
-      limits = c(min_grad, max_grad)
-      )+
+      midpoint = med_grad,
+      limits = c(min_grad,max_grad)
+    )+
     xlab("")+
     ylab("")+
     scale_y_continuous(
@@ -404,7 +416,6 @@ for(i in 1:6){
       color=PC1
       )
     )+
-    geom_line() +
     geom_ribbon(
       aes(
         ymin=growth_pred_lwr, 
@@ -415,22 +426,27 @@ for(i in 1:6){
       linetype=0, 
       alpha=0.1
       )+
+    geom_line() +
     geom_rug(
       data=g_fish_plot,
       aes(x=age,colour = PC1),
       inherit.aes  = F,
       line.width = rug.size
       )+
-    scale_color_gradient(
+    scale_color_gradient2(
       low = min_col,
+      mid = med_col,
       high = max_col,
-      limits = c(min_grad, max_grad)
-      )+
-    scale_fill_gradient(
+      midpoint = med_grad,
+      limits = c(min_grad,max_grad)
+    )+
+    scale_fill_gradient2(
       low = min_col,
+      mid = med_col,
       high = max_col,
-      limits = c(min_grad, max_grad)
-      )+
+      midpoint = med_grad,
+      limits = c(min_grad,max_grad)
+    )+
     xlab("")+
     ylab("")+
     xlim(c(0,max_age))+

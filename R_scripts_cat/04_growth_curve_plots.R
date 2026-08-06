@@ -128,7 +128,8 @@ for(i in 1:length(sp)){
   
   # Assign color scheme
   mod_compare_sp$top_mod <- factor(mod_compare_sp$top_mod,levels = c(0,1))
-  top_mod_color <- c("black","red")
+  top_mod_color_e <- c("darkgrey","#0072B2")
+  top_mod_color <- c("black","darkblue")
   
   # Assign line types for each model
   # Number of models, if 3 opposed to 4, then no stacked model
@@ -146,16 +147,16 @@ for(i in 1:length(sp)){
       colour = top_mod
       )
     )+
-    geom_line() +
     geom_ribbon(
       aes(
         ymin=length_pred_lwr, 
         ymax=length_pred_upr,
-        colour = top_mod
+        fill = top_mod
         ), 
       linetype=0, 
-      alpha=0.1
+      alpha=0.3
       )+
+    geom_line(aes(linewidth = top_mod)) +
     geom_rug(
       data=actual_df %>% filter(species == sp[i]),
       aes(x=age),
@@ -163,6 +164,8 @@ for(i in 1:length(sp)){
       )+
     scale_linetype_manual(values =line_vec) +
     scale_color_manual(values =top_mod_color)+
+    scale_fill_manual(values =top_mod_color_e)+
+    scale_linewidth_manual(values = c(2,2))+
     xlab("")+
     ylab("")+
     xlim(c(0,max_age_mu))+
@@ -187,24 +190,26 @@ for(i in 1:length(sp)){
       colour = top_mod
       )
     )+
-    geom_line() +
     geom_ribbon(
       aes(
         ymin=growth_pred_lwr, 
         ymax=growth_pred_upr,
         group = mod,
-        colour = top_mod
+        fill = top_mod
         ), 
       linetype=0, 
-      alpha=0.1
+      alpha=0.3
       )+
     geom_rug(
       data=actual_df %>% filter(species == sp[i]),
       aes(x=age),
       inherit.aes  = F
       )+
+    geom_line(aes(linewidth = top_mod)) +
     scale_linetype_manual(values =line_vec) +
     scale_color_manual(values =top_mod_color)+
+    scale_fill_manual(values =top_mod_color_e)+
+    scale_linewidth_manual(values = c(2,2))+
     xlab("")+
     ylab("")+
     xlim(c(0,max_age_mu))+
@@ -341,7 +346,7 @@ ggplot2::ggsave(
 # Hydroperiod specific curves (Fig s3.3) ---------------------------------------
 sp_cat <- sp[sp !="JORFLO"]
 # Set group colors
-cat_col <- c("#132B43","#355E9D","#56B1F7")
+cat_col <- c("gold","forestgreen","dodgerblue3")
 
 
 # Set y limits for length plots
@@ -403,7 +408,6 @@ for(i in 1:length(sp_cat)){
       colour = hydroperiod
       )
     )+
-    geom_line() +
     geom_ribbon(
       aes(
         ymin=length_pred_lwr, 
@@ -413,6 +417,7 @@ for(i in 1:length(sp_cat)){
       linetype=0, 
       alpha=0.1
       )+
+    geom_line() +
     geom_point(
       data = l_fish_plot,
       aes(
@@ -495,7 +500,6 @@ for(i in 1:length(sp_cat)){
       color=hydroperiod
       )
     )+
-    geom_line() +
     geom_ribbon(
       aes(
         ymin=growth_pred_lwr, 
@@ -506,6 +510,7 @@ for(i in 1:length(sp_cat)){
       linetype=0, 
       alpha=0.1
       )+
+    geom_line() +
     geom_rug(
       data=g_fish_plot,
       aes(x=age,colour = hydroperiod),
@@ -555,7 +560,6 @@ j_length <-ggplot(
   data=j_mu_curve_df,
   aes(x = age,y=length_pred_median)
   )+
-  geom_line(color="#97978F") +
   geom_ribbon(
     aes(
       ymin=length_pred_lwr, 
@@ -565,6 +569,7 @@ j_length <-ggplot(
     linetype=0, 
     alpha=0.1
     )+
+  geom_line(color="#97978F") +
   geom_point(
     data = j_data,
     aes(x=age,y = length),
@@ -591,7 +596,6 @@ j_growth <-ggplot(
   data=j_mu_curve_df,
   aes(x = age,y=growth_pred_median)
   )+
-  geom_line(color = "#97978F") +
   geom_ribbon(
     aes(
       ymin=growth_pred_lwr, 
@@ -601,6 +605,7 @@ j_growth <-ggplot(
     linetype=0, 
     alpha=0.1
     )+
+  geom_line(color = "#97978F") +
   geom_rug(
     data=j_data,aes(x=age),
     inherit.aes  = F,
