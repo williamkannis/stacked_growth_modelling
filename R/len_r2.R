@@ -11,6 +11,7 @@
 #' sampling id. Must have columns: age, length, and sample_id.
 #' @param stack T or F. Create model stacked predictions or parameter estimates
 #' (T), or candidate model specific outputs (F). Default is FALSE
+#' @param ... Additional augments passed to [stack_predict].
 #'
 #' @details Function predicts the length at age for each random grouping. 
 #' R-squared is then estimated for each candidate or the stacked model. 
@@ -20,12 +21,7 @@
 #' data.frame, and a data.frame containing predicted values and residuals for 
 #' each model.
 #' @export
-stack.df= sp_stack_wt[[1]];mod.dir =sp_dir[[1]]; sim =10;stack=F;data=age_df
-data <- age_df %>% 
-  dplyr::left_join(
-    sample_bridge,
-    by = dplyr::join_by(wateryear, region, site, species)
-  ) %>% dplyr::filter(species == sp[[1]])
+
 len_R2 <- function(
     stack.df,
     mod.dir,
@@ -33,7 +29,8 @@ len_R2 <- function(
     sum.fun,
     residuals,
     data,
-    stack
+    stack,
+    ...
     ) {
   
   # model names
@@ -53,7 +50,9 @@ len_R2 <- function(
     sim=sim,
     sum.fun = sum.fun,
     input.var = "age",
-    output.var = "length")
+    output.var = "length",
+    ... = ...
+    )
   
   # Link predictions to actual data
   linked_df <- pred_df %>% 
