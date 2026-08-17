@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-#  Stan diagonstic and model selection functions 
+#  Stan diagnostic and model selection functions 
 #-------------------------------------------------------------------------------
 
 #' Batch Stan model diagnostics
