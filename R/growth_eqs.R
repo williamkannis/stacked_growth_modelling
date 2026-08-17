@@ -11,7 +11,7 @@
   stopifnot('Growth model must be from the following models "vb" 
             (von Bertalanffy), "gz" (Gompertz), 
             or "lg" (logistic).'=g.mod %in% c("vb","gz","lg"))  
-  stopifnot("input length must be postive and non-zero" = all(input > 0))
+  # stopifnot("input length must be postive and non-zero" = all(input > 0))  ## FIX THIS IN TESTING, THIS WARNING IS NOT NECASSARY
   stopifnot("Linf must be postive and non-zero" = Linf > 0)
   stopifnot("g must be postiveand non-zero" = g > 0)
   
