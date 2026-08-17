@@ -34,8 +34,9 @@ plot_dir <- "stan_outputs/plotting_info"
 export_dir <- "loo_outputs"
 
 # Load in custom functions
-source(file.path(fun_dir,"stan_loo_batch_functions.R"))
-source(file.path(fun_dir,"growth_prediction_functions.R"))
+# source(file.path(fun_dir,"stan_loo_batch_functions.R"))
+# source(file.path(fun_dir,"growth_prediction_functions.R"))
+devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load in data
 fish_df <- 
@@ -95,7 +96,7 @@ pred_input <- 0:360
 ind_mu_curve_list <- purrr::map2(
   sp_stack_wt,
   sp_dir,
-  curve_predictR,
+  stack_predict,
     type = "prediction",
     group.id="mu",
     sim = stack.iter,
@@ -103,6 +104,7 @@ ind_mu_curve_list <- purrr::map2(
     pred.input = pred_input,
     input.var = "age",
     output.var = c("length","growth"),
+    summarize=T,
     sum.fun="median",
     parallel = T,
     mc.cores = n.cores
@@ -110,7 +112,7 @@ ind_mu_curve_list <- purrr::map2(
 
 # Inst. growth at mean age
 ind_mean_growth_list <- Map(function(x,y,z) 
-  curve_predictR(
+  stack_predict(
     stack.df = x,
     mod.dir = y,
     type = "prediction",
@@ -136,7 +138,7 @@ ind_mean_growth_list <- Map(function(x,y,z)
 site_curve_list <- purrr::map2(
   sp_stack_wt,
   sp_dir,
-  curve_predictR,
+  stack_predict,
     group.id="site",
     sim = stack.iter,
     stack=T,
@@ -144,6 +146,7 @@ site_curve_list <- purrr::map2(
     pred.input = pred_input,
     input.var = "age",
     output.var = c("length","growth"),
+    summarize=T,
     sum.fun="median",
     parallel = T,
     mc.cores = n.cores
@@ -153,7 +156,7 @@ site_curve_list <- purrr::map2(
 mu_curve_list <- purrr::map2(
   sp_stack_wt,
   sp_dir,
-  curve_predictR,
+  stack_predict,
     group.id = "mu",
     sim = stack.iter,
     stack = T,
@@ -161,6 +164,7 @@ mu_curve_list <- purrr::map2(
     pred.input = pred_input,
     input.var = "age",
     output.var = c("length","growth"),
+    summarize=T,
     sum.fun = "median",
     parallel = T,
     mc.cores = n.cores
@@ -168,7 +172,7 @@ mu_curve_list <- purrr::map2(
 
 # Inst. growth at mean age
 mean_growth_list <- Map(function(x,y,z) 
-  curve_predictR(
+  stack_predict(
     stack.df = x,
     mod.dir = y,
     type = "prediction",
@@ -178,6 +182,7 @@ mean_growth_list <- Map(function(x,y,z)
     pred.input = z,
     input.var = "length",
     output.var = "growth",
+    summarize=T,
     sum.fun="median",
     parallel = T,
     mc.cores = n.cores
@@ -191,12 +196,13 @@ mean_growth_list <- Map(function(x,y,z)
 param_list <- purrr::map2(
   sp_stack_wt,
   sp_dir,
-  curve_predictR,
+  stack_predict,
     group.id = "mu",
     sim = stack.iter,
     stack = T,
     type = "parameter",
     truncate.inf = F,
+    summarize=T,
     sum.fun = "median"
 )
 
@@ -204,7 +210,7 @@ param_list <- purrr::map2(
 pred_list <- purrr::map2(
   sp_stack_wt[names(sp_stack_wt) !="JORFLO"],
   sp_dir[names(sp_dir) != "JORFLO"],
-  linear_pred_stackR, 
+  linear_stack_predict, 
     sim = stack.iter,
     sum.fun = "median"
   )
