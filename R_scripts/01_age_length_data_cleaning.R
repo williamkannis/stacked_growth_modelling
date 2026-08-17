@@ -72,6 +72,8 @@ age_length_clean %>% filter(is.na(length)) %>% nrow() ==0
 
 
 # Export  ----------------------------------------------------------------------
-saveRDS(age_length_clean,
-        file.path(input_dir,paste0("fsage_cleaned_",Sys.Date(),".rds")))
+saveRDS(
+  age_length_clean,
+  file.path(input_dir,paste0("fsage_cleaned_",Sys.Date(),".rds"))
+  )
 
