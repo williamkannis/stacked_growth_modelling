@@ -24,7 +24,7 @@ We estimated growth rates using
 
 ### Data preparation 
 
-**Script**: ```01_age_length_data_cleaning.R```
+<br>**Script**: ```01_age_length_data_cleaning.R```
 
 <ins>Purpose:</ins> X
 
@@ -39,7 +39,7 @@ We estimated growth rates using
 
 ### Stan model fitting
 
-**Script**: ```03_stan_batch_run_linear.R```
+<br>**Script**: ```03_stan_batch_run_linear.R```
 
 <ins>Purpose:</ins> X
 
@@ -55,7 +55,7 @@ but for categorical predictor model.
 
 ### Model stacking and predictions
 
-**Script**: ```04_batch_loo_stacking_linear.R```
+<br>**Script**: ```04_batch_loo_stacking_linear.R```
 
 <ins>Purpose:</ins> X
 
@@ -70,7 +70,7 @@ but for categorical predictor model outputs.
 
 ### Model summary statistics
 
-**Script**: ```05_model_stacking_summary_stats.R```
+<br>**Script**: ```05_model_stacking_summary_stats.R```
 
 <ins>Purpose:</ins> X
 
@@ -85,7 +85,7 @@ but for categorical predictor model outputs.
 
 ### Plotting
 
-**Script**: ```06_growth_curve_plots.R```
+<br>**Script**: ```06_growth_curve_plots.R```
 
 <ins>Purpose:</ins> X
 
@@ -99,7 +99,7 @@ but for categorical predictor model outputs.
 <ins>Output:</ins> X
 
 ### Model fit
-**Script**: ```07_model_fit_appendix.R```
+<br>**Script**: ```07_model_fit_appendix.R```
 
 <ins>Purpose:</ins> X
 
