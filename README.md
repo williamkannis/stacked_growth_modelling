@@ -84,8 +84,9 @@ structure:
 │   │── loo_outputs*
 │   └── curve_predictions*
 │
-├── figures
-└── scripts
+├── scripts
+├── stan_scripts
+└── figures
 
 
 (*) directories or files downloaded from Zenodo
