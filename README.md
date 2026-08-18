@@ -1,9 +1,10 @@
-# Source code for *Bayesian model-stacking for improved somatic growth modelling: A case study examining hydrology-dependent growth of six cyprinodontid fish species in the Florida Everglades*
+# README
+
 
 Code and data for reproducing the analyses presented in:
 
-> Author et al. (YEAR). Syndromes of multidimensional beta diversity change in
-invaded metacommunities.[Journal, DOI]
+> Author et al. (YEAR). Bayesian model-stacking improves somatic growth 
+estimates in Everglades Cyprinodontid fishes.[Journal, DOI]
 
 This repository contains the R code and data products required to
 reproduce the analyses, figures, and tables presented in the manuscript.
@@ -21,8 +22,12 @@ OrcID: 0009-0003-3541-8503
 
 If you use this code or data, please cite:
 
->BLANK. Syndromes of multidimensional beta diversity change in 
-invaded metacommunities. in review
+>BLANK. Bayesian model-stacking improves somatic growth estimates in 
+Everglades Cyprinodontid fishes. in review
+
+Additionally, if you use associated R functions, also cite:
+
+>BLANK
 
 
 ## Data
@@ -33,10 +38,10 @@ invaded metacommunities. in review
 ## Figures
 **Directory:** ```figures/```
 
-## Growth models
-**Directory:** ```stan/```
+Contains raw R plots and .csv tables used to create the figures and tables in 
+the main manuscript and appendices. Most figures were edited in Adobe Illustrator
+for aesthetic purposes, and we included Illustrator files as well.
 
-We estimated growth rates using 
 
 ## Workflow
 **Directory:** ```scripts/```
@@ -146,3 +151,34 @@ but for categorical predictor model outputs.
 but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
+
+## Growth models
+**Directory:** ```stan/```
+
+We estimated growth rates using three model forms: von Bertalanffy, Gompertz, 
+and Logistic; and three effect structures: Random effect only, Categorical 
+second-level predictors, and continuous second-level predictors. While model
+stan files were called in using the [associated R package](BLANK),
+we also provide the stan scripts for each model code in this repository.
+Additionally, we provided R script used to validate each model with simulated
+data.See below for more information of growth forms and model type:
+
+### Growth forms
+
+**von Bertalanffy (vb)**
+
+**Logistic (lg)**
+
+**Gompertz (gz)**
+
+### Random effect only model
+**Files:** ```vb_BLANK.stan```, ```gz_BLANK.stan```, ```lg_BLANK.stan```
+
+### Categorical predictors
+**Files:** ```vb_BLANK.stan```, ```gz_BLANK.stan```, ```lg_BLANK.stan```
+
+### continuous predictors
+**Files:** ```vb_BLANK.stan```, ```gz_BLANK.stan```, ```lg_BLANK.stan```
+
+### Model dvelopment
+**Script:** ```BLANK.R```
