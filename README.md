@@ -50,7 +50,10 @@ The following scripts provide all R code necessary to replicate the
 manuscript's analyses, and are named sequentially in workflow order. Scripts
 call in custom functions designed to fit growth models, make predictions, and
 summarize results. These functions and their documentation can be found 
-[here](BLANK).
+[here](BLANK). 
+Script whose numerical id is followed by "b" refer to scripts used in
+relation to categorical (cat) effect version of the models. These only
+need to be ran to replicate the results in Appendix 2.
 
 ### Install custom functions
 <br>**Script**: ```00_install_growthstack_pkg.R```
@@ -78,7 +81,7 @@ principal component analysis (PCA) to create composite hydrology variables.
 
 ### Stan model fitting
 
-<br>**Script**: ```03_stan_batch_run_linear.R```
+<br>**Script**: ```03_stan_batch_run.R```
 
 <ins>Purpose:</ins> Fits continuous second-level predictor models of all
 three growth forms to each species. Random effect only model is fit to Flagfish
@@ -86,24 +89,24 @@ three growth forms to each species. Random effect only model is fit to Flagfish
 
 <ins>Output:</ins> X
 
-<br>**Script**: ```03_stan_batch_run_cat.R```
+<br>**Script**: ```03b_stan_batch_run_cat.R```
 
-<ins>Purpose:</ins> Identical as ```03_stan_batch_run_linear.R```,
+<ins>Purpose:</ins> Identical as ```03_stan_batch_run.R```,
 but for categorical predictor model.
 
 <ins>Output:</ins> X
 
 ### Model stacking and predictions
 
-<br>**Script**: ```04_batch_loo_stacking_linear.R```
+<br>**Script**: ```04_batch_loo_stacking.R```
 
 <ins>Purpose:</ins> X
 
 <ins>Output:</ins> X
 
-<br>**Script**: ```04_batch_loo_stacking_cat.R```
+<br>**Script**: ```04b_batch_loo_stacking_cat.R```
 
-<ins>Purpose:</ins> Identical as ```04_batch_loo_stacking_linear.R```,
+<ins>Purpose:</ins> Identical as ```04_batch_loo_stacking.R```,
 but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
@@ -116,7 +119,7 @@ but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
 
-<br>**Script**: ```05_model_stacking_summary_stats_cat.R```
+<br>**Script**: ```05b_model_stacking_summary_stats_cat.R```
 
 <ins>Purpose:</ins> Identical as ```05_model_stacking_summary_stats.R```,
 but for categorical predictor model outputs.
@@ -131,7 +134,7 @@ but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
 
-<br>**Script**: ```06_growth_curve_plots_cat.R```
+<br>**Script**: ```06b_growth_curve_plots_cat.R```
 
 <ins>Purpose:</ins> Identical as ```06_growth_curve_plots.R```,
 but for categorical predictor model outputs.
@@ -145,7 +148,7 @@ but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
 
-<br>**Script**: ```07_model_fit_appendix_cat.R```
+<br>**Script**: ```07b_model_fit_appendix_cat.R```
 
 <ins>Purpose:</ins> Identical as ```07_model_fit_appendix.R```,
 but for categorical predictor model outputs.
@@ -161,7 +164,7 @@ second-level predictors, and continuous second-level predictors. While model
 stan files were called in using the [associated R package](BLANK),
 we also provide the stan scripts for each model code in this repository.
 Additionally, we provided R script used to validate each model with simulated
-data.See below for more information of growth forms and model type:
+data. See below for more information of growth forms and model type:
 
 ### Growth forms
 
