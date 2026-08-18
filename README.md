@@ -1,6 +1,5 @@
 # README
 
-
 Code and data for reproducing the analyses presented in:
 
 > Author et al. (YEAR). Bayesian model-stacking improves somatic growth 
@@ -32,15 +31,65 @@ Additionally, if you use associated R functions, also cite:
 
 ## Data
 **Directory:** ```data/```
+The data below can be found at the manuscript's [Zenodo repository:](BLANK)
+These can be used to replicate the full manuscript workflow
 
-## Model outputs
+### Age at length data
+**Files:**
 
-## Figures
-**Directory:** ```figures/```
+### Species key
+**File:**
 
-Contains raw R plots and .csv tables used to create the figures and tables in 
-the main manuscript and appendices. Most figures were edited in Adobe Illustrator
-for aesthetic purposes, and we included Illustrator files as well.
+### Predictor data
+**Files:**
+
+## Outputs
+**Directory:** ```outputs/```
+File containing the following outputs can be found at the manuscript's 
+[Zenodo repository:](BLANK). These can be used to replicate specific
+sections of the workflow, as indicated below:
+
+### Growth model outputs
+**Files:**
+
+### Loo outputs
+**Files:**
+
+### Model stacking output
+**Files:**
+
+### Curve predictions
+**Files:**
+
+## File directory
+Download the entire repository. Then download required data from Zenodo 
+Repository, and data sources listed here, and unzip into the following file 
+structure:
+
+```bash
+
+│
+├── data
+│   │── raw_data
+│   │   │── fs_age.rds*
+│   │   │── fs_predictors.rds*
+│   │   └── fs_species_key.csv*
+│   │
+│   └── analysis_data
+│       │── fs_age_final.rds*
+│       └──  fs_pred_final.rds*
+│
+├── outputs
+│   │── stan_outputs*
+│   │── loo_outputs*
+│   └── curve_predictions*
+│
+├── figures
+└── scripts
+
+
+(*) directories or files downloaded from Zenodo
+```
 
 
 ## Workflow
@@ -55,13 +104,13 @@ Script whose numerical id is followed by "b" refer to scripts used in
 relation to categorical (cat) effect version of the models. These only
 need to be ran to replicate the results in Appendix 2.
 
-### Install custom functions
+### 1. Install custom functions
 <br>**Script**: ```00_install_growthstack_pkg.R```
 
 <ins>Purpose:</ins> Installs package contain custom functions used for
 the manuscript's analyses.
 
-### Data preparation 
+### 2. Data preparation 
 
 <br>**Script**: ```01_age_length_data_cleaning.R```
 
@@ -79,7 +128,7 @@ principal component analysis (PCA) to create composite hydrology variables.
 <ins>Output:</ins> X
 
 
-### Stan model fitting
+### 3. Stan model fitting
 
 <br>**Script**: ```03_stan_batch_run.R```
 
@@ -96,7 +145,7 @@ but for categorical predictor model.
 
 <ins>Output:</ins> X
 
-### Model stacking and predictions
+### 4. Model stacking and predictions
 
 <br>**Script**: ```04_batch_loo_stacking.R```
 
@@ -111,7 +160,7 @@ but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
 
-### Model summary statistics
+### 5. Model summary statistics
 
 <br>**Script**: ```05_model_stacking_summary_stats.R```
 
@@ -126,7 +175,7 @@ but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
 
-### Plotting
+### 6. Plotting
 
 <br>**Script**: ```06_growth_curve_plots.R```
 
@@ -141,7 +190,7 @@ but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
 
-### Model fit
+### 7. Model fit
 <br>**Script**: ```07_model_fit_appendix.R```
 
 <ins>Purpose:</ins> X
@@ -185,3 +234,10 @@ data. See below for more information of growth forms and model type:
 
 ### Model dvelopment
 **Script:** ```BLANK.R```
+
+## Figures
+**Directory:** ```figures/```
+
+Contains raw R plots and .csv tables used to create the figures and tables in 
+the main manuscript and appendices. Most figures were edited in Adobe Illustrator
+for aesthetic purposes, and we included Illustrator files as well.
