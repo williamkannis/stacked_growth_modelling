@@ -30,7 +30,7 @@ We estimated growth rates using
 
 <ins>Output:</ins> X
 
-**Script**: ```02_growth_predictor_data_prep.R```
+<br>**Script**: ```02_growth_predictor_data_prep.R```
 
 <ins>Purpose:</ins> X
 
@@ -45,7 +45,7 @@ We estimated growth rates using
 
 <ins>Output:</ins> X
 
-**Script**: ```03_stan_batch_run_cat.R```
+<br>**Script**: ```03_stan_batch_run_cat.R```
 
 <ins>Purpose:</ins> Identical as ```03_stan_batch_run_linear.R```,
 but for categorical predictor model.
@@ -61,7 +61,7 @@ but for categorical predictor model.
 
 <ins>Output:</ins> X
 
-**Script**: ```04_batch_loo_stacking_cat.R```
+<br>**Script**: ```04_batch_loo_stacking_cat.R```
 
 <ins>Purpose:</ins> Identical as ```04_batch_loo_stacking_linear.R```,
 but for categorical predictor model outputs.
@@ -76,7 +76,7 @@ but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
 
-**Script**: ```05_model_stacking_summary_stats_cat.R```
+<br>**Script**: ```05_model_stacking_summary_stats_cat.R```
 
 <ins>Purpose:</ins> Identical as ```05_model_stacking_summary_stats.R```,
 but for categorical predictor model outputs.
@@ -91,7 +91,7 @@ but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
 
-**Script**: ```06_growth_curve_plots_cat.R```
+<br>**Script**: ```06_growth_curve_plots_cat.R```
 
 <ins>Purpose:</ins> Identical as ```06_growth_curve_plots.R```,
 but for categorical predictor model outputs.
@@ -104,8 +104,10 @@ but for categorical predictor model outputs.
 <ins>Purpose:</ins> X
 
 <ins>Output:</ins> X
-<br>
-**Script**: ```07_model_fit_appendix_cat.R```
+
+<br>**Script**: ```07_model_fit_appendix_cat.R```
 
 <ins>Purpose:</ins> Identical as ```07_model_fit_appendix.R```,
 but for categorical predictor model outputs.
+
+<ins>Output:</ins> X
