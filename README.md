@@ -19,7 +19,7 @@ Email: wannis@fsu.edu, williamkannis@gmail.com
 OrcID: 0009-0003-3541-8503
 ```
 
-If you use this code or data, please cite:
+If you use these, models, code or data, please cite:
 
 >BLANK. Bayesian model-stacking improves somatic growth estimates in 
 Everglades Cyprinodontid fishes. in review
