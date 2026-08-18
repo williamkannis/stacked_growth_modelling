@@ -172,13 +172,13 @@ data.See below for more information of growth forms and model type:
 **Gompertz (gz)**
 
 ### Random effect only model
-**Files:** ```vb_BLANK.stan```, ```gz_BLANK.stan```, ```lg_BLANK.stan```
+**Files:** ```vb_random.stan```, ```gz_random.stan```, ```lg_random.stan```
 
 ### Categorical predictors
-**Files:** ```vb_BLANK.stan```, ```gz_BLANK.stan```, ```lg_BLANK.stan```
+**Files:** ```vb_categorical.stan```, ```gz_categorical.stan```, ```lg_categorical.stan```
 
-### continuous predictors
-**Files:** ```vb_BLANK.stan```, ```gz_BLANK.stan```, ```lg_BLANK.stan```
+### Continuous predictors
+**Files:** ```vb_continuous.stan```, ```gz_continuous.stan```, ```lg_continuous.stan```
 
 ### Model dvelopment
 **Script:** ```BLANK.R```
