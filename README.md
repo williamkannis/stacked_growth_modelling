@@ -104,7 +104,7 @@ but for categorical predictor model outputs.
 <ins>Purpose:</ins> X
 
 <ins>Output:</ins> X
-<brk>
+<br>
 **Script**: ```07_model_fit_appendix_cat.R```
 
 <ins>Purpose:</ins> Identical as ```07_model_fit_appendix.R```,
