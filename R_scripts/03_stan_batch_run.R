@@ -29,6 +29,7 @@ len_dir <- paste0(
 input_dir <- "input_data"
 plot_dir <- "stan_outputs/plotting_info"
 out_dir <- "stan_outputs/model_out"
+fig_dir <-"figures"
 
 # Load in custom functions
 source(file.path(fun_dir,"stan_loo_batch_functions.R"))
@@ -39,6 +40,39 @@ len_df <- readRDS(file.path(len_dir,"fslen_cleaned_2026-02-25.rds"))
 pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-06-17.rds"))
 
 
+# Age and length summary tables  -----------------------------------------------
+
+mean_length <- len_df %>% 
+  right_join(age_df %>% distinct(species)) %>% 
+  group_by(species) %>% 
+  summarise(
+    across(
+      .cols = length,
+      .fns = ~ mean(.x, na.rm = TRUE)
+    )
+  )
+
+age_length_sum <- age_df %>% 
+  group_by(species) %>% 
+  summarise(
+    across(
+      .cols = c(age,length),
+      
+      .fns = list(
+        min = ~ min(.x, na.rm = TRUE),
+        max = ~ max(.x, na.rm = TRUE),
+        mean = ~ mean(.x, na.rm = TRUE)
+        )
+      )
+    ) %>% 
+  left_join(mean_length)
+
+write.csv(
+  age_length_sum,
+  file.path(fig_dir,"age_length_summary.csv"), 
+  row.names = F)
+
+  
 # Create inputs for batch model runs  ------------------------------------------
 
 # Create Stan data lists and id bridge tables for each species.
