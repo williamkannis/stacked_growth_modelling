@@ -96,7 +96,7 @@ fit_growth <- function(
     scale = T,
     linear.predictions = F,  
     pred.len = 100,
-    sp=sp,   
+    sp,   
     age.df, 
     len.df = NULL,
     ...,
@@ -150,9 +150,8 @@ fit_growth <- function(
   # out_diag_list <- list(out,diag)
   # names(out_diag_list) <- c("model_out","sample_diagnostics")
   # c(out_diag_list,input_list) 
-  out_list <- c(out,input_list)
-  names(out_list)[1] <- "model_out"
-  out_list
+  c(list(model_out = out),input_list)
+
   
 }
 
