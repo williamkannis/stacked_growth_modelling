@@ -21,23 +21,27 @@ library(readxl)
 library(rstan)
 
 # Directories
-fun_dir <-"functions"
+# fun_dir <-"functions"
 len_dir <- paste0(
   "~/Documents/Work/Everglades post-doc/",
   "Data analysis/Data cleaning/cleaned_data"
 )
 input_dir <- "input_data"
-plot_dir <- "stan_outputs/plotting_info"
-out_dir <- "stan_outputs/model_out"
+out_dir <- "outputs/stan_outputs"
 fig_dir <-"figures"
 
 # Load in custom functions
-source(file.path(fun_dir,"stan_loo_batch_functions.R"))
+# source(file.path(fun_dir,"stan_loo_batch_functions.R"))
+devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Data (Make sure up-to date version!)
 age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 len_df <- readRDS(file.path(len_dir,"fslen_cleaned_2026-02-25.rds"))
-pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-06-17.rds"))
+pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-08-21.rds"))
+
+# Combine age and predictor data.frames
+input_df <- age_df %>% 
+  left_join(pred_df)
 
 
 # Age and length summary tables  -----------------------------------------------
@@ -69,201 +73,300 @@ age_length_sum <- age_df %>%
 
 write.csv(
   age_length_sum,
-  file.path(fig_dir,"age_length_summary.csv"), 
+  file.path(
+    fig_dir,
+    "table_s1.2",
+    "table_s1.2.csv"
+    ), 
   row.names = F)
-
-  
-# Create inputs for batch model runs  ------------------------------------------
-
-# Create Stan data lists and id bridge tables for each species.
-# Data is provide to Stan in named list for all variables. For random effects,
-# groupings must be numeric. This function will create sampling event ids based
-# on wateryear, region, and site. To link the new sampling id back to original
-# site information, a bridge data.frame is also created
-sp <- unique(age_df$species)
-
-# Combine age and predictor data.frames
-input_df <- age_df %>% 
-  left_join(pred_df)
-
-# Prepare data
-prep_list <-lapply(
-  sp,
-  stan_data_prep,
-  age.df = input_df,
-  sample.groups <- c("wateryear","region","site"),
-  len.df = len_df,
-  fixed.effect = "linear",
-  predictors = c("PC1","PC2","PC3"),
-  scale = T,
-  linear.predictions = T,
-  pred.len = 100)
-names(prep_list) <- sp
-
-# Split data prep list into Stan data and plotting data (e.g. sample id, average
-# length, and prediction labels) 
-prep_list_t <- purrr::list_transpose(prep_list)
-id_bridge <- bind_rows(prep_list_t$id_bridge)  # links sample_id to site and year
-pred_lables <- prep_list_t$prediction_labels  # PC values used for predicted growth rates 
-mean_lengths <- prep_list_t$mean_length  # mean length used to estimate inst. growth
-input_list <- prep_list_t$stan_data   # data for stan analysis
-
-# Export plotting data
-saveRDS(
-  id_bridge,
-  file.path(plot_dir,paste0("fsgwh_sampleid_bridge_",Sys.Date(),".rds"))
-  )
-saveRDS(
-  pred_lables,
-  file.path(plot_dir,paste0("fsgwh_pred_labels_",Sys.Date(),".rds"))
-  )
-saveRDS(
-  mean_lengths,
-  file.path(plot_dir,paste0("fsgwh_mean_lengths_",Sys.Date(),".rds"))
-  )
 
 
 # LUCGOO model runs  -----------------------------------------------------------
 
-# Subset by species
-luc <- "LUCGOO"
-luc_input <- input_list[[luc]]
-
-# Species specific nu for student t's distribution
-luc_input$NU <- 4
-
-# Run model, export results, and return diagnostics
-luc_diag <- stan_diag_batch(
-  fixed.effects = "linear",
-  data = luc_input,
-  sp = luc,
-  export.dir = out_dir,
+# Fit models
+luc_out <- fit_growth(
+  mod.form = c("vb","gz","lg"),
+  nu=4,
+  fixed.effect = "continuous",
+  sample.groups = c("wateryear","region","site"),
+  predictors = c("PC1","PC2","PC3"),  
+  scale = T,
+  linear.predictions = T,  
+  pred.len = 100,
+  sp="LUCGOO",   
+  age.df = input_df, 
+  len.df = len_df,
   iter = 5000,
   warmup = 1000,
   chains =4,
   control = list(adapt_delta = .97),  
   cores = 4
+)
+
+# Check for sampling and convergence issues
+lapply(luc_out$model_out, stan_diag)
+
+# export
+luc_dir <- file.path(out_dir,"LUCGOO")
+dir.create(luc_dir)
+lapply(1:length(luc_out$model_out),function(x){
+  mod <- luc_out$model_out[[x]]
+  name <- names(luc_out$model_out)[x]
+  file_name <- paste0(
+    name,
+    "_LUCGOO_",
+    Sys.Date(),
+    ".rds"
   )
+  saveRDS(mod,file.path(luc_dir,file_name))
+})
 
 
 # POELAT model runs  -----------------------------------------------------------
 
-# Subset by species
-poe <- "POELAT"
-poe_input <- input_list[[poe]]
-
-# Species specific nu for student t's distribution
-poe_input$NU <- 3
-
-# Run model, export results, and return diagnostics
-poe_diag <- stan_diag_batch(
-  fixed.effects = "linear",
-  data = poe_input,
-  sp = poe,
-  export.dir = out_dir,
-  iter = 7000,
-  warmup = 1000,
-  chains =4,
-  control = list(adapt_delta = .97), 
-  cores = 4
-)
-poe_diag_t <- purrr::transpose(poe_diag)
-
-
-# HETFOR model runs  -----------------------------------------------------------
-
-# Subset by species
-het <- "HETFOR"
-het_input <- input_list[[het]]
-
-# Species specific nu for student t's distribution
-het_input$NU <- 4
-
-# Run model, export results, and return diagnostics
-het_diag <- stan_diag_batch(
-  fixed.effects = "linear",
-  data = het_input,
-  sp = het,
-  export.dir = out_dir,
+# Fit models
+poe_out <- fit_growth(
+  mod.form = c("vb","gz","lg"),
+  nu=3,
+  fixed.effect = "continuous",
+  sample.groups = c("wateryear","region","site"),
+  predictors = c("PC1","PC2","PC3"),  
+  scale = T,
+  linear.predictions = T,  
+  pred.len = 100,
+  sp="POELAT",   
+  age.df = input_df, 
+  len.df = len_df,
   iter = 5000,
   warmup = 1000,
   chains =4,
-  control = list(adapt_delta = .97), 
-  mc.cores = 1
+  control = list(adapt_delta = .97),  
+  cores = 4
 )
-het_diag_t <- purrr::transpose(het_diag)
+
+# Check for sampling and convergence issues
+lapply(poe_out$model_out, stan_diag)
+
+# export
+poe_dir <- file.path(out_dir,"POELAT")
+dir.create(poe_dir)
+lapply(1:length(poe_out$model_out),function(x){
+  mod <- poe_out$model_out[[x]]
+  name <- names(poe_out$model_out)[x]
+  file_name <- paste0(
+    name,
+    "_POELAT_",
+    Sys.Date(),
+    ".rds"
+  )
+  saveRDS(mod,file.path(poe_dir,file_name))
+})
+  
+
+# HETFOR model runs  -----------------------------------------------------------
+
+# Fit models
+het_out <- fit_growth(
+  mod.form = c("vb","gz","lg"),
+  nu=4,
+  fixed.effect = "continuous",
+  sample.groups = c("wateryear","region","site"),
+  predictors = c("PC1","PC2","PC3"),  
+  scale = T,
+  linear.predictions = T,  
+  pred.len = 100,
+  sp="HETFOR",   
+  age.df = input_df, 
+  len.df = len_df,
+  iter = 5000,
+  warmup = 1000,
+  chains =4,
+  control = list(adapt_delta = .97),  
+  cores = 4
+)
+
+# Check for sampling and convergence issues
+lapply(het_out$model_out, stan_diag)
+
+# export
+het_dir <- file.path(out_dir,"HETFOR")
+dir.create(het_dir)
+lapply(1:length(het_out$model_out),function(x){
+  mod <- het_out$model_out[[x]]
+  name <- names(het_out$model_out)[x]
+  file_name <- paste0(
+    name,
+    "_HETFOR_",
+    Sys.Date(),
+    ".rds"
+  )
+  saveRDS(mod,file.path(het_dir,file_name))
+})
 
 
 # GAMHOL model runs  -----------------------------------------------------------
 
-# Subset by species
-gam <- "GAMHOL"
-gam_input <- input_list[[gam]]
-
-# Species specific nu for student t's distribution
-gam_input$NU <- 4
-
-# Run model, export results, and return diagnostics
-gam_diag <- stan_diag_batch(
-  fixed.effects = "linear",
-  data = gam_input,
-  sp = gam,
-  export.dir = out_dir,
+# Fit models
+gam_out <- fit_growth(
+  mod.form = c("vb","gz","lg"),
+  nu=4,
+  fixed.effect = "continuous",
+  sample.groups = c("wateryear","region","site"),
+  predictors = c("PC1","PC2","PC3"),  
+  scale = T,
+  linear.predictions = T,  
+  pred.len = 100,
+  sp="GAMHOL",   
+  age.df = input_df, 
+  len.df = len_df,
   iter = 5000,
   warmup = 1000,
   chains =4,
   control = list(adapt_delta = .97),  
   cores = 4
 )
-gam_diag_t <- purrr::transpose(gam_diag)
+
+# Check for sampling and convergence issues
+lapply(gam_out$model_out, stan_diag)
+
+# export
+gam_dir <- file.path(out_dir,"GAMHOL")
+dir.create(gam_dir)
+lapply(1:length(gam_out$model_out),function(x){
+  mod <- gam_out$model_out[[x]]
+  name <- names(gam_out$model_out)[x]
+  file_name <- paste0(
+    name,
+    "_GAMHOL_",
+    Sys.Date(),
+    ".rds"
+  )
+  saveRDS(mod,file.path(gam_dir,file_name))
+})
 
 
 # FUNCHR model runs  -----------------------------------------------------------
 
-# Subset by species
-fun <- "FUNCHR"
-fun_input <- input_list[[fun]]
-
-# Species specific nu for student t's distribution
-fun_input$NU <- 3
-
-# Run model, export results, and return diagnostics
-fun_diag <- stan_diag_batch(
-  fixed.effects = "linear",
-  data = fun_input,
-  sp = fun,
-  export.dir = out_dir,
+# Fit models
+fun_out <- fit_growth(
+  mod.form = c("vb","gz","lg"),
+  nu=3,
+  fixed.effect = "continuous",
+  sample.groups = c("wateryear","region","site"),
+  predictors = c("PC1","PC2","PC3"),  
+  scale = T,
+  linear.predictions = T,  
+  pred.len = 100,
+  sp="FUNCHR",   
+  age.df = input_df, 
+  len.df = len_df,
   iter = 5000,
   warmup = 1000,
   chains =4,
   control = list(adapt_delta = .97),  
   cores = 4
 )
-fun_diag_t <- purrr::transpose(fun_diag)
+
+# Check for sampling and convergence issues
+lapply(fun_out$model_out, stan_diag)
+
+# export
+fun_dir <- file.path(out_dir,"FUNCHR")
+dir.create(fun_dir)
+lapply(1:length(fun_out$model_out),function(x){
+  mod <- fun_out$model_out[[x]]
+  name <- names(fun_out$model_out)[x]
+  file_name <- paste0(
+    name,
+    "_FUNCHR_",
+    Sys.Date(),
+    ".rds"
+  )
+  saveRDS(mod,file.path(fun_dir,file_name))
+})
 
 
 # JORFLO model runs  -----------------------------------------------------------
 
-# Subset by species
-jor <- "JORFLO"
-jor_input <- input_list[[jor]]
-
-# Species specific nu for student t's distribution
-jor_input$NU <- 4
-
-# JORFLO has insufficient sample size for second level effects, run
-# random effect only models
-# Run model, export results, and return diagnostics
-jor_diag <- stan_diag_batch(
-  fixed.effects = NULL,
-  data = jor_input,
-  sp = jor,
-  export.dir = out_dir,
+# Fit models
+jor_out <- fit_growth(
+  mod.form = c("vb","gz","lg"),
+  nu=4,
+  fixed.effect = "random",
+  sample.groups = c("wateryear","region","site"),
+  scale = T,
+  sp="JORFLO",   
+  age.df = input_df, 
+  len.df = len_df,
   iter = 5000,
   warmup = 1000,
   chains =4,
-  control = list(adapt_delta = .97), 
+  control = list(adapt_delta = .97),  
   cores = 4
 )
-jor_diag_t <- purrr::transpose(jor_diag)
+
+# Check for sampling and convergence issues
+lapply(jor_out$model_out, stan_diag)
+
+# export
+jor_dir <- file.path(out_dir,"JORFLO")
+dir.create(jor_dir)
+lapply(1:length(jor_out$model_out),function(x){
+  mod <- jor_out$model_out[[x]]
+  name <- names(jor_out$model_out)[x]
+  file_name <- paste0(
+    name,
+    "_JORFLO_",
+    Sys.Date(),
+    ".rds"
+  )
+  saveRDS(mod,file.path(jor_dir,file_name))
+})
+
+
+#  Plot labels and group ids  --------------------------------------------------
+
+out_list <- list(
+  LUCGOO = luc_out,
+  POELAT = poe_out,
+  HETFOR = het_out,
+  GAMHOL = gam_out,
+  FUNCHR = fun_out,
+  JORFLO = jor_out
+)
+
+
+# Split data prep various plotting data (e.g. sample id, average
+# length, and prediction labels) 
+out_list_t <- purrr::list_transpose(out_list)
+id_bridge <- bind_rows(out_list_t$id_bridge)  # links sample_id to site and year
+pred_lables <- out_list_t$prediction_labels  # PC values used for predicted growth rates 
+mean_lengths <- out_list_t$mean_length  # mean length used to estimate inst. growth
+
+
+# Export plotting data
+saveRDS(
+  id_bridge,
+  file.path(
+    fig_dir,
+    "_labels",
+    paste0("fsgwh_sampleid_bridge_",Sys.Date(),".rds")
+    )
+  )
+saveRDS(
+  pred_lables,
+  file.path(
+    fig_dir,
+    "_labels",
+    paste0("fsgwh_pred_labels_",Sys.Date(),".rds")
+    )
+  )
+saveRDS(
+  mean_lengths,
+  file.path(
+    fig_dir,
+    "_labels",
+    paste0("fsgwh_mean_lengths_",Sys.Date(),".rds")
+    )
+  )
 
