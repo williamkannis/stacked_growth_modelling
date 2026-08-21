@@ -22,6 +22,7 @@ rm(list = ls())
 # Load in packages
 library(dplyr)
 library(vegan)
+library(ggplot2)
 
 # Directories
 data_dir <- paste0(
@@ -29,6 +30,7 @@ data_dir <- paste0(
   "Data analysis/Data cleaning/cleaned_data"
 )
 input_dir <- "input_data"
+fig_dir <- "figures"
 
 # Data
 age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
@@ -99,22 +101,29 @@ pis_df_for <- pis_df %>%
   rename(site = site_full)
   
   
-# Some sampling events in the age data did not have elctrofishing conducted,
-# likely due to low water conditions. For these, impute pisc_index of zero.
+# Some sampling events in the age data did not have elctrofishing conducted at
+# their respective sample site.For these, impute pisc_index of using the median
+# value for that region and year.
 # Many missing values exist outside of the age sampling events and these
 # will not be imputed for pca data. This decision does not change clusters or 
 # PCA axes much.
 
 # Impute missing pisc data from age sampling events
+pisc_avg <- pis_df_for %>% 
+  group_by(region,wateryear) %>% 
+  summarise(pisc_index_impute = mean(pisc_index,na.rm=T))
+
 pis_df_age <- pis_df_for %>% 
   right_join(samp_df) %>% 
+  left_join(pisc_avg) %>% 
   mutate(
     pisc_index = case_when(
-      is.na(pisc_index) ~ 0,
+      is.na(pisc_index) ~ pisc_index_impute,
       T~pisc_index
     )
   ) %>% 
-  select(-period)
+  select(-period,-pisc_index_impute)
+
 
 # Extract pisc data that is not linked to age sampling events
 pis_df_sub <-
@@ -176,11 +185,12 @@ setdiff(
 # these data fro growth so this is okay, but will need to think about this in 
 # the future
 
+
 # Hydrology  -------------------------------------------------------------------
 
 # Summarize annual hydrological data at the site year for each water period to 
 # estimate the impacts of hydrological disturbance and energy on fish growth.
-# Also creates categorical groupings based on anual hydroperiod (i.e. days 
+# Also creates categorical groupings based on annual hydroperiod (i.e. days 
 # flooded).
 
 hydro_df <- phy_df %>% 
@@ -188,8 +198,7 @@ hydro_df <- phy_df %>%
   summarise(
     depth_ave_365day = mean(depth_ave_365day,na.rm=T),
     wet_sum_365day = mean(wet_sum_365day,na.rm=T),
-    dsldd = mean(dsldd,na.rm=T),
-    lastdaydry = mean(lastdaydry,na.rm=T)
+    dsldd = mean(dsldd,na.rm=T)
   ) %>% 
   ungroup() %>% 
   mutate(
@@ -260,7 +269,10 @@ pred_df <- comp_df %>%
 # Export
 saveRDS(
   pred_df,
-  file.path(input_dir,paste0("fsgrw_predictors_",Sys.Date(),".rds"))
+  file.path(
+    input_dir,
+    paste0("fsgrw_predictors_",Sys.Date(),".rds")
+    )
   )
 
 
@@ -349,7 +361,10 @@ for (i in 1:ncol(pca_ax)) {
   print(p)
   
   ggsave(
-    filename = file.path("figures/pca_plot",pca_file),
+    filename = file.path(
+      fig_dir,
+      "figure_2",
+      pca_file),
      plot = p,
      width = 10,
      height = 8,
@@ -369,7 +384,15 @@ pca_cor <- pca_cor[-c(1:3),1:3]
 # Export plot
 corrplot::corrplot(pca_cor)
 
-png("figures/corr_plot.png", width = 900, height = 1800)
+png(
+  file.path(
+    fig_dir,
+    "figure_2",
+    "corr_plot.png"
+    ), 
+  width = 900, 
+  height = 1800
+  )
 corrplot::corrplot(
   corr = pca_cor,
   cl.pos = "n",
