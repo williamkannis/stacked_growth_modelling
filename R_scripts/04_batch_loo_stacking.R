@@ -28,10 +28,13 @@ library(loo)
 
 # directories
 input_dir <- "input_data"
-fun_dir <-"functions"
-out_dir <- "stan_outputs/model_out"
-plot_dir <- "stan_outputs/plotting_info"
-export_dir <- "loo_outputs"
+# fun_dir <-"functions"
+out_dir <- "outputs/stan_outputs"
+label_dir <- "figures/_labels"
+loo_dir <- "outputs/loo_outputs"
+param_dir <- "outputs/parameter_outputs"
+curve_dir <- "outputs/curve_outputs"
+
 
 # Load in custom functions
 # source(file.path(fun_dir,"stan_loo_batch_functions.R"))
@@ -42,13 +45,14 @@ devtools::load_all("~/Documents/work/R packages/growthstack")
 fish_df <- 
   readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 sample_bridge <- 
-  readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-06-16.rds"))
+  readRDS(file.path(label_dir,"fsgwh_sampleid_bridge_2026-08-21.rds"))
 pred_lables <- 
-  readRDS(file.path(plot_dir,"fsgwh_pred_labels_2026-06-16.rds"))
+  readRDS(file.path(label_dir,"fsgwh_pred_labels_2026-08-21.rds"))
 mean_lengths <- 
-  readRDS(file.path(plot_dir,"fsgwh_mean_lengths_2026-06-16.rds"))
+  readRDS(file.path(label_dir,"fsgwh_mean_lengths_2026-08-21.rds"))
 n.cores <- 6
 stack.iter <- 10000
+
 
 # Load in model outputs  -------------------------------------------------------
 
@@ -58,7 +62,7 @@ sp_dir <- sapply(sp,function(x) file.path(out_dir,x))
 names(sp_dir) <- sp
 
 # Species specific model outputs. Select only linear or random models
-sp_out <- lapply(sp_dir,list.files,pattern = "linear|random") 
+sp_out <- lapply(sp_dir,list.files,pattern = "continuous|random") 
 
 # are there 3 models in each?
 sapply(sp_out,n_distinct)
@@ -73,7 +77,7 @@ mean_lengths <- mean_lengths[order(names(mean_lengths))]
 sp_loo <- purrr::map2(sp_out,sp_dir,loo_batch,n.cores)
 
 # Ensure that all models have Pareto' K > 0.7
-sp_loo_diag <- lapply(sp_loo, loo_diag,"ESS")
+lapply(sp_loo, loo_diag,"ESS")
 
 # Compare loo values among models
 sp_loo_compare <- lapply(sp_loo,loo_compare)
@@ -308,7 +312,7 @@ r2_df <- bind_rows(r2_list)
 ### Link PC values to linear predictions  ###
 
 # Format prediction input labels to merge
-pred_lables_id <- lapply(pred_lables,function(x) {
+pred_lables_id <- lapply(pred_lables[names(pred_lables) !="JORFLO"],function(x) {
   df <- as.data.frame(x)
   df[,"pred_id"] <- 1:nrow(df)
   df
@@ -342,52 +346,53 @@ site_curve_bridged <-site_curve_df %>%
 # and parameters
 saveRDS(
   sp_loo_compare,
-  file.path(export_dir,paste0("loo_out_",Sys.Date(),".rds"))
+  file.path(loo_dir,paste0("loo_out_",Sys.Date(),".rds"))
   )
 saveRDS(
   sp_stack_wt,
-  file.path(export_dir,paste0("stack_wt_out_",Sys.Date(),".rds"))
+  file.path(loo_dir,paste0("stack_wt_out_",Sys.Date(),".rds"))
   )
 saveRDS(
   mean_growth_df, 
   file.path(
-    export_dir,
+    param_dir,
     paste0("stacked_mean_growth_predictions_",Sys.Date(),".rds")
     )
   )
 saveRDS(
   ind_mean_growth_df, 
   file.path(
-    export_dir,
+    param_dir,
     paste0("ind_mean_growth_predictions_",Sys.Date(),".rds")
     )
   )
+### MAYBE REMOE THIS AND KEEP THIS IN MODEL FIT
 saveRDS(
   r2_df, 
-  file.path(export_dir,paste0("model_r2_",Sys.Date(),".rds"))
+  file.path(loo_dir,paste0("model_r2_",Sys.Date(),".rds"))
   )
 saveRDS(
   param_df, 
-  file.path(export_dir,paste0("stacked_mu_parameters_",Sys.Date(),".rds"))
+  file.path(param_dir,paste0("stacked_mu_parameters_",Sys.Date(),".rds"))
   )
 
 # For plots, export length and growth-at-age predictions and bridge tables
 saveRDS(
   site_curve_bridged, 
-  file.path(export_dir,paste0("stacked_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir,paste0("stacked_curves_",Sys.Date(),".rds"))
   )
 saveRDS(
   mu_curve_df, 
-  file.path(export_dir,paste0("stacked_mu_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir,paste0("stacked_mu_curves_",Sys.Date(),".rds"))
   )
 saveRDS(
   ind_mu_curve_df, 
-  file.path(export_dir,paste0("ind_mu_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir,paste0("ind_mu_curves_",Sys.Date(),".rds"))
   )
 saveRDS(
   pred_bridged, 
   file.path(
-    export_dir,
+    curve_dir,
     paste0("stacked_growth_predictions_",Sys.Date(),".rds")
     )
   )
