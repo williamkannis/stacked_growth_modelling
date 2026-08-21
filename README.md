@@ -31,6 +31,7 @@ Additionally, if you use associated R functions, also cite:
 
 ## Data
 **Directory:** ```data/```
+
 The data below can be found at the manuscript's [Zenodo repository:](BLANK)
 These can be used to replicate the full manuscript workflow
 
@@ -45,6 +46,7 @@ These can be used to replicate the full manuscript workflow
 
 ## Outputs
 **Directory:** ```outputs/```
+
 File containing the following outputs can be found at the manuscript's 
 [Zenodo repository:](BLANK). These can be used to replicate specific
 sections of the workflow, as indicated below:
@@ -77,7 +79,7 @@ structure:
 │   │
 │   └── analysis_data
 │       │── fs_age_final.rds*
-│       └──  fs_pred_final.rds*
+│       └── fs_pred_final.rds*
 │
 ├── outputs
 │   │── stan_outputs*
@@ -233,7 +235,7 @@ data. See below for more information of growth forms and model type:
 ### Continuous predictors
 **Files:** ```vb_continuous.stan```, ```gz_continuous.stan```, ```lg_continuous.stan```
 
-### Model dvelopment
+### Model development
 **Script:** ```BLANK.R```
 
 ## Figures
