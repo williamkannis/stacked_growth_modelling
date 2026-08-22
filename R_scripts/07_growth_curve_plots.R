@@ -19,31 +19,36 @@ rm(list = ls())
 library(rstan)
 library(parallel)
 library(tidyverse)
+library(stringr)
+library(ggplot2)
 
 # Directories
-out_dir <- "stan_outputs/model_out"
-loo_dir <- "loo_outputs"
+out_dir <- "outputs/stan_outputs"
+loo_dir <- "outputs/loo_outputs"
+param_dir <- "outputs/parameter_outputs"
+curve_dir <- "outputs/curve_outputs"
 pred_dir <- "input_data"
 export_dir <- "figures"
-mu_dir <- file.path(export_dir,"mu_plots")
-fun_dir <- "functions"
+# mu_dir <- file.path(export_dir,"mu_plots")
+# fun_dir <- "functions"
 
 # Custom functions
-source(file.path(fun_dir,"growth_summary_functions.R"))
+# source(file.path(fun_dir,"growth_summary_functions.R"))
+devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data
 sp_stack_wt <- 
-  readRDS(file.path(loo_dir,"stack_wt_out_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"stack_wt_out_2026-08-21.rds"))
 curve_df <- 
-  readRDS(file.path(loo_dir,"stacked_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"stacked_curves_2026-08-21.rds"))
 mu_curve_df <- 
-  readRDS(file.path(loo_dir,"stacked_mu_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"stacked_mu_curves_2026-08-21.rds"))
 ind_mu_curve_df <- 
-  readRDS(file.path(loo_dir,"ind_mu_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"ind_mu_curves_2026-08-21.rds"))
 pred_bridged <- 
-  readRDS(file.path(loo_dir,"stacked_growth_predictions_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"stacked_growth_predictions_2026-08-21.rds"))
 pred_df <-
-  readRDS(file.path(pred_dir,"fsgrw_predictors_2026-06-17.rds"))
+  readRDS(file.path(pred_dir,"fsgrw_predictors_2026-08-21.rds"))
 age_df <- 
   readRDS(file.path(pred_dir,"fsage_cleaned_2026-06-18.rds"))
 
@@ -216,9 +221,13 @@ for(i in 1:length(sp)){
   print(growth_compare)
   
   # Export length
-  length_compare_name <- paste0("length_age_compare_plot_",sp[i],".png")
+  length_compare_name <- paste0("_length_age_",sp[i],".png")
   ggplot2::ggsave(
-    file.path(mu_dir,length_compare_name),
+    file.path(
+      export_dir,
+      "figure_3",
+      length_compare_name
+      ),
     length_compare,
     width = 10,
     height = 8,
@@ -226,9 +235,13 @@ for(i in 1:length(sp)){
     )
 
   # Export growth
-  growth_compare_name <- paste0("growth_age_compare_plot_",sp[i],".png")
+  growth_compare_name <- paste0("_growth_age_",sp[i],".png")
   ggplot2::ggsave(
-    file.path(mu_dir,growth_compare_name),
+    file.path(
+      export_dir,
+      "figure_3",
+      growth_compare_name
+      ),
     growth_compare,
     width = 10,
     height = 8,
@@ -363,14 +376,18 @@ for(i in 1:6){
   
   # Create file name based on species
   length_plot_name <- paste0(
-    "length_at_age_plots/",
+    "_length_age_",
     sp[i],
-    "_length_age_plot.png"
+    ".png"
     )
   
   # Export plot
   ggplot2::ggsave(
-    file.path(export_dir,length_plot_name),
+    file.path(
+      export_dir,
+      "figure_4",
+      length_plot_name
+      ),
     p,
     width = 10,
     height = 8,
@@ -465,14 +482,18 @@ for(i in 1:6){
   
   # Create file name based on species
   growth_plot_name <- paste0(
-    "growth_at_age_plots/",
+    "_growth_age_",
     sp[i],
-    "_growth_age_plot.png"
+    ".png"
     )
   
   # export
   ggplot2::ggsave(
-    file.path(export_dir,growth_plot_name),
+    file.path(
+      export_dir,
+      "figure_4",
+      growth_plot_name
+      ),
     p,
     width = 10,
     height = 8,
@@ -534,7 +555,11 @@ mu_l_plot <-ggplot(
       )
     )
 ggplot2::ggsave(
-  file.path(mu_dir,"mu_length_age_plot.png"),
+  file.path(
+    export_dir,
+    "figure_5",
+    "_length_age.png"
+    ),
   mu_l_plot,
   width = 10,
   height = 8,
@@ -582,120 +607,21 @@ mu_g_plot <-ggplot(
       )
     ) 
 ggplot2::ggsave(
-  file.path(mu_dir,"mu_growth_age_plot.png"),
+  file.path(
+    export_dir,
+    "figure_5",
+    "_growth_age.png"),
   mu_g_plot,
   width = 10,
   height = 8,
   dpi = 300)
 
 
-# Beta coefficient plot (Fig 6)  -----------------------------------------------
-
-# Remove JORFLO
-sp_stack_wt_for <- sp_stack_wt[names(sp_stack_wt) != "JORFLO"]
-sp_dir_for <- sp_dir[names(sp_dir) != "JORFLO"]
-
-# Extract beta parameters and CIs
-beta_list <- lapply(1:length(sp_stack_wt_for), function (i) {
-  beta_mean_ci_batch(sp_stack_wt_for[[i]],T,sp_dir_for[i],mc.cores = 3)
-} )
-
-# Format beta data
-beta_df <- bind_rows(beta_list) %>% 
-  mutate(
-    mean = as.numeric(mean),
-    lwr = as.numeric(lwr),
-    upr = as.numeric(upr),
-    species = substr(mod_file,8,13),
-    mod = substr(mod_file,1,2),
-    mod = factor(mod,levels = c("vb","gz","lg")),
-    response = str_extract(parameter, "(?<=_).*?(?=_)"),
-    pca_id = substr(parameter,nchar(parameter),nchar(parameter)),
-    predictor = paste0("pc",pca_id),
-    # group = interaction(predictor, species, mod, sep = " | "),
-    group = interaction(predictor, species, sep = " | "),
-    group = factor(
-      group, 
-      levels = unique(group[order(predictor, species,decreasing = T)])
-      ),
-    overlap_zero = lwr <= 0 & upr >= 0
-    )
-
-# Assign species colors
-sp.colors_sub <- c("#b5a331","#339d38","#c26a77","#2f2585","#2b695c")
-
-# Create seperate plots for each growth parameter
-lapply(c("Linf","g","t"),function(i){
-  
-  # Subset data
-  plot_df <- beta_df %>% filter(response == i) %>% 
-    # Create spaces between species
-    arrange(desc(predictor), desc(species), desc(mod)) %>%
-    mutate(
-      group_id = row_number(),
-      species_id = as.numeric(group),
-      y_pos = group_id + (species_id - 1) * 3
-    )
-  
-  # Plot
-  p <- ggplot(
-    data=plot_df, 
-    aes(
-      y=y_pos,
-      x=mean,
-      color = species,
-      alpha = overlap_zero)
-    ) +
-    geom_vline(xintercept = 0, color = "red",linewidth =2) +
-    geom_errorbarh(
-      aes(xmin = lwr, xmax = upr),
-      linewidth = 2,height =0
-      )+
-    geom_point(aes(shape = mod),size = 5)+
-    scale_alpha_manual(
-      values = c(`TRUE` = 0.3, `FALSE` = 1),
-      guide = "none"
-      ) +
-    scale_color_manual(values =sp.colors_sub)+
-    xlab("")+
-    theme(legend.position="none")+
-    theme(
-      axis.title.y = element_blank(),
-      axis.text.y  = element_blank(),
-      axis.ticks.y = element_blank(),
-      panel.grid.major.y = element_blank(),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      panel.border = element_blank(),
-      plot.border  = element_blank(),
-      axis.line.x = element_line(color = "black", linewidth = 2),
-      panel.background = element_rect(fill = "transparent", color = NA),
-      plot.background  = element_rect(fill = "transparent", color = NA),
-      axis.text.x = element_text(size = 14)
-    )
-  print(p)
-  
-  #File name
-  p_name <- paste0("beta_plot_",i,".png")
-  
-  # Export
-  ggsave(
-    file.path(export_dir,"beta_tree_plots",p_name),
-    plot = p,
-    bg = "transparent",
-    width = 5,
-    height = 10,
-    dpi = 300
-  )
-  
-} 
-)
-
-# Beta prediction plots (Fig 7)  -----------------------------------------------
+# Beta prediction plots (Fig 6)  -----------------------------------------------
 
 # responses used for predictions
 pred_vec <- c("ig") 
-pred_vec <- c("Linf","ig")   
+# pred_vec <- c("Linf","ig")   
 
 # X axis limits
 xmins <- pred_bridged %>% 
@@ -789,19 +715,22 @@ for (j in 1:length(sp)) {
       
       # Create file name based on response, predictor, and species
       beta_plot_name <- paste0(
-        pred_vec[i],
-        "_beta_plots/",
-        sp[j],
         "_PC",
         k,
         "_",
+        sp[j],
+        "_",
         pred_vec[i],
-        "_beta_plot.png"
+        ".png"
         )
       
       # Export plot
       ggplot2::ggsave(
-        file.path(export_dir,beta_plot_name),
+        file.path(
+          export_dir,
+          "figure_6",
+          beta_plot_name
+          ),
         p,
         width = 10,
         height = 8,
@@ -811,3 +740,114 @@ for (j in 1:length(sp)) {
   }
 }
 
+
+# Beta coefficient plot (Fig s7.1)  --------------------------------------------
+
+# Remove JORFLO
+sp_stack_wt_for <- sp_stack_wt[names(sp_stack_wt) != "JORFLO"]
+sp_dir_for <- sp_dir[names(sp_dir) != "JORFLO"]
+
+# Extract beta parameters and CIs
+beta_list <- lapply(1:length(sp_stack_wt_for), function (i) {
+  beta_mean_ci_batch(
+    sp_stack_wt_for[[i]],
+    T,
+    sp_dir_for[i],
+    mc.cores = 3
+    )
+} )
+
+# Format beta data
+beta_df <- bind_rows(beta_list) %>% 
+  mutate(
+    mean = as.numeric(mean),
+    lwr = as.numeric(lwr),
+    upr = as.numeric(upr),
+    species = str_split_i(mod_file, "_", 3),
+    mod = substr(mod_file,1,2),
+    mod = factor(mod,levels = c("vb","gz","lg")),
+    response = str_extract(parameter, "(?<=_).*?(?=_)"),
+    pca_id = substr(parameter,nchar(parameter),nchar(parameter)),
+    predictor = paste0("pc",pca_id),
+    # group = interaction(predictor, species, mod, sep = " | "),
+    group = interaction(predictor, species, sep = " | "),
+    group = factor(
+      group, 
+      levels = unique(group[order(predictor, species,decreasing = T)])
+    ),
+    overlap_zero = lwr <= 0 & upr >= 0
+  )
+
+# Assign species colors
+sp.colors_sub <- c("#b5a331","#339d38","#c26a77","#2f2585","#2b695c")
+
+# Create seperate plots for each growth parameter
+lapply(c("Linf","g","t"),function(i){
+  
+  # Subset data
+  plot_df <- beta_df %>% filter(response == i) %>% 
+    # Create spaces between species
+    arrange(desc(predictor), desc(species), desc(mod)) %>%
+    mutate(
+      group_id = row_number(),
+      species_id = as.numeric(group),
+      y_pos = group_id + (species_id - 1) * 3
+    )
+  
+  # Plot
+  p <- ggplot(
+    data=plot_df, 
+    aes(
+      y=y_pos,
+      x=mean,
+      color = species,
+      alpha = overlap_zero)
+  ) +
+    geom_vline(xintercept = 0, color = "red",linewidth =2) +
+    geom_errorbarh(
+      aes(xmin = lwr, xmax = upr),
+      linewidth = 2,height =0
+    )+
+    geom_point(aes(shape = mod),size = 5)+
+    scale_alpha_manual(
+      values = c(`TRUE` = 0.3, `FALSE` = 1),
+      guide = "none"
+    ) +
+    scale_color_manual(values =sp.colors_sub)+
+    xlab("")+
+    theme(legend.position="none")+
+    theme(
+      axis.title.y = element_blank(),
+      axis.text.y  = element_blank(),
+      axis.ticks.y = element_blank(),
+      panel.grid.major.y = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      plot.border  = element_blank(),
+      axis.line.x = element_line(color = "black", linewidth = 2),
+      panel.background = element_rect(fill = "transparent", color = NA),
+      plot.background  = element_rect(fill = "transparent", color = NA),
+      axis.text.x = element_text(size = 14)
+    )
+  print(p)
+  
+  #File name
+  p_name <- paste0("_tree_plot_",i,".png")
+  
+  # Export
+  ggsave(
+    file.path(
+      export_dir,
+      "figure_s7.1",
+      p_name
+    ),
+    plot = p,
+    bg = "transparent",
+    width = 5,
+    height = 10,
+    dpi = 300
+  )
+  
+} 
+)
