@@ -329,7 +329,7 @@ for (i in 1:ncol(pca_ax)) {
   label_df[,"y"] <- label_df[pca_ax[2,i]]
   
   # file name
-  pca_file <- paste0("pca_plot_",pca_ax[1,i],"-",pca_ax[2,i],".png")
+  pca_file <- paste0("_pca_plot_",pca_ax[1,i],"-",pca_ax[2,i],".png")
   
   # Plot
   p <-ggplot(
@@ -388,7 +388,7 @@ png(
   file.path(
     fig_dir,
     "figure_2",
-    "corr_plot.png"
+    "_corr_plot.png"
     ), 
   width = 900, 
   height = 1800
