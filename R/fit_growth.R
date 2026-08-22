@@ -8,7 +8,7 @@
 #' @param nu Numeric indicating the degrees of freedom for student's t error
 #' distributions of lengths. If zero is selected (default), then length error is 
 #' modeled using a normal distributions
-#' @param fixed.effect Character ("categorical", "linear","random") indicating 
+#' @param fixed.effect Character ("categorical", "continuous","random") indicating 
 #' the type of second level effects present in model. Default is no second-level
 #' effects (random).
 #' @param sample.groups Vector containing the column names used to designate an
@@ -18,12 +18,12 @@
 #' Should contain category as a factor. Only necessary if fixed.effects == 
 #' "category" Default is NULL.
 #' @param predictors Vector with column names of chosen predictor variables. 
-#' Only necessary if fixed.effects == "linear". Default is NULL
+#' Only necessary if fixed.effects == "continuous". Default is NULL
 #' @param scale T or F: scale and center predictors? Only necessary if 
-#' fixed.effects == "linear". Default is T.
+#' fixed.effects == "continuous". Default is T.
 #' @param linear.predictions T or F. Create predictions of growth parameters and
 #' and rates across the range of linear predictor variables? Only possible if 
-#' fixed.effects == "linear". Default is F.
+#' fixed.effects == "continuous". Default is F.
 #' @param pred.len Number of predictions to make along range of predictor 
 #' variables. Only necessary if linear.predictions == T. Default is 100.
 #' @param sp Character containing species name for data filtering.
@@ -31,7 +31,7 @@
 #' dates, and sites. Must have columns for species name (species), individual
 #' lengths (length), and ages (age). Additional columns for groupings are 
 #' required for random effects. If second level fixed effects of selected, data
-#' must include columns for categorical groupings, or linear predictors.
+#' must include columns for categorical groupings, or continuous predictors.
 #' @param len.df Data.frame with fish size structure. Used for average length 
 #' for inst.growth comparisons across groupings. Must have columns for species 
 #' names (species) and lengths (length). If NULL (default), lengths from 
@@ -51,15 +51,15 @@
 #' be modeled using normally distributed errors (nu = 0) or using the student's
 #' T distribution with user specified degrees of freedom (nu > 0). MORE DETAILS
 #' 
-#' Supported effect structures are random effects only, categorical, or linear
+#' Supported effect structures are random effects only, categorical, or continuous
 #' second-level effect predictors. In all models, each growth parameter can 
 #' vary based on random grouping (e.g. sampling event). For categorical second
 #' level effects, random groupings are classified into higher level groups, which
-#' can vary in mean growth parameters. For the linear second-level effects, 
+#' can vary in mean growth parameters. For the continuous second-level effects, 
 #' differences in random grouping growth parameters are explained by continuous
 #' predictors.
 #' 
-#' The Linear second-level effect model can produce asymptotic length and 
+#' The continuous second-level effect model can produce asymptotic length and 
 #' length-standardized instantaneous growth predictions of a user-specified 
 #' length along the entire range of range of each predictor variable.
 #' 
@@ -70,9 +70,9 @@
 #' using an optional size structure data.frame for length-standardized 
 #' instantaneous growth estimates. 
 #' 
-#' If selected, categorical or linear second-level predictor variables are 
+#' If selected, categorical or continuous second-level predictor variables are 
 #' prepared. For categorical data, categories are transformed into a numeric 
-#' categorical id. For linear predictors, specified predictor variables are 
+#' categorical id. For continuous predictors, specified predictor variables are 
 #' subset by group id, and optionally scaled and centered. 
 #' 
 #' @returns Named list containing a list of Stanfit objects for each model 
@@ -202,8 +202,8 @@ fit_growth <- function(
   }
   
   # Verify input arguments are valid
-  if(!fixed.effect %in% c("random","linear","categorical")) {
-    stop('fixed effect must be "random","linear",or "categorical"')
+  if(!fixed.effect %in% c("random","continuous","categorical")) {
+    stop('fixed effect must be "random","continuous",or "categorical"')
   }
   
   # Filter to species of interest and create numeric sample event ids
@@ -307,14 +307,14 @@ fit_growth <- function(
     return(out)
   }
   
-  # add linear second-level predictors if applicable
-  if(fixed.effect == "linear"){
+  # add continuous second-level predictors if applicable
+  if(fixed.effect == "continuous"){
     
     # check if correct type of predictors are provided
     if(!is.null(category)) {
-    stop("Categorical predictors are not possibe with the linear model")
+    stop("Categorical predictors are not possibe with the continuous model")
       }
-    if(is.null(predictors)) stop("Please provide names of linear predictors")
+    if(is.null(predictors)) stop("Please provide names of continuous predictors")
 
     # select predictors of choice
     x_df_raw <- sample_df[,predictors]
