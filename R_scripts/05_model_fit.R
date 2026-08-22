@@ -117,7 +117,7 @@ r2_list <- fit_list_t$rsquared
 resid_list <- fit_list_t$residual
 
 
-# Rsqaured tables  -------------------------------------------------------------
+# Rsqaured tables (Table s6.1)  ------------------------------------------------
 
 r2_df <- bind_rows(r2_list[!is.na(r2_list)]) %>% 
   select(-r2) %>% 
@@ -147,7 +147,7 @@ write.csv(
   )
 
 
-# Residual plots  --------------------------------------------------------------
+# Residual plots (Figure s5.1)  ------------------------------------------------
 
 resid_df <- bind_rows(resid_list) %>% 
   filter(quantile == "all") %>% 
