@@ -27,7 +27,7 @@ len_R2 <- function(
     mod.dir,
     sim,
     sum.fun,
-    residuals,
+    residuals = F,
     data,
     stack,
     ...
