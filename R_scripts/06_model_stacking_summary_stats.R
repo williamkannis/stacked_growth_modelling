@@ -23,60 +23,35 @@ library(tidyverse)
 
 # Directories
 fig_dir <- "figures"
-supp_dir <- "figures/supp_tables"
-loo_dir <- "loo_outputs"
-out_dir <- "stan_outputs/model_out"
-input_dir <-"input_data"
-fun_dir <- "functions"
+label_dir <- "figures/_labels"
+loo_dir <- "outputs/loo_outputs"
+param_dir <- "outputs/parameter_outputs"
+out_dir <- "outputs/stan_outputs"
+# fun_dir <- "functions"
 
 # Load in custom functions
-source(file.path(fun_dir,"growth_summary_functions.R"))
+# source(file.path(fun_dir,"growth_summary_functions.R"))
+devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data
 sp_stack_wt <- 
-  readRDS(file.path(loo_dir,"stack_wt_out_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"stack_wt_out_2026-08-21.rds"))
 sp_loo_compare <- 
-  readRDS(file.path(loo_dir,"loo_out_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"loo_out_2026-08-21.rds"))
 r2_df <- 
-  readRDS(file.path(loo_dir,"model_r2_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"model_r2_2026-08-22.rds"))
 stack_param_df <- 
-  readRDS(file.path(loo_dir,"stacked_mu_parameters_2026-06-22.rds"))
+  readRDS(file.path(param_dir,"stacked_mu_parameters_2026-08-21.rds"))
 ind_gmean_df <- 
-  readRDS(file.path(loo_dir,"ind_mean_growth_predictions_2026-06-22.rds"))
+  readRDS(file.path(param_dir,"ind_mean_growth_predictions_2026-08-21.rds"))
 stack_gmean_df <- 
-  readRDS(file.path(loo_dir,"stacked_mean_growth_predictions_2026-06-22.rds"))
-age_df <- 
-  readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
-
+  readRDS(file.path(param_dir,"stacked_mean_growth_predictions_2026-08-21.rds"))
+sp_key <-
+  readRDS(file.path(label_dir,"fsgwh_sp_key_2026-08-22.rds"))
+  
 # Species specific directories
 sp <- names(sp_stack_wt)
 sp_dir <- sapply(sp,function(x) file.path(out_dir,x))
-
-
-# Age and length summary  ------------------------------------------------------
-
-# All species summary
-age_df %>%  
-  summarise(mean_length = mean(length),
-            median_length = median(length),
-            min_length = min(length),
-            max_length = max(length),
-            mean_age = mean(age),
-            median_age = median(age),
-            min_age = min(age),
-            max_age = max(age))
-
-# Species-specific summary
-age_df %>% 
-  group_by(species) %>% 
-  summarise(mean_length = mean(length),
-            median_length = median(length),
-            min_length = min(length),
-            max_length = max(length),
-            mean_age = mean(age),
-            median_age = median(age),
-            min_age = min(age),
-            max_age = max(age))
 
 
 # Parameter and slope estimates ------------------------------------------------
@@ -97,8 +72,11 @@ ind_mean_list <- lapply(
 names(ind_mean_list) <- names(sp_stack_wt)
 
 # Add species names
-ind_mean_list <- purrr::map2(ind_mean_list,names(ind_mean_list), 
-                             function(x,y) x %>% mutate(species =y))
+ind_mean_list <- purrr::map2(
+  ind_mean_list,
+  names(ind_mean_list),
+  function(x,y) x %>% mutate(species =y)
+  )
 
 # Bind into one data frame
 ind_mean_df <- bind_rows(ind_mean_list)
@@ -107,9 +85,11 @@ ind_mean_df <- bind_rows(ind_mean_list)
 
 # format column names
 stack_mean_for <- stack_param_df %>% 
-  rename(t_mean = inf_median,
-         t_lwr = inf_lwr,
-         t_upr = inf_upr)
+  rename(
+    t_mean = inf_median,
+    t_lwr = inf_lwr,
+    t_upr = inf_upr
+    )
 
 # Format mean and CIs
 stack_mean_list <-lapply(c("Linf","t"),function (i) {
@@ -176,11 +156,21 @@ sp_loo_compare <- purrr::map2(
 
 # Format loo data and estimate CIs for elpd_diff
 loo_compare_df <- bind_rows(sp_loo_compare) %>% 
-  mutate(lwr = round(elpd_diff - 1.96*se_diff,1),
-         upr = round(elpd_diff + 1.96*se_diff,1),
-         elpd_diff = round(elpd_diff,1),
-         delta_elpd = paste0(elpd_diff, " (",lwr,", ",upr,")")) %>% 
-  select(species,elpd_loo,p_loo,se_p_loo,delta_elpd,elpd_diff,se_diff) %>% 
+  mutate(
+    lwr = round(elpd_diff - 1.96*se_diff,1),
+    upr = round(elpd_diff + 1.96*se_diff,1),
+    elpd_diff = round(elpd_diff,1),
+    delta_elpd = paste0(elpd_diff, " (",lwr,", ",upr,")")
+    ) %>% 
+  select(
+    species,
+    elpd_loo,
+    p_loo,
+    se_p_loo,
+    delta_elpd,
+    elpd_diff,
+    se_diff
+    ) %>% 
   tibble::rownames_to_column("model")
 
 
@@ -189,9 +179,10 @@ loo_compare_df <- bind_rows(sp_loo_compare) %>%
 # merge into table
 stack_df <- bind_rows(sp_stack_wt) %>% 
     mutate(
-      species = substr(model,11,16),
+      species = stringr::str_split_i(model, "_", 3),
       stack_wt = round(stack_wt,2)
       )
+
 
 
 # Format and export summarized outputs (Table 2)  ------------------------------
@@ -199,33 +190,47 @@ stack_df <- bind_rows(sp_stack_wt) %>%
 # Join all results
 out_table <- combined_mean_df %>% 
   left_join(mean_growth_df) %>% 
-  left_join(r2_df) %>% 
   left_join(loo_compare_df) %>% 
   left_join(stack_df) %>% 
+  left_join(r2_df) %>% 
+  left_join(sp_key) %>% 
   mutate(
-    model = case_when(
-      model != "stacked" ~ substr(model,1,2),
-      T ~ model
-      ),
-    adj_r2 = round(adj_r2,3)
-    ) %>% 
+    species = sci_name,
+    model = casefold(substr(model,1,2),T),
+    adj_r2 = round(all,3)) %>% 
   arrange(species,desc(elpd_diff))
 
 # Pretty up NAs
 out_table[is.na(out_table)] <- "-"
 
 # Reorder table
-out_order <-c("species","model",
-              "mu_Linf","mu_g","mu_t","mean_growth",
-              "adj_r2","delta_elpd","stack_wt")
+out_order <-c(
+  "species",
+  "model",
+  "mu_Linf",
+  "mu_g",
+  "mu_t",
+  "mean_growth",
+  "adj_r2",
+  "delta_elpd",
+  "stack_wt"
+  )
 out_table_export <-out_table[,out_order]
 
 # Export
-write.csv(out_table_export,file.path(fig_dir,"model_selection_table.csv"))
+write.csv(
+  out_table_export,
+  file.path(
+    fig_dir,
+    "table_2",
+    "table_2.csv"
+    )
+  )
 
 
 # Format and export full model outputs (Appendix 4)------------------------------
 
+dir.create(file.path(fig_dir,"table_s4"))
 lapply(1:length(sp_stack_wt), function (i) {
   
   # Summarize output
@@ -235,8 +240,15 @@ lapply(1:length(sp_stack_wt), function (i) {
   )
   
   # Export outputs
-  fig_name <- paste0("supp_table_",names(sp_stack_wt)[i],".csv")
-  write.csv(out,file.path(supp_dir,fig_name),row.names = F)
+  fig_name <- paste0("table_s4_",names(sp_stack_wt)[i],".csv")
+  write.csv(
+    out,
+    file.path(
+      fig_dir,
+      "table_s4",
+      fig_name
+      ),
+    row.names = F
+    )
 })
-
 
