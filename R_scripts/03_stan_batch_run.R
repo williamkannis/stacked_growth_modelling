@@ -7,9 +7,9 @@
 # AUTHOR: William K. Annis
 # CREATED: Feb 2, 2026
 
-# DESCRIPTION: Prepares age-length and predictor data for rstan functions. Runs
-# all stan models for each species, exporting results to species specific 
-# directory, and return sampling diagnostics.
+# DESCRIPTION: Runs all stan models for each species, exporting results to 
+# species specific directory, and return sampling diagnostics. Creates age and 
+# length summary tables and specie code keys.
 
 
 # Housekeeping  ----------------------------------------------------------------

@@ -137,7 +137,7 @@ principal component analysis (PCA) to create composite hydrology variables.
 
 <ins>Purpose:</ins> Fits continuous second-level predictor models of all
 three growth forms to each species. Random effect only model is fit to Flagfish
-(JORFLO) due to smaller sample size.
+(JORFLO) due to smaller sample size. Creates age and length summary tables.
 
 <ins>Output:</ins> X
 
