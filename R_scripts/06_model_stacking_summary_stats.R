@@ -20,6 +20,7 @@ rm(list = ls())
 library(rstan)
 library(parallel)
 library(tidyverse)
+library(stringr)
 
 # Directories
 fig_dir <- "figures"
@@ -179,7 +180,7 @@ loo_compare_df <- bind_rows(sp_loo_compare) %>%
 # merge into table
 stack_df <- bind_rows(sp_stack_wt) %>% 
     mutate(
-      species = stringr::str_split_i(model, "_", 3),
+      species = str_split_i(model, "_", 3),
       stack_wt = round(stack_wt,2)
       )
 
