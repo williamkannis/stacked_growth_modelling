@@ -27,23 +27,24 @@ library(ggplot2)
 devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Directories
-loo_dir <- "loo_outputs_cat"
-out_dir <- "stan_outputs/model_out"
+loo_dir <- "outputs/loo_outputs"
+out_dir <- "outputs/stan_outputs"
 input_dir <-"input_data"
-fun_dir <- "functions"
-plot_dir <- "stan_outputs/plotting_info"
-export_dir <- "figures_cat"
+label_dir <- "figures/_labels"
+export_dir <- "figures"
 
 # Load in custom functions
 # source(file.path(fun_dir,"growth_prediction_functions.R"))
 
 # Load data
 sp_stack_wt <- 
-  readRDS(file.path(loo_dir,"stack_wt_out_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"_cat-stack_wt_out_2026-06-22.rds"))
 age_df <- 
   readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 sample_bridge <- 
-  readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-06-16.rds"))   
+  readRDS(file.path(label_dir,"fsgwh_sampleid_bridge_2026-08-21.rds")) 
+sp_key <-
+  readRDS(file.path(label_dir,"fsgwh_sp_key_2026-08-22.rds"))
 
 sp <- names(sp_stack_wt)
 sp_dir <- sapply(sp,function(x) file.path(out_dir,x))
@@ -118,16 +119,48 @@ r2_list <- fit_list_t$rsquared
 resid_list <- fit_list_t$residual
 
 
-# Rsqaured tables  -------------------------------------------------------------
+# Rsqaured tables (Table s2.1 and s6.2)  ---------------------------------------
 
+# For rsquare table for various summary tables
 r2_df <- bind_rows(r2_list[!is.na(r2_list)]) %>% 
   select(-r2) %>% 
   pivot_wider(
     names_from = quantile,
     values_from = adj_r2
-  ) %>% 
-  mutate(model = substr(model,1,2))
-write_csv(r2_df,file.path(export_dir,"r2_age_class_cat.csv"))
+  )
+
+saveRDS(
+  r2_df,
+  file.path(
+    loo_dir,
+    paste0("_cat-model_r2_",Sys.Date(),".rds")
+  )
+)
+
+# Export r2 table for model fit appendix results table
+r2_table <- r2_df %>% 
+  left_join(sp_key) %>% 
+  mutate(
+    model = casefold(substr(model,1,2),T),
+    species = sci_name) %>% 
+  select(
+    species,
+    model,
+    lwr,
+    mid,
+    upr,
+    all
+  )
+
+write.csv(
+  r2_table,
+  file.path(
+    export_dir,
+    "table_s6.2",
+    "table_s6.2.csv"
+  ),
+  row.names = F
+)
 
 
 # Residual plots  --------------------------------------------------------------
@@ -163,9 +196,13 @@ lapply(sp, function(s){
     )
   print(plot)
   
-  plot_name <- paste0("resid/resid_cat_",s,".png")
+  plot_name <- paste0("_resid_cat_",s,".png")
   ggsave(
-    filename = file.path(export_dir,plot_name),
+    filename = file.path(
+      export_dir,
+      "figure_s5.2",
+      plot_name
+      ),
     plot = plot,
     width = 15,
     height = 5,
