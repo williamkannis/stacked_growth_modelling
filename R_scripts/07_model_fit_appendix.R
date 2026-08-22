@@ -27,23 +27,22 @@ library(ggplot2)
 devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Directories
-loo_dir <- "loo_outputs"
-out_dir <- "stan_outputs/model_out"
+loo_dir <- "outputs/loo_outputs"
+out_dir <- "outputs/stan_outputs"
 input_dir <-"input_data"
-fun_dir <- "functions"
-plot_dir <- "stan_outputs/plotting_info"
+
+label_dir <- "figures/_labels"
 export_dir <- "figures"
 
-# Load in custom functions
-# source(file.path(fun_dir,"growth_prediction_functions.R"))
+
 
 # Load data
 sp_stack_wt <- 
-  readRDS(file.path(loo_dir,"stack_wt_out_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"stack_wt_out_2026-08-21.rds"))
 age_df <- 
   readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 sample_bridge <- 
-  readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-06-16.rds"))   
+  readRDS(file.path(label_dir,"fsgwh_sampleid_bridge_2026-08-21.rds"))   
 
 sp <- names(sp_stack_wt)
 sp_dir <- sapply(sp,function(x) file.path(out_dir,x))
@@ -57,7 +56,7 @@ sp_list <- rep(sp,each = 4)
 quant_list <- rep(c("lwr","mid","upr","all"),length(sp))
 
 # batch species function
-fit_list2 <- purrr::map2(sp_list,quant_list,function(s,q){
+fit_list <- purrr::map2(sp_list,quant_list,function(s,q){
   
   # Subset data
   data <- age_df %>% 
@@ -113,7 +112,7 @@ fit_list2 <- purrr::map2(sp_list,quant_list,function(s,q){
 })
 
 # separate rsquared and residual outputs
-fit_list_t <- transpose(fit_list2)
+fit_list_t <- transpose(fit_list)
 r2_list <- fit_list_t$rsquared
 resid_list <- fit_list_t$residual
 
@@ -127,7 +126,25 @@ r2_df <- bind_rows(r2_list[!is.na(r2_list)]) %>%
     values_from = adj_r2
   ) %>% 
   mutate(model = substr(model,1,2))
-write_csv(r2_df,file.path(export_dir,"r2_age_class_linear.csv"))
+
+# Export r2 table for main results table
+saveRDS(
+  r2_df,
+  file.path(
+    loo_dir,
+    paste0("model_r2_2_",Sys.Date(),".rds")
+  )
+)
+
+write.csv(
+  r2_df,
+  file.path(
+    export_dir,
+    "table_s6.1",
+    "table_s6.1.csv"
+    ),
+  row.names = F
+  )
 
 
 # Residual plots  --------------------------------------------------------------
@@ -163,18 +180,16 @@ lapply(sp, function(s){
     )
   print(plot)
   
-  plot_name <- paste0("resid/resid_linear_",s,".png")
+  plot_name <- paste0("resid_",s,".png")
   ggsave(
-    filename = file.path(export_dir,plot_name),
+    filename = file.path(
+      export_dir,
+      "figure_s5.1",
+      plot_name),
     plot = plot,
     width = 15,
     height = 5,
     dpi = 300
   )
 })    
-
-
-
-
-
 
