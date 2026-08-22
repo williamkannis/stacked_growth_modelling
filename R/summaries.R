@@ -205,7 +205,7 @@ supp_table_format <- function(mod.df,mod.dir) {
   
   # Load in file and extract model summary
   mod <- readRDS(file.path(mod.dir,mod.file))
-  mod_summary <- as.data.frame(summary(mod)[[1]])
+  mod_summary <- as.data.frame(rstan::summary(mod)[[1]])
   
   # model form
   mod_type <- substr(mod.file,1,2)
