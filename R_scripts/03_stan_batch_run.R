@@ -44,43 +44,6 @@ input_df <- age_df %>%
   left_join(pred_df)
 
 
-# Age and length summary tables  -----------------------------------------------
-
-mean_length <- len_df %>% 
-  right_join(age_df %>% distinct(species)) %>% 
-  group_by(species) %>% 
-  summarise(
-    across(
-      .cols = length,
-      .fns = ~ mean(.x, na.rm = TRUE)
-    )
-  )
-
-age_length_sum <- age_df %>% 
-  group_by(species) %>% 
-  summarise(
-    across(
-      .cols = c(age,length),
-      
-      .fns = list(
-        min = ~ min(.x, na.rm = TRUE),
-        max = ~ max(.x, na.rm = TRUE),
-        mean = ~ mean(.x, na.rm = TRUE)
-        )
-      )
-    ) %>% 
-  left_join(mean_length)
-
-write.csv(
-  age_length_sum,
-  file.path(
-    fig_dir,
-    "table_s1.2",
-    "table_s1.2.csv"
-    ), 
-  row.names = F)
-
-
 # LUCGOO model runs  -----------------------------------------------------------
 
 # Fit models
@@ -343,6 +306,25 @@ id_bridge <- bind_rows(out_list_t$id_bridge)  # links sample_id to site and year
 pred_lables <- out_list_t$prediction_labels  # PC values used for predicted growth rates 
 mean_lengths <- out_list_t$mean_length  # mean length used to estimate inst. growth
 
+# Species bridge 
+sp_bridge <- data.frame(
+  species = c(
+    "FUNCHR",
+    "GAMHOL",
+    "HETFOR",
+    "JORFLO",
+    "LUCGOO",
+    "POELAT"
+    ),
+  sci_name = c(
+    "F. chrysotus",
+    "G. holbrooki",
+    "H. formosa",
+    "J. floridae",
+    "L. goodei",
+    "P. latipinna"
+    )
+)
 
 # Export plotting data
 saveRDS(
@@ -370,3 +352,51 @@ saveRDS(
     )
   )
 
+saveRDS(
+  sp_bridge,
+  file.path(
+    fig_dir,
+    "_labels",
+    paste0("fsgwh_sp_key_",Sys.Date(),".rds")
+  )
+)
+
+
+# Age and length summary tables  -----------------------------------------------
+
+mean_length <- len_df %>% 
+  right_join(age_df %>% distinct(species)) %>% 
+  group_by(species) %>% 
+  summarise(
+    across(
+      .cols = length,
+      .fns = ~ mean(.x, na.rm = TRUE)
+    )
+  )
+
+age_length_sum <- age_df %>% 
+  group_by(species) %>% 
+  summarise(
+    across(
+      .cols = c(age,length),
+      
+      .fns = list(
+        min = ~ min(.x, na.rm = TRUE),
+        max = ~ max(.x, na.rm = TRUE),
+        mean = ~ mean(.x, na.rm = TRUE)
+      )
+    )
+  ) %>% 
+  left_join(mean_length) %>% 
+  left_join(sp_bridge) %>% 
+  mutate(species = sci_name) %>% 
+  select(-sci_name)
+
+write.csv(
+  age_length_sum,
+  file.path(
+    fig_dir,
+    "table_s1.2",
+    "table_s1.2.csv"
+  ), 
+  row.names = F)
