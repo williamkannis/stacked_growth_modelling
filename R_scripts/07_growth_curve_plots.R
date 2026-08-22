@@ -24,7 +24,6 @@ library(tidyverse)
 out_dir <- "stan_outputs/model_out"
 loo_dir <- "loo_outputs"
 pred_dir <- "input_data"
-plot_dir <- "stan_outputs/plotting_info"
 export_dir <- "figures"
 mu_dir <- file.path(export_dir,"mu_plots")
 fun_dir <- "functions"
