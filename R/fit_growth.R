@@ -287,6 +287,7 @@ fit_growth <- function(
     
     # link category factor to label
     cat_bridge <- data.frame(
+      species = sp,
       cat = sample_df[,category],
       cat_id = cat_id
     ) %>% 
