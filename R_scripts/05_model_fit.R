@@ -30,10 +30,8 @@ devtools::load_all("~/Documents/work/R packages/growthstack")
 loo_dir <- "outputs/loo_outputs"
 out_dir <- "outputs/stan_outputs"
 input_dir <-"input_data"
-
 label_dir <- "figures/_labels"
 export_dir <- "figures"
-
 
 # Load data
 sp_stack_wt <- 
@@ -120,7 +118,7 @@ resid_list <- fit_list_t$residual
 
 # Rsqaured tables (Table 2 and s6.1)  ------------------------------------------
 
-# FOr rsquare table for various summary datbles
+# For rsquare table for various summary tables
 r2_df <- bind_rows(r2_list[!is.na(r2_list)]) %>% 
   select(-r2) %>% 
   pivot_wider(
@@ -200,7 +198,8 @@ lapply(sp, function(s){
     filename = file.path(
       export_dir,
       "figure_s5.1",
-      plot_name),
+      plot_name
+      ),
     plot = plot,
     width = 15,
     height = 5,
