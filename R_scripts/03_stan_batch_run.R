@@ -7,9 +7,10 @@
 # AUTHOR: William K. Annis
 # CREATED: Feb 2, 2026
 
-# DESCRIPTION: Runs all stan models for each species, exporting results to 
-# species specific directory, and return sampling diagnostics. Creates age and 
-# length summary tables and specie code keys.
+# DESCRIPTION: Runs all stan continuous fixed effect models for each species 
+# (except JORFLO) , exporting results to species specific directory, and return 
+# sampling diagnostics. Creates age and length summary tables and specie code 
+# keys.
 
 
 # Housekeeping  ----------------------------------------------------------------
@@ -249,7 +250,7 @@ lapply(1:length(fun_out$model_out),function(x){
 })
 
 
-# JORFLO model runs  -----------------------------------------------------------
+# JORFLO model runs (random effect only)  --------------------------------------
 
 # Fit models
 jor_out <- fit_growth(
@@ -287,7 +288,7 @@ lapply(1:length(jor_out$model_out),function(x){
 })
 
 
-#  Plot labels and group ids  --------------------------------------------------
+# Plot labels and group ids  ---------------------------------------------------
 
 out_list <- list(
   LUCGOO = luc_out,
