@@ -26,38 +26,21 @@
 #' 
 #' @export
 
-stan_diag <- function(mod.out,k_limit){
+stan_diag <- function(mod.out,k_limit = 0.7){
   
-  ### Check for convergence issues ###
-  
+
   # Extract model summary, including rhats
-  mod.summary <- as.data.frame(summary(mod.out)[[1]])
-  
+  mod.summary <- as.data.frame(rstan::summary(mod.out)[[1]])
+
   # number of parameters that did not converge (anything >0 is unacceptable)
-  no.conv <- nrow(mod.summary %>% 
-                    dplyr::filter(Rhat >1.1))
+  no.conv <- nrow(mod.summary %>% dplyr::filter(Rhat > 1.1))
   
   # Bulk effective sample size
-  low.eff <- nrow(mod.summary %>% 
-                    dplyr::filter(n_eff < 400))
+  low.eff <- nrow(mod.summary %>% dplyr::filter(n_eff < 400))
   
-  ### Check for sampler issues ###
-  
-  # Extract sampler parameters after warmup
-  sampler.params.post.list <- 
-    rstan::get_sampler_params(mod.out, inc_warmup = FALSE)
-  
-  # Convert from list to dataframe
-  sampler.params.post.df <-as.data.frame(
-    do.call(rbind,sampler.params.post.list)
-  )
-  
-  # Divergence transitions
-  n.diverg <- sum(sampler.params.post.df[,"divergent__"])
-  
-  # Number of tree depths over 10
-  n.tree.depth.10  <-nrow(sampler.params.post.df %>%
-                            filter(treedepth__>=10))
+  # Check for sampler issues
+  n.diverg <- get_num_divergent(mod.out)
+  n.max.tree.depth <- get_num_max_treedepth(mod.out)
   
   # Pareto K for loo estimation
   high_k <- .loo_diag_helper(
@@ -67,11 +50,10 @@ stan_diag <- function(mod.out,k_limit){
   
   # create a list for convergence and sampling diagnostics
   list(
-    sp = sp,
     high_rhat = no.conv,  # did the model converge
     low_eff = low.eff,  # number of parameters with low ess
     divergence = n.diverg,  # how many divergent transitions were there
-    tree_depth = n.tree.depth.10,  # number of samples exceeding tree depth
+    max_tree_depth = n.max.tree.depth,  # number of samples exceeding tree depth
     high_k = high_k,  # Pareto K values that exceed the threshold
     export = ifelse(no.conv+low.eff+n.diverg == 0,T,F)  # should file be exported?
   )
