@@ -193,7 +193,7 @@ lapply(sp, function(s){
     )
   print(plot)
   
-  plot_name <- paste0("resid_",s,".png")
+  plot_name <- paste0("_resid_",s,".png")
   ggsave(
     filename = file.path(
       export_dir,
