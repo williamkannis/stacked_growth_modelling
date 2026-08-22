@@ -27,7 +27,6 @@ library(tidyr)
 library(loo)
 
 # directories
-input_dir <- "input_data"
 # fun_dir <-"functions"
 out_dir <- "outputs/stan_outputs"
 label_dir <- "figures/_labels"
@@ -42,8 +41,6 @@ curve_dir <- "outputs/curve_outputs"
 devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load in data
-fish_df <- 
-  readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 sample_bridge <- 
   readRDS(file.path(label_dir,"fsgwh_sampleid_bridge_2026-08-21.rds"))
 pred_lables <- 
@@ -219,44 +216,6 @@ pred_list <- purrr::map2(
     sum.fun = "median"
   )
 
-### Model R-squared  ###
-r2_list <- lapply(sp,function(x){
-  
-  # Subset data
-  data <- fish_df %>% 
-    left_join(
-      sample_bridge,
-      by = join_by(wateryear, region, site, species)
-    ) %>% 
-    filter(species == x) %>% 
-    select(sample_id,length,age)
-  
-  # Candidate model R2
-  ind_r2 <- len_R2(
-    stack.df = sp_stack_wt[[x]],
-    mod.dir = sp_dir[[x]],
-    data = data,
-    stack = F,
-    sim = stack.iter,
-    sum.fun = "median"
-  )
-  
-  # Stack model R2
-  stack_r2 <- len_R2(
-    stack.df = sp_stack_wt[[x]],
-    mod.dir = sp_dir[[x]],
-    data = data,
-    stack = T,
-    sim = stack.iter,
-    sum.fun = "median"
-  )
-  
-  # bind into one data.frame
-  rbind(ind_r2,stack_r2)
-  
-})
-names(r2_list) <- sp
-
 
 # Format predictions into data frames  -----------------------------------------
 
@@ -289,10 +248,6 @@ pred_list <- purrr::map2(
   pred_list,names(pred_list),
   function(x,y) x %>% mutate(species =y)
 )
-r2_list <- purrr::map2(
-  r2_list,names(r2_list), 
-  function(x,y) x %>% mutate(species =y)
-  )
 
 # Create one data.frame for all species
 ind_mu_curve_df <- bind_rows(ind_mu_curve_list)
@@ -302,7 +257,6 @@ mean_growth_df <- bind_rows(mean_growth_list)
 ind_mean_growth_df <- bind_rows(ind_mean_growth_list)
 param_df <- bind_rows(param_list)
 pred_df <- bind_rows(pred_list)
-r2_df <- bind_rows(r2_list)
 
 
 # Link predictions to labels  -------------------------------------------------- 
@@ -365,11 +319,6 @@ saveRDS(
     param_dir,
     paste0("ind_mean_growth_predictions_",Sys.Date(),".rds")
     )
-  )
-### MAYBE REMOE THIS AND KEEP THIS IN MODEL FIT
-saveRDS(
-  r2_df, 
-  file.path(loo_dir,paste0("model_r2_",Sys.Date(),".rds"))
   )
 saveRDS(
   param_df, 
