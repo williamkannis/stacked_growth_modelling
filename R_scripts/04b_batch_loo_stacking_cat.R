@@ -41,11 +41,11 @@ source(file.path(fun_dir,"growth_prediction_functions.R"))
 fish_df <- 
   readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 sample_bridge <- 
-  readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_cat_2026-06-18.rds"))
+  readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-08-21.rds"))
 cat_labels <- 
-  readRDS(file.path(plot_dir,"fsgwh_cat_labels2026-06-17.rds"))
+  readRDS(file.path(plot_dir,"fsgwh_cat_labels2026-08-22.rds"))
 mean_lengths <- 
-  readRDS(file.path(plot_dir,"fsgwh_mean_lengths_cat_2026-06-18.rds"))
+  readRDS(file.path(plot_dir,"fsgwh_mean_lengths_2026-08-21.rds"))
 n.cores <- 5
 stack.iter <- 10000
 
@@ -221,45 +221,6 @@ param_list <- purrr::map2(
 )
 
 
-### Model R-squared  ###
-r2_list <- lapply(sp,function(x){
-
-  # Subset data
-  data <- fish_df %>% 
-    left_join(
-      sample_bridge,
-      by = join_by(wateryear, region, site, species)
-      ) %>% 
-    filter(species == x) %>% 
-    select(sample_id,length,age)
-  
-  # Candidate model R2
-  ind_r2 <- len_R2(
-    stack.df = sp_stack_wt[[x]],
-    mod.dir = sp_dir[[x]],
-    data = data,
-    stack = F,
-    sim = stack.iter,
-    sum.fun = "median"
-  )
-  
-  # Stack model R2
-  stack_r2 <- len_R2(
-    stack.df = sp_stack_wt[[x]],
-    mod.dir = sp_dir[[x]],
-    data = data,
-    stack = T,
-    sim = stack.iter,
-    sum.fun = "median"
-  )
-  
-  # bind into one data.frame
-  rbind(ind_r2,stack_r2)
-  
-})
-names(r2_list) <- sp
-
-
 # Format predictions into data frames  -----------------------------------------
 
 # Add species names to data frames
@@ -291,10 +252,7 @@ param_list <- purrr::map2(
   param_list,names(param_list), 
   function(x,y) x %>% mutate(species =y)
 )
-r2_list <- purrr::map2(
-  r2_list,names(r2_list), 
-  function(x,y) x %>% mutate(species =y)
-)
+
 
 # Create one dataframe for all species
 ind_mu_curve_df <- bind_rows(ind_mu_curve_list)
@@ -304,7 +262,6 @@ mu_curve_df <- bind_rows(mu_curve_list)
 ind_mean_growth_df <- bind_rows(ind_mean_growth_list)
 mean_growth_df <- bind_rows(mean_growth_list)
 param_df <- bind_rows(param_list)
-r2_df <- bind_rows(r2_list)
 
 
 # Link predictions to labels  -------------------------------------------------- 
@@ -318,21 +275,14 @@ site_curve_bridged <-site_curve_df %>%
 
 ### return hydroperiod labels   ###
 
-# add species
-cat_labels <- purrr::map2(
-  cat_labels,names(cat_labels),
-  function(x,y) x %>% mutate(species =y))
-
-# Bind into one data.frame
-cat_id <- bind_rows(cat_labels)
-
 # Merge labels
 cat_curve_bridged <- cat_curve_df %>% 
   left_join(
-    cat_id,
+    cat_labels,
     by=join_by(cat_id,species)
     ) %>% 
-  select(-cat_id)
+  select(-cat_id) %>% 
+  rename(hydroperiod = cat)
 
 
 # Export  ----------------------------------------------------------------------
@@ -361,10 +311,6 @@ saveRDS(
     )
   )
 saveRDS(
-  r2_df, 
-  file.path(export_dir,paste0("model_r2_",Sys.Date(),".rds"))
-  )
-saveRDS(
   param_df, 
   file.path(export_dir,paste0("stacked_cat_parameters_",Sys.Date(),".rds"))
   )
@@ -386,3 +332,4 @@ saveRDS(
   ind_mu_curve_df, 
   file.path(export_dir,paste0("ind_mu_curves_",Sys.Date(),".rds"))
   )
+
