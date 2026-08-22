@@ -27,25 +27,25 @@ library(tidyr)
 library(loo)
 
 # directories
-input_dir <- "input_data"
-fun_dir <-"functions"
-out_dir <- "stan_outputs/model_out"
-plot_dir <- "stan_outputs/plotting_info"
-export_dir <- "loo_outputs_cat"
+# fun_dir <-"functions"
+out_dir <- "outputs/stan_outputs"
+label_dir <- "figures/_labels"
+loo_dir <- "outputs/loo_outputs"
+param_dir <- "outputs/parameter_outputs"
+curve_dir <- "outputs/curve_outputs"
 
 # Load in custom functions
-source(file.path(fun_dir,"stan_loo_batch_functions.R"))
-source(file.path(fun_dir,"growth_prediction_functions.R"))
+# source(file.path(fun_dir,"stan_loo_batch_functions.R"))
+# source(file.path(fun_dir,"growth_prediction_functions.R"))
+devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load in data
-fish_df <- 
-  readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
 sample_bridge <- 
-  readRDS(file.path(plot_dir,"fsgwh_sampleid_bridge_2026-08-21.rds"))
+  readRDS(file.path(label_dir,"fsgwh_sampleid_bridge_2026-08-21.rds"))
 cat_labels <- 
-  readRDS(file.path(plot_dir,"fsgwh_cat_labels2026-08-22.rds"))
+  readRDS(file.path(label_dir,"fsgwh_cat_labels2026-08-22.rds"))
 mean_lengths <- 
-  readRDS(file.path(plot_dir,"fsgwh_mean_lengths_2026-08-21.rds"))
+  readRDS(file.path(label_dir,"fsgwh_mean_lengths_2026-08-21.rds"))
 n.cores <- 5
 stack.iter <- 10000
 
@@ -97,7 +97,7 @@ pred_input <- 0:360
 ind_mu_curve_list <- purrr::map2(
   sp_stack_wt,
   sp_dir,
-  curve_predictR,
+  stack_predict,
     type = "prediction",
     group.id="mu",
     sim = stack.iter,
@@ -105,6 +105,7 @@ ind_mu_curve_list <- purrr::map2(
     pred.input = pred_input,
     input.var = "age",
     output.var = c("length","growth"),
+    summarize=T,
     sum.fun="median",
     parallel = T,
     mc.cores = n.cores
@@ -112,7 +113,7 @@ ind_mu_curve_list <- purrr::map2(
 
 # Inst. growth at mean age
 ind_mean_growth_list <- Map(function(x,y,z) 
-  curve_predictR(
+  stack_predict(
     stack.df = x,
     mod.dir = y,
     type = "prediction",
@@ -122,6 +123,7 @@ ind_mean_growth_list <- Map(function(x,y,z)
     pred.input = z,
     input.var = "length",
     output.var = "growth",
+    summarize=T,
     sum.fun="median",
     parallel = T,
     mc.cores = n.cores
@@ -138,7 +140,7 @@ ind_mean_growth_list <- Map(function(x,y,z)
 site_curve_list <- purrr::map2(
   sp_stack_wt,
   sp_dir,
-  curve_predictR,
+  stack_predict,
     group.id="site",
     sim = stack.iter,
     stack=T,
@@ -146,6 +148,7 @@ site_curve_list <- purrr::map2(
     pred.input = pred_input,
     input.var = "age",
     output.var = c("length","growth"),
+    summarize=T,
     sum.fun="median",
     parallel = T,
     mc.cores = n.cores
@@ -156,7 +159,7 @@ site_curve_list <- purrr::map2(
 cat_curve_list <- purrr::map2(
   sp_stack_wt,
   sp_dir,
-  curve_predictR,
+  stack_predict,
     group.id="cat",
     sim = stack.iter,
     stack=T,
@@ -164,6 +167,7 @@ cat_curve_list <- purrr::map2(
     pred.input = pred_input,
     input.var = "age",
     output.var = c("length","growth"),
+    summarize=T,
     sum.fun="median",
     parallel = T,
     mc.cores = n.cores
@@ -173,7 +177,7 @@ cat_curve_list <- purrr::map2(
 mu_curve_list <- purrr::map2(
   sp_stack_wt,
   sp_dir,
-  curve_predictR,
+  stack_predict,
     group.id = "mu",
     sim = stack.iter,
     stack = T,
@@ -181,6 +185,7 @@ mu_curve_list <- purrr::map2(
     pred.input = pred_input,
     input.var = "age",
     output.var = c("length","growth"),
+    summarize=T,
     sum.fun = "median",
     parallel = T,
     mc.cores = n.cores
@@ -188,7 +193,7 @@ mu_curve_list <- purrr::map2(
 
 # Inst. growth at mean age - category level
 mean_growth_list <- Map(function(x,y,z) 
-  curve_predictR(
+  stack_predict(
     stack.df = x,
     mod.dir = y,
     type = "prediction",
@@ -198,6 +203,7 @@ mean_growth_list <- Map(function(x,y,z)
     pred.input = z,
     input.var = "length",
     output.var = "growth",
+    summarize=T,
     sum.fun="median",
     parallel = T,
     mc.cores = n.cores
@@ -211,12 +217,13 @@ mean_growth_list <- Map(function(x,y,z)
 param_list <- purrr::map2(
   sp_stack_wt,
   sp_dir,
-  curve_predictR,
+  stack_predict,
     group.id = "cat",
     sim = stack.iter,
     stack = T,
     type = "parameter",
     truncate.inf = F,
+    summarize=T,
     sum.fun = "median"
 )
 
@@ -290,11 +297,11 @@ cat_curve_bridged <- cat_curve_df %>%
 # For summary stats, export loo, stacking weights, growth rates, r2, and parameters
 saveRDS(
   sp_loo_compare,
-  file.path(export_dir,paste0("loo_out_",Sys.Date(),".rds"))
+  file.path(loo_dir,paste0("loo_out_",Sys.Date(),".rds"))
   )
 saveRDS(
   sp_stack_wt,
-  file.path(export_dir,paste0("stack_wt_out_",Sys.Date(),".rds"))
+  file.path(loo_dir,paste0("stack_wt_out_",Sys.Date(),".rds"))
   )
 saveRDS(
   mean_growth_df, 
@@ -306,30 +313,30 @@ saveRDS(
 saveRDS(
   ind_mean_growth_df, 
   file.path(
-    export_dir,
+    param_dir,
     paste0("ind_mean_growth_predictions_",Sys.Date(),".rds")
     )
   )
 saveRDS(
   param_df, 
-  file.path(export_dir,paste0("stacked_cat_parameters_",Sys.Date(),".rds"))
+  file.path(param_dir,paste0("stacked_cat_parameters_",Sys.Date(),".rds"))
   )
 
 # For plots, export length and growth-at-age predictions and bridge tables
 saveRDS(
   site_curve_bridged, 
-  file.path(export_dir,paste0("stacked_site_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir,paste0("stacked_site_curves_",Sys.Date(),".rds"))
   )
 saveRDS(
   cat_curve_bridged, 
-  file.path(export_dir,paste0("stacked_cat_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir,paste0("stacked_cat_curves_",Sys.Date(),".rds"))
   )
 saveRDS(
   mu_curve_df, 
-  file.path(export_dir,paste0("stacked_mu_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir,paste0("stacked_mu_curves_",Sys.Date(),".rds"))
   )
 saveRDS(
   ind_mu_curve_df, 
-  file.path(export_dir,paste0("ind_mu_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir,paste0("ind_mu_curves_",Sys.Date(),".rds"))
   )
 
