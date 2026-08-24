@@ -28,6 +28,36 @@ Additionally, if you use associated R functions, also cite:
 
 >BLANK
 
+## Repository strucuture
+Download the entire repository. Then download [required data](#data) from 
+[Zenodo Repository](#BLANK), and data sources listed here, and unzip into the following file 
+structure:
+
+```bash
+
+│
+├── data
+│   │── raw_data
+│   │   │── fs_age.rds*
+│   │   │── fs_predictors.rds*
+│   │   └── fs_species_key.csv*
+│   │
+│   └── analysis_data
+│       │── fs_age_final.rds*
+│       └── fs_pred_final.rds*
+│
+├── outputs
+│   │── stan_outputs*
+│   │── loo_outputs*
+│   └── curve_predictions*
+│
+├── scripts
+├── stan_scripts
+└── figures
+
+
+(*) directories or files downloaded from Zenodo
+```
 
 ## Data
 **Directory:** ```data/```
@@ -62,37 +92,6 @@ sections of the workflow, as indicated below:
 
 ### Curve predictions
 **Files:**
-
-## File directory
-Download the entire repository. Then download required data from Zenodo 
-Repository, and data sources listed here, and unzip into the following file 
-structure:
-
-```bash
-
-│
-├── data
-│   │── raw_data
-│   │   │── fs_age.rds*
-│   │   │── fs_predictors.rds*
-│   │   └── fs_species_key.csv*
-│   │
-│   └── analysis_data
-│       │── fs_age_final.rds*
-│       └── fs_pred_final.rds*
-│
-├── outputs
-│   │── stan_outputs*
-│   │── loo_outputs*
-│   └── curve_predictions*
-│
-├── scripts
-├── stan_scripts
-└── figures
-
-
-(*) directories or files downloaded from Zenodo
-```
 
 
 ## Workflow
@@ -152,7 +151,12 @@ but for categorical predictor model.
 
 <br>**Script**: ```04_batch_loo_stacking.R```
 
-<ins>Purpose:</ins> X
+<ins>Purpose:</ins> This script loads in stanfit objects created in Stan_batch_run
+and performs Leave-one-out cross validation and estimates stacking weights. 
+Uses model stacking weights to create model stacked predicted length- and
+growth-at-age curves at the population and sampling event-level, stacked
+growth parameters, and isnt. growth and hydrology predictions. Additionally,
+length- and growth-at-age curves predictions for each candidate model are created.
 
 <ins>Output:</ins> X
 
@@ -163,49 +167,54 @@ but for categorical predictor model outputs.
 
 <ins>Output:</ins> X
 
-### 5. Model fit
+### 5. Model fit NNEEED TO ADD R@ OUTPUTS MAYBE
 <br>**Script**: ```05_model_fit_appendix.R```
 
-<ins>Purpose:</ins> X
+<ins>Purpose:</ins> Estimates the rsquared values for each model form using the 
+entire age range, the middle 95%, and the upper/lower 2.5% age ranges. 
+Additionally, raw length residuals are plotted.
 
-<ins>Output:</ins> X
+<ins>Output:</ins> Figure s5.1 and Table s6.1
 
 <br>**Script**: ```05b_model_fit_appendix_cat.R```
 
 <ins>Purpose:</ins> Identical as ```05_model_fit_appendix.R```,
 but for categorical predictor model outputs.
 
-<ins>Output:</ins> X
+<ins>Output:</ins> Figure s5.2 and Table s6.2
 
 ### 6. Model summary statistics
 
 <br>**Script**: ```06_model_stacking_summary_stats.R```
 
-<ins>Purpose:</ins> X
+<ins>Purpose:</ins> Summarizes candidate growth models and stacked growth model 
+outputs, model R2s, loo_cv results, and model stacking weight for results
+tables for manuscript and supporting information.
 
-<ins>Output:</ins> X
+<ins>Output:</ins> Table 2 and appendix 4 tables
 
 <br>**Script**: ```06b_model_stacking_summary_stats_cat.R```
 
 <ins>Purpose:</ins> Identical as ```06_model_stacking_summary_stats.R```,
 but for categorical predictor model outputs.
 
-<ins>Output:</ins> X
+<ins>Output:</ins> Tables s2.1-2 and appendix 4 tables
 
 ### 7. Plotting
 
 <br>**Script**: ```07_growth_curve_plots.R```
 
-<ins>Purpose:</ins> X
+<ins>Purpose:</ins> Create growth- and age-at-length plots for global and
+sample event level paramters.
 
-<ins>Output:</ins> X
+<ins>Output:</ins> Figures 3-6
 
 <br>**Script**: ```07b_growth_curve_plots_cat.R```
 
 <ins>Purpose:</ins> Identical as ```07_growth_curve_plots.R```,
 but for categorical predictor model outputs.
 
-<ins>Output:</ins> X
+<ins>Output:</ins> Figures s2.1-3
 
 
 ## Growth models
@@ -288,7 +297,7 @@ Where γ<sub>1-3,h</sub> are the fixed effects coefficients for environmental
 PC *k* on the three growth parameters.
 
 ### Model development
-**Script:** ```BLANK.R```
+**Script:** ```00_model_test_sim.R```
 
 Uses functions to simulate multiple iterations of datasets based on user 
 specified growth parameters, fits those datasets to growth models, and compares 
