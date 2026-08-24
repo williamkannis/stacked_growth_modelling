@@ -13,9 +13,8 @@
 # Uses model stacking weights to create model stacked predicted length- and 
 # growth-at-age curves at the population and sampling event-level, stacked 
 # growth parameters, and isnt. growth and hydrology predictions. Additionally,
-# length- and growth-at-age curves for each candidate model are created and R2s
-# are estimated. This script completes all of this in batch for all species in
-# analysis.
+# length- and growth-at-age curves predictions for each candidate model are created. 
+# This script completes all of this in batch for all species in analysis.
 
 
 # Housekeeping  ----------------------------------------------------------------
