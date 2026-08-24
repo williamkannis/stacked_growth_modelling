@@ -20,33 +20,40 @@ rm(list = ls())
 library(rstan)
 library(parallel)
 library(tidyverse)
+library(stringr)
 
 # Directories
-fig_dir <- "figures_cat"
-supp_dir <- "figures_cat/supp_tables"
-loo_dir <- "loo_outputs_cat"
-out_dir <- "stan_outputs/model_out"
-input_dir <-"input_data"
-fun_dir <- "functions"
+fig_dir <- "figures"
+label_dir <- "figures/_labels"
+loo_dir <- "outputs/loo_outputs"
+param_dir <- "outputs/parameter_outputs"
+out_dir <- "outputs/stan_outputs"
+# fun_dir <- "functions"
 
 # Load in custom functions
-source(file.path(fun_dir,"growth_summary_functions.R"))
+# source(file.path(fun_dir,"growth_summary_functions.R"))
+devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data
 sp_stack_wt <- 
-  readRDS(file.path(loo_dir,"stack_wt_out_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"_cat-stack_wt_out_2026-06-22.rds"))
 sp_loo_compare <- 
-  readRDS(file.path(loo_dir,"loo_out_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"_cat-loo_out_2026-06-22.rds"))
 r2_df <- 
-  readRDS(file.path(loo_dir,"model_r2_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"_cat-model_r2_2026-08-22.rds"))
 stack_param_df <- 
-  readRDS(file.path(loo_dir,"stacked_cat_parameters_2026-06-22.rds"))
+  readRDS(file.path(param_dir,"_cat-stacked_cat_parameters_2026-06-22.rds"))
 ind_gmean_df <- 
-  readRDS(file.path(loo_dir,"ind_mean_growth_predictions_2026-06-23.rds"))
+  readRDS(
+    file.path(param_dir,"_cat-ind_mean_growth_predictions_2026-06-23.rds")
+    )
 stack_gmean_df <- 
-  readRDS(file.path(loo_dir,"stacked_mean_growth_predictions_2026-06-22.rds"))
-age_df <- 
-  readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
+  readRDS(
+    file.path(param_dir,"_cat-stacked_mean_growth_predictions_2026-06-22.rds")
+    )
+sp_key <-
+  readRDS(file.path(label_dir,"fsgwh_sp_key_2026-08-22.rds"))
+
 
 # Species specific directories
 sp <- names(sp_stack_wt)
@@ -188,41 +195,82 @@ loo_compare_df <- bind_rows(sp_loo_compare) %>%
 # merge into table
 stack_df <- bind_rows(sp_stack_wt) %>% 
     mutate(
-      species = substr(model,16,21),
+      species = str_split_i(model, "_", 3),
       stack_wt = round(stack_wt,2)
       )
   
-
 
 # Format and export summarized outputs (Tables s3.1-2)  ------------------------
 
 # Join all results
 out_table <- combined_mean_df %>% 
   left_join(mean_growth_df) %>% 
-  left_join(r2_df) %>% 
   left_join(loo_compare_df) %>% 
   left_join(stack_df) %>% 
-  mutate(model = case_when(
-    model != "stacked" ~ substr(model,1,2),
-    T ~ model
-  )) %>% 
+  left_join(r2_df) %>% 
+  left_join(sp_key) %>% 
+  mutate(
+    species = sci_name,
+    model = casefold(substr(model,1,2),T),
+    adj_r2 = round(all,3)) %>% 
   arrange(species,desc(elpd_diff))
 
 # Pretty up NAs
 out_table[is.na(out_table)] <- "-"
 
-# Reorder table
-out_order <-c("species","model",
-              "cat_Linf_1","cat_Linf_2","cat_Linf_3",
-              "cat_g_1","cat_g_2","cat_g_3",
-              "cat_t_1","cat_t_2","cat_t_3",
-              "mean_growth_1","mean_growth_2","mean_growth_3",
-              "sigma_length",
-              "adj_r2","delta_elpd","stack_wt")
-out_table_export <-out_table[,out_order]
+# Model selection table
+# Pretty up NAs
+modsel_order <-c(
+  "species",
+  "model",
+  "adj_r2",
+  "delta_elpd",
+  "stack_wt"
+)
+mod_select <-out_table[,modsel_order]
+
+
+# Category growth parameters
+cat_param <- out_table %>% 
+  filter(model == "ST") %>% 
+  select(
+    species,
+    contains("cat_Linf"),
+    contains("cat_t"),
+    contains("mean_growth")
+    ) %>% 
+  pivot_longer(
+    cols = -species,
+    names_to = c(".value", "hydroperiod"),
+    names_pattern = "(.*)_(\\d+)$"
+  ) %>% 
+  rename(
+    Linf = cat_Linf,
+    t = cat_t
+  ) %>% 
+  mutate(
+    hydroperiod = case_when(
+      hydroperiod == 1 ~ "Short",
+      hydroperiod == 2 ~ "Intermediate",
+      hydroperiod == 3 ~ "Long",
+    )
+  )
 
 # Export
-write.csv(out_table_export,file.path(fig_dir,"cat_model_selection_table.csv"))
+write.csv(
+  mod_select,
+  file.path(
+    fig_dir,
+    "table_s2.1",
+    "table_s2.1.csv")
+  )
+write.csv(
+  cat_param,
+  file.path(
+    fig_dir,
+    "table_s2.2",
+    "table_s2.2.csv")
+)
 
 
 # Format and export full model outputs (Appendix 4)------------------------------
@@ -236,8 +284,16 @@ lapply(1:length(sp_stack_wt), function (i) {
   )
   
   # Export outputs
-  fig_name <- paste0("supp_table_",names(sp_stack_wt)[i],".csv")
-  write.csv(out,file.path(supp_dir,fig_name),row.names = F)
+  fig_name <- paste0("table_s4_",names(sp_stack_wt)[i],"_cat.csv")
+  write.csv(
+    out,
+    file.path(
+      fig_dir,
+      "table_s4",
+      fig_name
+    ),
+    row.names = F
+  )
 })
 
 
