@@ -28,10 +28,8 @@ label_dir <- "figures/_labels"
 loo_dir <- "outputs/loo_outputs"
 param_dir <- "outputs/parameter_outputs"
 out_dir <- "outputs/stan_outputs"
-# fun_dir <- "functions"
 
 # Load in custom functions
-# source(file.path(fun_dir,"growth_summary_functions.R"))
 devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data

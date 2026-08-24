@@ -29,11 +29,8 @@ param_dir <- "outputs/parameter_outputs"
 curve_dir <- "outputs/curve_outputs"
 pred_dir <- "input_data"
 export_dir <- "figures"
-# mu_dir <- file.path(export_dir,"mu_plots")
-# fun_dir <- "functions"
 
 # Custom functions
-# source(file.path(fun_dir,"growth_summary_functions.R"))
 devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data

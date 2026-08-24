@@ -32,7 +32,6 @@ out_dir <- "outputs/stan_outputs"
 fig_dir <-"figures"
 
 # Load in custom functions
-# source(file.path(fun_dir,"stan_loo_batch_functions.R"))
 devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Data (Make sure up-to date version!)

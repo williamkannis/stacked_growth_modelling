@@ -35,8 +35,6 @@ param_dir <- "outputs/parameter_outputs"
 curve_dir <- "outputs/curve_outputs"
 
 # Load in custom functions
-# source(file.path(fun_dir,"stan_loo_batch_functions.R"))
-# source(file.path(fun_dir,"growth_prediction_functions.R"))
 devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load in data
