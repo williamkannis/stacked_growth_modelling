@@ -228,20 +228,24 @@ equation for instantaneous growth (G) at length are given below. Asymptote terms
 (t<sub>0</sub>, t<sub>inf</sub>) describes the age at which maximum growth rate occurs
 
 **von Bertalanffy (vb)**
+
 $$L(t) = L_{\infty} (1 - e^{-g_1 (t - t_0)})$$
 $$G(L) = g_1 (L_{\infty} - L)$$
 
 **Gompertz (gz)**
+
 $$L(t) = L_{\infty} e^{-e^{-g_2 (t - t_{\text{inf}})}}$$
 $$G(L) = g_2 \times L \times \ln\left(\frac{L_{\infty}}{L}\right)$$
 
 **Logistic (lg)**
+
 $$L(t) = \frac{L_{\infty}}{1 + e^{-g_3 (t - t_{\text{inf}})}}$$
 $$G(L) = g_3 \times L \left(1 - \frac{L}{L_{\infty}}\right)$$
 
 ### Effect structure
 
 **Random effect only model (random)**
+
 $$L_{i,j} = \text{FUN}_x (\text{age}_{i,j} \mid L_{\infty j}, g_j, t_j) + \varepsilon_{i,j}$$
 
 $$\varepsilon_{i,j} \sim \text{StudentT}(\nu, 0, \sigma^2)$$
