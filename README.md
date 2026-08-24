@@ -271,6 +271,7 @@ addition of 10, so we left t<sub>0</sub> on the untransformed scale.
 **Categorical predictors (categorical)**
 
 Same structure as random effect model but:
+
 $$\mu = \log \begin{pmatrix} \bar{L}_{\infty} + \gamma_{1,h} \times \text{hydr}_j \\ \bar{g} + \gamma_{2,h} \times \text{hydr}_j \\ \bar{t} + \gamma_{3,h} \times \text{hydr}_j \end{pmatrix}$$
 
 Where γ<sub>1-3,h</sub> are the fixed effects coefficients for hydroperiod 
@@ -280,6 +281,7 @@ on the three growth parameters.
 **Continuous predictors (continuous)**
 
 Same structure as random effect model but:
+
 $$\mu = \log \begin{pmatrix} \bar{L}_{\infty} + \gamma_{1,k} \times \text{PC}_{k,j} \\ \bar{g} + \gamma_{2,k} \times \text{PC}_{k,j} \\ \bar{t} + \gamma_{3,k} \times \text{PC}_{k,j} \end{pmatrix}$$
 
 Where γ<sub>1-3,h</sub> are the fixed effects coefficients for environmental 
@@ -287,6 +289,10 @@ PC *k* on the three growth parameters.
 
 ### Model development
 **Script:** ```BLANK.R```
+
+Uses functions to simulate multiple iterations of datasets based on user 
+specified growth parameters, fits those datasets to growth models, and compares 
+model outputs to actual growth paramter values
 
 ## Figures
 **Directory:** ```figures/```
