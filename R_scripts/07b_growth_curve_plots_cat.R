@@ -19,42 +19,47 @@ rm(list = ls())
 library(rstan)
 library(parallel)
 library(tidyverse)
+library(stringr)
+library(ggplot2)
 
 # Directories
-loo_dir <- "loo_outputs_cat"
+out_dir <- "outputs/stan_outputs"
+loo_dir <- "outputs/loo_outputs"
+param_dir <- "outputs/parameter_outputs"
+curve_dir <- "outputs/curve_outputs"
 pred_dir <- "input_data"
-plot_dir <- "stan_outputs/plotting_info"
-export_dir <- "figures_cat"
-mu_dir <- file.path(export_dir,"mu_plots")
-fun_dir <- "functions"
+export_dir <- "figures"
+# mu_dir <- file.path(export_dir,"mu_plots")
+# fun_dir <- "functions"
 
 # Custom functions
-source(file.path(fun_dir,"growth_summary_functions.R"))
+# source(file.path(fun_dir,"growth_summary_functions.R"))
+devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data
 curve_df <- 
-  readRDS(file.path(loo_dir,"stacked_site_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"_cat-stacked_site_curves_2026-06-22.rds"))
 cat_curve_df <- 
-  readRDS(file.path(loo_dir,"stacked_cat_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"_cat-stacked_cat_curves_2026-06-22.rds"))
 mu_curve_df <- 
-  readRDS(file.path(loo_dir,"stacked_mu_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"_cat-stacked_mu_curves_2026-06-22.rds"))
 ind_mu_curve_df <- 
-  readRDS(file.path(loo_dir,"ind_mu_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"_cat-ind_mu_curves_2026-06-22.rds"))
 pred_df <-
-  readRDS(file.path(pred_dir,"fsgrw_predictors_2026-06-17.rds"))
+  readRDS(file.path(pred_dir,"fsgrw_predictors_2026-08-21.rds"))
 age_df <- 
   readRDS(file.path(pred_dir,"fsage_cleaned_2026-06-18.rds"))
 
 
-# JORFLO DATA  ----------------------------------------------------------------
+# JORFLO DATA  ----------------------------------------------------------------_
 
 # Load in jorflo random effect only curve
 j_mu_curve_df <- readRDS(
-  file.path("loo_outputs","stacked_mu_curves_2026-06-22.rds")
+  file.path(curve_dir,"stacked_mu_curves_2026-08-21.rds")
 ) %>% 
   filter(species == "JORFLO")
 j_ind_mu_curve_df <- readRDS(
-  file.path("loo_outputs","ind_mu_curves_2026-06-22.rds")
+  file.path(curve_dir,"ind_mu_curves_2026-08-21.rds")
 ) %>% 
   filter(species == "JORFLO")
 
@@ -85,7 +90,6 @@ base.size = 45
 border.size =3
 point.size <- 1
 
-
 # mu Plot parameters
 max_age_mu <-plyr::round_any(max(actual_df$age),5,ceiling)
 max_age_mu <- 360
@@ -93,7 +97,7 @@ mu_breaks <- seq(0,max_age_mu,length.out =4)
 base.size.mu <-45
 
 
-# Population curves - model comparisons (Fig s3.1)  ----------------------------
+# Population curves - model comparisons (Fig s2.1)  ----------------------------
 
 # Prepare data
 mod_compare_df <- mu_curve_df %>% 
@@ -225,9 +229,13 @@ for(i in 1:length(sp)){
   print(growth_compare)
   
   # Export length
-  length_compare_name <- paste0("length_age_compare_plot_",sp[i],".png")
+  length_compare_name <- paste0("_length_age_",sp[i],".png")
   ggplot2::ggsave(
-    file.path(mu_dir,length_compare_name),
+    file.path(
+      export_dir,
+      "figure_s2.1",
+      length_compare_name
+      ),
     length_compare,
     width = 10,
     height = 8,
@@ -235,9 +243,13 @@ for(i in 1:length(sp)){
     )
   
   # Export growth
-  growth_compare_name <- paste0("growth_age_compare_plot_",sp[i],".png")
+  growth_compare_name <- paste0("_growth_age_",sp[i],".png")
   ggplot2::ggsave(
-    file.path(mu_dir,growth_compare_name),
+    file.path(
+      export_dir,
+      "figure_s2.1",
+      growth_compare_name
+      ),
     growth_compare,
     width = 10,
     height = 8,
@@ -247,8 +259,7 @@ for(i in 1:length(sp)){
 }
 
 
-
-# Population curves - all species (Fig s3.2)  ----------------------------------
+# Population curves - all species (Fig s2.2)  ----------------------------------
 
 # Age at length
 mu_l_plot <-ggplot(
@@ -279,7 +290,7 @@ mu_l_plot <-ggplot(
   xlim(c(0,max_age_mu))+
   theme_classic(base_size = base.size.mu)+ 
   theme(
-    legend.position="none"+
+    legend.position="none",
     panel.border = element_rect(
       color = "black", 
       fill = NA, 
@@ -287,7 +298,11 @@ mu_l_plot <-ggplot(
       )
     )
 ggplot2::ggsave(
-  file.path(mu_dir,"mu_length_age_plot.png"),
+  file.path(
+    export_dir,
+    "figure_s2.2",
+    "_length_age.png"
+    ),
   mu_l_plot,
   width = 10,
   height = 8,
@@ -334,7 +349,11 @@ mu_g_plot <-ggplot(
       size = border.size)
     )
 ggplot2::ggsave(
-  file.path(mu_dir,"mu_growth_age_plot.png"),
+  file.path(
+    export_dir,
+    "figure_s2.2",
+    "_growth_age.png"
+    ),
   mu_g_plot,
   width = 10,
   height = 8,
@@ -342,8 +361,7 @@ ggplot2::ggsave(
   )
 
 
-
-# Hydroperiod specific curves (Fig s3.3) ---------------------------------------
+# Hydroperiod specific curves (Fig s2.3) ---------------------------------------
 sp_cat <- sp[sp !="JORFLO"]
 # Set group colors
 cat_col <- c("gold","forestgreen","dodgerblue3")
@@ -450,14 +468,18 @@ for(i in 1:length(sp_cat)){
   
   # Create file name based on species
   length_plot_name <- paste0(
-    "cat_length_at_age_plots/",
+    "_length_age_",
     sp_cat[i],
-    "_length_age_plot.png"
+    ".png"
     )
   
   # Export plot
   ggplot2::ggsave(
-    file.path(export_dir,length_plot_name),
+    file.path(
+      export_dir,
+      "figure_s2.3",
+      length_plot_name
+      ),
     p,
     width = 10,
     height = 8,
@@ -538,14 +560,18 @@ for(i in 1:length(sp_cat)){
   
   # Create file name based on species
   growth_plot_name <- paste0(
-    "cat_growth_at_age_plots/",
+    "_growth_age_",
     sp_cat[i],
-    "_growth_age_plot.png"
+    ".png"
     )
   
   # export
   ggplot2::ggsave(
-    file.path(export_dir,growth_plot_name),
+    file.path(
+      export_dir,
+      "figure_s2.3",
+      growth_plot_name
+      ),
     p,
     width = 10,
     height = 8,
@@ -631,16 +657,25 @@ print(j_growth)
 
 # Export plot
 ggplot2::ggsave(
-  file.path(export_dir,"cat_length_at_age_plots/JORFLO_length_age.png"),
+  file.path(
+    export_dir,
+    "figure_s2.3",
+    "_length_age_JORFLO.png"
+    ),
   j_length,
   width = 10,
   height = 8,
   dpi = 300
   )
 ggplot2::ggsave(
-  file.path(export_dir,"cat_growth_at_age_plots/JORFLO_growth_age.png"),
+  file.path(
+    export_dir,
+    "figure_s2.3",
+    "_growth_age_JORFLO.png"
+    ),
   j_growth,
   width = 10,
   height = 8,
   dpi = 300
   )
+
