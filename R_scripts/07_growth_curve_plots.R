@@ -74,7 +74,6 @@ base.size = 45
 border.size =3
 point.size <- 1
 
-
 # mu Plot parameters
 max_age_mu <-plyr::round_any(max(actual_df$age),5,ceiling)
 max_age_mu <- 360
