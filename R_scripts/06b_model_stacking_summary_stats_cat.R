@@ -262,15 +262,17 @@ write.csv(
   file.path(
     fig_dir,
     "table_s2.1",
-    "table_s2.1.csv")
+    "table_s2.1.csv"
+    )
   )
 write.csv(
   cat_param,
   file.path(
     fig_dir,
     "table_s2.2",
-    "table_s2.2.csv")
-)
+    "table_s2.2.csv"
+    )
+  )
 
 
 # Format and export full model outputs (Appendix 4)------------------------------
