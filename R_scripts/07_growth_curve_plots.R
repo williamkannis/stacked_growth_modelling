@@ -253,9 +253,11 @@ for(i in 1:length(sp)){
 min_grad <- pred_bridged %>% select(PC1) %>% min()
 med_grad <- median(pred_bridged %>% pull(PC1))
 max_grad <- pred_bridged %>% select(PC1) %>% max()
-min_col <- "gold"
-med_col <- "forestgreen"
-max_col <- "dodgerblue3"
+
+min_col <- "#FFD700"
+med_col <- "#1ABC9C"
+max_col <- "#1B4F72"
+
 
 # Set y limits for length plots
 age_limit <- actual_df %>% 

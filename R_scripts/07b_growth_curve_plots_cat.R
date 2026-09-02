@@ -361,8 +361,7 @@ ggplot2::ggsave(
 # Hydroperiod specific curves (Fig s2.3) ---------------------------------------
 sp_cat <- sp[sp !="JORFLO"]
 # Set group colors
-cat_col <- c("gold","forestgreen","dodgerblue3")
-
+cat_col <- c("#FFD700","#1ABC9C","#1B4F72")
 
 # Set y limits for length plots
 age_limit <- actual_df %>% 
