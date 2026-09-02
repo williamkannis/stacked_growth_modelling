@@ -277,10 +277,10 @@ mu_l_plot <-ggplot(
     linetype=0,
     alpha=0.1
     )+
-  geom_rug(
-    data=actual_df,
-    aes(x=age,colour = species),
-    inherit.aes  = F)+
+  # geom_rug(
+  #   data=actual_df,
+  #   aes(x=age,colour = species),
+  #   inherit.aes  = F)+
   scale_color_manual(values =sp.colors)+
   xlab("")+
   ylab("")+
@@ -328,11 +328,11 @@ mu_g_plot <-ggplot(
     linetype=0, 
     alpha=0.1
     )+
-  geom_rug(
-    data=actual_df,
-    aes(x=age,colour = species),
-    inherit.aes  = F
-    )+
+  # geom_rug(
+  #   data=actual_df,
+  #   aes(x=age,colour = species),
+  #   inherit.aes  = F
+  #   )+
   scale_color_manual(values =sp.colors)+
   xlab("")+
   ylab("")+
