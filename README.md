@@ -37,25 +37,17 @@ Additionally, if you use associated R functions, also cite:
 
 ## Repository strucuture
 Download the entire repository. Then download [required data](#data) from 
-[Zenodo Repository](#BLANK), and data sources listed here, and unzip into the following file 
+[Zenodo Repository](#BLANK), and unzip into the following file 
 structure:
 
 ```bash
 
 │
-├── data
-│   │── raw_data
-│   │   │── fs_age.rds*
-│   │   │── fs_predictors.rds*
-│   │   └── fs_species_key.csv*
-│   │
-│   └── analysis_data
-│       │── fs_age_final.rds*
-│       └── fs_pred_final.rds*
-├── data
-│   │── fs_age.rds*
-│   │── fs_predictors.rds*
-│   └── fs_species_key.csv*
+├── input_data
+│   │── FCE1302_fsage_at_length.rds*
+│   │── FCE1302_fsgrw_predictors.rds*
+│   │── FCE1302_fskey_mean_len.csv*
+│   └── _raw_data_prep.R
 │
 ├── outputs
 │   │── stan_outputs*
@@ -63,51 +55,90 @@ structure:
 │   │── parameter_outputs*
 │   └── curve_outputs*
 │
-├── scripts
+├── R_scripts
 ├── stan_scripts
 └── figures
 
 
-(*) directories or files downloaded from Zenodo
+(*) directories or files downloaded from data repository
 ```
 
-## Data
-**Directory:** ```data/```
+## Input Data
+**Directory:** ```input_data/```
 
-The data below can be found at the manuscript's [Zenodo repository:](BLANK)
-These can be used to replicate the full manuscript workflow
+The data below can be found at the manuscript's [Zenodo repository:](BLANK),
+and downloaded into the ```input_data/``` directory. These can be used to 
+replicate the full manuscript workflow. See README at data source for more
+details on data structure and metadata.
+
 
 ### Age at length data
-**Files:**
+**File:** ```FCE1302_fsage_at_length.rds```
 
-### Species key
-**File:**
+Otolith derived age-at-length data at 30 different
+sampling events and for six species.
 
 ### Predictor data
-**Files:**
+**File:** ```FCE1302_fsgrw_predictors.rds.rds```
+
+Hydrological and biological predictor data for 447 samples, including the 
+30 otolith sampling events
+
+### Species key
+**File:** ```FCE1302_fskey_meanlen.csv```
+
+Key for species scientific name codes. Also includes mean lengths from the fish 
+density dataset (not provided), which is used for predicted growth at typical length
+
+### Raw data preparation code
+**File**: ```_raw_data_prep.R```
+
+Script used to prepare the raw data to state shared with this 
+manuscript. No data imputation, filtering, or analysis takes place in this 
+script. **Cannot run with data provided**
+
 
 ## Outputs
 **Directory:** ```outputs/```
 
-File containing the following outputs can be found at the manuscript's 
-[Zenodo repository:](BLANK). These can be used to replicate specific
-sections of the workflow, as indicated below:
+File containing the following outputs can be downloaded at the manuscript's 
+[Zenodo repository:](BLANK) and unzipped into the ```outputs/``` directory. 
+See README at data source for more details on data structure and metadata.
+These can be used to replicate specific sections of the workflow, as indicated 
+below:
 
 ### Growth model outputs
-**Files:**
+**Files:** ```stan_outputs.zip```
+
+Stan model outputs for von Bertalanffy, Gompertz, and Logistic random effects 
+only, categorical second level effects, and continuous second level effect 
+growth models for each species. Can be used to replicate Leave-one-out cross 
+validation and model stacking results.
+
 
 ### Loo outputs
-**Files:**
+**Files:** ```loo_outputs.zip```
+
+Leave-one-out cross validation results, model stacking results, and model fit
+outputs.
+
 
 ### Parameter outputs
-**Files:**
+**Files:** ```parameter_outputs.zip```
+
+Individual and stacked model instantaneous growth and model parameter estimates.
+Can be used to recreate manuscript result tables.
+
 
 ### Curve outputs
-**Files:**
+**Files:** ```curve_outputs.zip```
 
+Length and growth at age predictions using sample-event specific and global
+growth parameters. Includes predictions for individual models and for stacked
+models. Can be used to recreate growth curve plots.
 
 ## Workflow
-**Directory:** ```scripts/```
+**Directory:** ```R_scripts/```
 
 The following scripts provide all R code necessary to replicate the 
 manuscript's analyses, and are named sequentially in workflow order. Scripts
@@ -126,20 +157,15 @@ the manuscript's analyses.
 
 ### 2. Data preparation 
 
-<br>**Script**: ```_age_length_data_cleaning.R```
-
-<ins>Purpose:</ins> Prepares otolith-derived age-at-length data for growth 
-modelling. Retains only female specimens for consistency among species, and
-removes missing data.
-
-<ins>Output:</ins> X
-
 <br>**Script**: ```02_data_prep_and_pca.R```
 
-<ins>Purpose:</ins> Prepares growth parameter predictor variables, and conducts
-principal component analysis (PCA) to create composite hydrology variables.
+<ins>Purpose:</ins> Prepares growth parameter response and predictor variables, 
+and conducts principal component analysis (PCA) to create composite hydrology 
+variables.
 
-<ins>Output:</ins> X
+<ins>Output:</ins> Filtered and cleaned response data (```fsage_filtered.rds```), 
+environmental principal component predictors (```fsgrw_pca_out.rds```), and 
+Figure 2
 
 
 ### 3. Stan model fitting
@@ -209,14 +235,14 @@ tables for manuscript and supporting information.
 <ins>Purpose:</ins> Identical as ```06_model_stacking_summary_stats.R```,
 but for categorical predictor model outputs.
 
-<ins>Output:</ins> Tables s2.1-2 and appendix 4 tables
+<ins>Output:</ins> Tables s2.1-2.2 and appendix 4 tables
 
 ### 7. Plotting
 
 <br>**Script**: ```07_growth_curve_plots.R```
 
 <ins>Purpose:</ins> Create growth- and age-at-length plots for global and
-sample event level paramters.
+sample event level parameters.
 
 <ins>Output:</ins> Figures 3-6
 
@@ -225,7 +251,7 @@ sample event level paramters.
 <ins>Purpose:</ins> Identical as ```07_growth_curve_plots.R```,
 but for categorical predictor model outputs.
 
-<ins>Output:</ins> Figures s2.1-3
+<ins>Output:</ins> Figures s2.1-2.3
 
 
 ## Growth models
@@ -242,7 +268,7 @@ data. See below for more information of growth forms and model type:
 
 ### Growth forms
 For each growth form, the equation for length (L) at age (t), and the differential 
-equation for instantaneous growth (G) at length are given below. Asymptote terms 
+equation for instantaneous growth (G) at length are given below. Asymptotic terms 
 (L<sub>∞</sub>) describe the maximum length for the average fish, the scaling terms 
 (g<sub>1-3</sub>)  describe the slope of the growth curve, and the inflection term 
 (t<sub>0</sub>, t<sub>inf</sub>) describes the age at which maximum growth rate occurs
@@ -285,7 +311,7 @@ To aid in model convergence, growth parameters were estimated on the natural
 log scale, with the addition of 10 to the inflection parameter to allow for 
 negative values. For the von Bertalanffy model, the inflection parameter 
 t<sub>0</sub> was often close to -10 and biased by the 
-addition of 10, so we left t<sub>0</sub> on the untransformed scale.  
+addition of 10, so we left t<sub>0</sub> on the non-transformed scale.  
 
 
 **Categorical predictors (categorical)**
@@ -312,7 +338,7 @@ PC *k* on the three growth parameters.
 
 Uses functions to simulate multiple iterations of datasets based on user 
 specified growth parameters, fits those datasets to growth models, and compares 
-model outputs to actual growth paramter values
+model outputs to actual growth parameter values
 
 ## Figures
 **Directory:** ```figures/```
