@@ -25,7 +25,7 @@ library(janitor)
 library(purrr)
 
 # Directories
-age_dir <- "raw_data"
+age_dir <- "_raw_data"
 raw_dir <- paste0(
   "~/Documents/Work/Everglades post-doc/",
   "Data analysis/Data cleaning/cleaned_data"
