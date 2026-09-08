@@ -34,20 +34,20 @@ devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data
 sp_stack_wt <- 
-  readRDS(file.path(loo_dir,"_cat-stack_wt_out_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"_cat-stack_wt_out.rds"))
 sp_loo_compare <- 
-  readRDS(file.path(loo_dir,"_cat-loo_out_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"_cat-loo_out.rds"))
 r2_df <- 
-  readRDS(file.path(loo_dir,"_cat-model_r2_2026-08-22.rds"))
+  readRDS(file.path(loo_dir,"_cat-model_r2.rds"))
 stack_param_df <- 
-  readRDS(file.path(param_dir,"_cat-stacked_cat_parameters_2026-06-22.rds"))
+  readRDS(file.path(param_dir,"_cat-stacked_cat_parameters.rds"))
 ind_gmean_df <- 
   readRDS(
-    file.path(param_dir,"_cat-ind_mean_growth_predictions_2026-06-23.rds")
+    file.path(param_dir,"_cat-ind_mean_growth_predictions.rds")
     )
 stack_gmean_df <- 
   readRDS(
-    file.path(param_dir,"_cat-stacked_mean_growth_predictions_2026-06-22.rds")
+    file.path(param_dir,"_cat-stacked_mean_growth_predictions.rds")
     )
 sp_key <-
   read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))

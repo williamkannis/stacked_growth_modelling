@@ -38,11 +38,11 @@ export_dir <- "figures"
 
 # Load data
 sp_stack_wt <- 
-  readRDS(file.path(loo_dir,"_cat-stack_wt_out_2026-06-22.rds"))
+  readRDS(file.path(loo_dir,"_cat-stack_wt_out.rds"))
 age_df <- 
   readRDS(file.path(input_dir,"fsage_filtered.rds"))
 sample_bridge <- 
-  readRDS(file.path(label_dir,"fsgwh_sampleid_bridge_2026-08-21.rds")) 
+  readRDS(file.path(label_dir,"fsgrw_sampleid_bridge.rds")) 
 sp_key <-
   read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))
 
@@ -131,10 +131,7 @@ r2_df <- bind_rows(r2_list[!is.na(r2_list)]) %>%
 
 saveRDS(
   r2_df,
-  file.path(
-    loo_dir,
-    paste0("_cat-model_r2_",Sys.Date(),".rds")
-  )
+  file.path(loo_dir,"_cat-model_r2.rds")
 )
 
 # Export r2 table for model fit appendix results table

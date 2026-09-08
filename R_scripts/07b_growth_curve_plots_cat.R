@@ -35,13 +35,13 @@ devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data
 curve_df <- 
-  readRDS(file.path(curve_dir,"_cat-stacked_site_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"_cat-stacked_site_curves.rds"))
 cat_curve_df <- 
-  readRDS(file.path(curve_dir,"_cat-stacked_cat_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"_cat-stacked_cat_curves.rds"))
 mu_curve_df <- 
-  readRDS(file.path(curve_dir,"_cat-stacked_mu_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"_cat-stacked_mu_curves.rds"))
 ind_mu_curve_df <- 
-  readRDS(file.path(curve_dir,"_cat-ind_mu_curves_2026-06-22.rds"))
+  readRDS(file.path(curve_dir,"_cat-ind_mu_curves.rds"))
 pred_df <-
   readRDS(file.path(pred_dir,"FCE1302_fsgrw_predictors.rds"))
 age_df <- 

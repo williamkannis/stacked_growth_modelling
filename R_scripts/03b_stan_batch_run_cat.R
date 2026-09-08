@@ -268,7 +268,7 @@ saveRDS(
   file.path(
     fig_dir,
     "_labels",
-    paste0("fsgwh_cat_labels",Sys.Date(),".rds")
+    "fsgrw_cat_labels.rds"
     )
   )
 

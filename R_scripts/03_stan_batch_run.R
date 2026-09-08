@@ -308,7 +308,7 @@ saveRDS(
   file.path(
     fig_dir,
     "_labels",
-    paste0("fsgrw_sampleid_bridge_",Sys.Date(),".rds")
+    "fsgrw_sampleid_bridge.rds"
     )
   )
 saveRDS(
@@ -316,7 +316,7 @@ saveRDS(
   file.path(
     fig_dir,
     "_labels",
-    paste0("fsgrw_pred_labels_",Sys.Date(),".rds")
+    "fsgrw_pred_labels.rds"
     )
   )
 

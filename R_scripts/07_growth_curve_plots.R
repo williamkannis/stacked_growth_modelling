@@ -35,15 +35,15 @@ devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data
 sp_stack_wt <- 
-  readRDS(file.path(loo_dir,"stack_wt_out_2026-08-21.rds"))
+  readRDS(file.path(loo_dir,"stack_wt_out.rds"))
 curve_df <- 
-  readRDS(file.path(curve_dir,"stacked_curves_2026-08-21.rds"))
+  readRDS(file.path(curve_dir,"stacked_curves.rds"))
 mu_curve_df <- 
-  readRDS(file.path(curve_dir,"stacked_mu_curves_2026-08-21.rds"))
+  readRDS(file.path(curve_dir,"stacked_mu_curves.rds"))
 ind_mu_curve_df <- 
-  readRDS(file.path(curve_dir,"ind_mu_curves_2026-08-21.rds"))
+  readRDS(file.path(curve_dir,"ind_mu_curves.rds"))
 pred_bridged <- 
-  readRDS(file.path(curve_dir,"stacked_growth_predictions_2026-08-21.rds"))
+  readRDS(file.path(curve_dir,"stacked_growth_predictions.rds"))
 pca_df <-
   readRDS(file.path(pred_dir,"fsgrw_pca_out.rds"))
 age_df <- 

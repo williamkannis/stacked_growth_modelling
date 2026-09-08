@@ -39,9 +39,9 @@ devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load in data
 sample_bridge <- 
-  readRDS(file.path(label_dir,"fsgwh_sampleid_bridge_2026-08-21.rds"))
+  readRDS(file.path(label_dir,"fsgrw_sampleid_bridge.rds"))
 cat_labels <- 
-  readRDS(file.path(label_dir,"fsgwh_cat_labels2026-08-22.rds"))
+  readRDS(file.path(label_dir,"fsgrw_cat_labels.rds"))
 len_df <- 
   read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))
 n.cores <- 5
@@ -297,46 +297,40 @@ cat_curve_bridged <- cat_curve_df %>%
 # For summary stats, export loo, stacking weights, growth rates, r2, and parameters
 saveRDS(
   sp_loo_compare,
-  file.path(loo_dir,paste0("_cat-loo_out_",Sys.Date(),".rds"))
+  file.path(loo_dir, "_cat-loo_out.rds")
   )
 saveRDS(
   sp_stack_wt,
-  file.path(loo_dir,paste0("_cat-stack_wt_out_",Sys.Date(),".rds"))
+  file.path(loo_dir, "_cat-stack_wt_out.rds")
   )
 saveRDS(
   mean_growth_df, 
-  file.path(
-    export_dir,
-    paste0("_cat-stacked_mean_growth_predictions_",Sys.Date(),".rds")
-    )
+  file.path(export_dir, "_cat-stacked_mean_growth_predictions.rds")
   )
 saveRDS(
   ind_mean_growth_df, 
-  file.path(
-    param_dir,
-    paste0("_cat-ind_mean_growth_predictions_",Sys.Date(),".rds")
-    )
+  file.path(param_dir, "_cat-ind_mean_growth_predictions.rds")
   )
 saveRDS(
   param_df, 
-  file.path(param_dir,paste0("_cat-stacked_cat_parameters_",Sys.Date(),".rds"))
+  file.path(param_dir, "_cat-stacked_cat_parameters.rds")
   )
 
 # For plots, export length and growth-at-age predictions and bridge tables
 saveRDS(
   site_curve_bridged, 
-  file.path(curve_dir,paste0("_cat-stacked_site_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir, "_cat-stacked_site_curves.rds")
   )
 saveRDS(
   cat_curve_bridged, 
-  file.path(curve_dir,paste0("_cat-stacked_cat_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir, "_cat-stacked_cat_curves.rds")
   )
 saveRDS(
   mu_curve_df, 
-  file.path(curve_dir,paste0("_cat-stacked_mu_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir, "_cat-stacked_mu_curves.rds")
   )
 saveRDS(
   ind_mu_curve_df, 
-  file.path(curve_dir,paste0("_cat-ind_mu_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir, "_cat-ind_mu_curves.rds")
   )
 

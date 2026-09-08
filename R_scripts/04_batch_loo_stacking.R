@@ -38,9 +38,9 @@ devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load in data
 sample_bridge <- 
-  readRDS(file.path(label_dir,"fsgwh_sampleid_bridge_2026-08-21.rds"))
+  readRDS(file.path(label_dir,"fsgrw_sampleid_bridge.rds"))
 pred_lables <- 
-  readRDS(file.path(label_dir,"fsgwh_pred_labels_2026-08-21.rds"))
+  readRDS(file.path(label_dir,"fsgrw_pred_labels.rds"))
 len_df <- 
   read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))
 n.cores <- 6
@@ -298,49 +298,41 @@ site_curve_bridged <-site_curve_df %>%
 # and parameters
 saveRDS(
   sp_loo_compare,
-  file.path(loo_dir,paste0("loo_out_",Sys.Date(),".rds"))
+  file.path(loo_dir,"loo_out.rds")
   )
 saveRDS(
   sp_stack_wt,
-  file.path(loo_dir,paste0("stack_wt_out_",Sys.Date(),".rds"))
+  file.path(loo_dir,"stack_wt_out.rds")
   )
 saveRDS(
   mean_growth_df, 
-  file.path(
-    param_dir,
-    paste0("stacked_mean_growth_predictions_",Sys.Date(),".rds")
-    )
+  file.path(param_dir,"stacked_mean_growth_predictions.rds")
   )
 saveRDS(
   ind_mean_growth_df, 
-  file.path(
-    param_dir,
-    paste0("ind_mean_growth_predictions_",Sys.Date(),".rds")
-    )
+  file.path(param_dir,"ind_mean_growth_predictions.rds")
   )
 saveRDS(
   param_df, 
-  file.path(param_dir,paste0("stacked_mu_parameters_",Sys.Date(),".rds"))
+  file.path(param_dir,"stacked_mu_parameters.rds")
   )
 
 # For plots, export length and growth-at-age predictions and bridge tables
 saveRDS(
   site_curve_bridged, 
-  file.path(curve_dir,paste0("stacked_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir,"stacked_curves.rds")
   )
 saveRDS(
   mu_curve_df, 
-  file.path(curve_dir,paste0("stacked_mu_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir,"stacked_mu_curves.rds")
   )
 saveRDS(
   ind_mu_curve_df, 
-  file.path(curve_dir,paste0("ind_mu_curves_",Sys.Date(),".rds"))
+  file.path(curve_dir, "ind_mu_curves.rds")
   )
 saveRDS(
   pred_bridged, 
   file.path(
-    curve_dir,
-    paste0("stacked_growth_predictions_",Sys.Date(),".rds")
-    )
+    curve_dir,"stacked_growth_predictions.rds")
   )
 
