@@ -23,10 +23,6 @@ library(rstan)
 
 # Directories
 # fun_dir <-"functions"
-len_dir <- paste0(
-  "~/Documents/Work/Everglades post-doc/",
-  "Data analysis/Data cleaning/cleaned_data"
-)
 input_dir <- "input_data"
 out_dir <- "outputs/stan_outputs"
 fig_dir <-"figures"
@@ -34,16 +30,17 @@ fig_dir <-"figures"
 # Load in custom functions
 devtools::load_all("~/Documents/work/R packages/growthstack")
 
-# Data (Make sure up-to date version!)
-age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
-len_df <- readRDS(file.path(len_dir,"fslen_cleaned_2026-02-25.rds"))
-pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-08-21.rds"))
+# Data
+age_df <- readRDS(file.path(input_dir,"fsage_filtered.rds"))
+pca_df <- readRDS(file.path(input_dir,"fsgrw_pca_out.rds"))
+len_df <- read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))
 
 # Combine age and predictor data.frames
 input_df <- age_df %>% 
-  left_join(pred_df)
+  left_join(pca_df) %>% 
 
 
+  
 # LUCGOO model runs  -----------------------------------------------------------
 
 # Fit models
@@ -304,27 +301,6 @@ out_list <- list(
 out_list_t <- purrr::list_transpose(out_list)
 id_bridge <- bind_rows(out_list_t$id_bridge)  # links sample_id to site and year
 pred_lables <- out_list_t$prediction_labels  # PC values used for predicted growth rates 
-mean_lengths <- out_list_t$mean_length  # mean length used to estimate inst. growth
-
-# Species bridge 
-sp_bridge <- data.frame(
-  species = c(
-    "FUNCHR",
-    "GAMHOL",
-    "HETFOR",
-    "JORFLO",
-    "LUCGOO",
-    "POELAT"
-    ),
-  sci_name = c(
-    "F. chrysotus",
-    "G. holbrooki",
-    "H. formosa",
-    "J. floridae",
-    "L. goodei",
-    "P. latipinna"
-    )
-)
 
 # Export plotting data
 saveRDS(
@@ -332,7 +308,7 @@ saveRDS(
   file.path(
     fig_dir,
     "_labels",
-    paste0("fsgwh_sampleid_bridge_",Sys.Date(),".rds")
+    paste0("fsgrw_sampleid_bridge_",Sys.Date(),".rds")
     )
   )
 saveRDS(
@@ -340,39 +316,16 @@ saveRDS(
   file.path(
     fig_dir,
     "_labels",
-    paste0("fsgwh_pred_labels_",Sys.Date(),".rds")
+    paste0("fsgrw_pred_labels_",Sys.Date(),".rds")
     )
   )
-saveRDS(
-  mean_lengths,
-  file.path(
-    fig_dir,
-    "_labels",
-    paste0("fsgwh_mean_lengths_",Sys.Date(),".rds")
-    )
-  )
-
-saveRDS(
-  sp_bridge,
-  file.path(
-    fig_dir,
-    "_labels",
-    paste0("fsgwh_sp_key_",Sys.Date(),".rds")
-  )
-)
 
 
 # Age and length summary tables  -----------------------------------------------
 
 mean_length <- len_df %>% 
-  right_join(age_df %>% distinct(species)) %>% 
-  group_by(species) %>% 
-  summarise(
-    across(
-      .cols = length,
-      .fns = ~ mean(.x, na.rm = TRUE)
-    )
-  )
+  mutate(mean_length = length) %>% 
+  select(species,sci_name_abv,mean_length)
 
 age_length_sum <- age_df %>% 
   group_by(species) %>% 
@@ -388,9 +341,8 @@ age_length_sum <- age_df %>%
     )
   ) %>% 
   left_join(mean_length) %>% 
-  left_join(sp_bridge) %>% 
-  mutate(species = sci_name) %>% 
-  select(-sci_name)
+  mutate(species = sci_name_abv) %>% 
+  select(-sci_name_abv)
 
 write.csv(
   age_length_sum,

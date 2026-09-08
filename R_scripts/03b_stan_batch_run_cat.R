@@ -22,10 +22,6 @@ library(rstan)
 
 # Directories
 # fun_dir <-"functions"
-len_dir <- paste0(
-  "~/Documents/Work/Everglades post-doc/",
-  "Data analysis/Data cleaning/cleaned_data"
-  )
 input_dir <- "input_data"
 out_dir <- "outputs/stan_outputs"
 fig_dir <-"figures"
@@ -33,14 +29,15 @@ fig_dir <-"figures"
 # Load in custom functions
 devtools::load_all("~/Documents/work/R packages/growthstack")
 
-# Data (Make sure up-to date version!)
-age_df <- readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
-len_df <- readRDS(file.path(len_dir,"fslen_cleaned_2026-02-25.rds"))
-pred_df <-readRDS(file.path(input_dir,"fsgrw_predictors_2026-08-21.rds"))
+# Data
+age_df <- readRDS(file.path(input_dir,"fsage_filtered.rds"))
+pred_df <- readRDS(file.path(input_dir,"FCE1302_fsgrw_predictors.rds"))
+len_df <- read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))
 
 # Combine age and predictor data.frames
 input_df <- age_df %>% 
   left_join(pred_df)
+
 
 # LUCGOO model runs  -----------------------------------------------------------
 
@@ -265,7 +262,7 @@ id_bridge <- bind_rows(out_list_t$id_bridge)  # links sample_id to site and year
 cat_lables <- bind_rows(out_list_t$category_labels)  # hydroperiod classes
 
 
-# Export plotting data]
+# Export plotting data
 saveRDS(
   cat_lables,
   file.path(
