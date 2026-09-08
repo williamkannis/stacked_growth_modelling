@@ -2,8 +2,9 @@
 
 Code and data for reproducing the analyses presented in:
 
-> Author et al. (YEAR). Bayesian model-stacking improves somatic growth 
-estimates in Everglades Cyprinodontid fishes.[Journal, DOI]
+> Annis, W.K., Strickland, B.A., Dorn, N.J., Trexler, J.C. (YEAR). Bayesian 
+model-stacking improves somatic growth estimates in Everglades Cyprinodontid 
+fishes.[Journal, DOI]
 
 This repository contains the R code and data products required to
 reproduce the analyses, figures, and tables presented in the manuscript.
@@ -21,8 +22,14 @@ OrcID: 0009-0003-3541-8503
 
 If you use these, models, code or data, please cite:
 
->BLANK. Bayesian model-stacking improves somatic growth estimates in 
-Everglades Cyprinodontid fishes. in review
+>Annis, W.K., Strickland, B.A., Dorn, N.J., Trexler, J.C. (2026). 
+Data for "Bayesian model-stacking improves somatic growth 
+estimates in Everglades Cyprinodontid fishes" (Version 0.0.1) [Dataset]. Zenodo. 
+(BLANK)[BLANK]
+
+> Annis, W.K., Strickland, B.A., Dorn, N.J., Trexler, J.C. (YEAR). Bayesian 
+model-stacking improves somatic growth estimates in Everglades Cyprinodontid 
+fishes.[Journal, DOI]
 
 Additionally, if you use associated R functions, also cite:
 
@@ -45,11 +52,16 @@ structure:
 │   └── analysis_data
 │       │── fs_age_final.rds*
 │       └── fs_pred_final.rds*
+├── data
+│   │── fs_age.rds*
+│   │── fs_predictors.rds*
+│   └── fs_species_key.csv*
 │
 ├── outputs
 │   │── stan_outputs*
 │   │── loo_outputs*
-│   └── curve_predictions*
+│   │── parameter_outputs*
+│   └── curve_outputs*
 │
 ├── scripts
 ├── stan_scripts
@@ -87,10 +99,10 @@ sections of the workflow, as indicated below:
 ### Loo outputs
 **Files:**
 
-### Model stacking output
+### Parameter outputs
 **Files:**
 
-### Curve predictions
+### Curve outputs
 **Files:**
 
 
@@ -107,14 +119,14 @@ relation to categorical (cat) effect version of the models. These only
 need to be ran to replicate the results in Appendix 2.
 
 ### 1. Install custom functions
-<br>**Script**: ```00_install_growthstack_pkg.R```
+<br>**Script**: ```01_install_growthstack_pkg.R```
 
 <ins>Purpose:</ins> Installs package contain custom functions used for
 the manuscript's analyses.
 
 ### 2. Data preparation 
 
-<br>**Script**: ```01_age_length_data_cleaning.R```
+<br>**Script**: ```_age_length_data_cleaning.R```
 
 <ins>Purpose:</ins> Prepares otolith-derived age-at-length data for growth 
 modelling. Retains only female specimens for consistency among species, and
@@ -122,7 +134,7 @@ removes missing data.
 
 <ins>Output:</ins> X
 
-<br>**Script**: ```02_growth_predictor_data_prep.R```
+<br>**Script**: ```02_data_prep_and_pca.R```
 
 <ins>Purpose:</ins> Prepares growth parameter predictor variables, and conducts
 principal component analysis (PCA) to create composite hydrology variables.
@@ -138,14 +150,13 @@ principal component analysis (PCA) to create composite hydrology variables.
 three growth forms to each species. Random effect only model is fit to Flagfish
 (JORFLO) due to smaller sample size. Creates age and length summary tables.
 
-<ins>Output:</ins> X
+<ins>Output:</ins> [Growth model outputs](#growth-model-outputs)
 
 <br>**Script**: ```03b_stan_batch_run_cat.R```
 
 <ins>Purpose:</ins> Identical as ```03_stan_batch_run.R```,
 but for categorical predictor model.
 
-<ins>Output:</ins> X
 
 ### 4. Model stacking and predictions
 
@@ -158,23 +169,23 @@ growth-at-age curves at the population and sampling event-level, stacked
 growth parameters, and isnt. growth and hydrology predictions. Additionally,
 length- and growth-at-age curves predictions for each candidate model are created.
 
-<ins>Output:</ins> X
+<ins>Output:</ins> [Loo](#loo-outputs), [parameter](#parameter-outputs), and 
+[curve](#curve-outputs) outputs
 
 <br>**Script**: ```04b_batch_loo_stacking_cat.R```
 
 <ins>Purpose:</ins> Identical as ```04_batch_loo_stacking.R```,
 but for categorical predictor model outputs.
 
-<ins>Output:</ins> X
 
-### 5. Model fit NNEEED TO ADD R@ OUTPUTS MAYBE
+### 5. Model fit 
 <br>**Script**: ```05_model_fit_appendix.R```
 
-<ins>Purpose:</ins> Estimates the rsquared values for each model form using the 
+<ins>Purpose:</ins> Estimates the r-squared values for each model form using the 
 entire age range, the middle 95%, and the upper/lower 2.5% age ranges. 
 Additionally, raw length residuals are plotted.
 
-<ins>Output:</ins> Figure s5.1 and Table s6.1
+<ins>Output:</ins> Figure s5.1, Table s6.1, and [loo outputs](loo-outputs)
 
 <br>**Script**: ```05b_model_fit_appendix_cat.R```
 
