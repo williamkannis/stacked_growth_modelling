@@ -37,11 +37,11 @@ export_dir <- "figures"
 sp_stack_wt <- 
   readRDS(file.path(loo_dir,"stack_wt_out_2026-08-21.rds"))
 age_df <- 
-  readRDS(file.path(input_dir,"fsage_cleaned_2026-06-18.rds"))
+  readRDS(file.path(input_dir,"fsage_filtered.rds"))
 sample_bridge <- 
   readRDS(file.path(label_dir,"fsgwh_sampleid_bridge_2026-08-21.rds")) 
 sp_key <-
-  readRDS(file.path(label_dir,"fsgwh_sp_key_2026-08-22.rds"))
+  read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))
 
 sp <- names(sp_stack_wt)
 sp_dir <- sapply(sp,function(x) file.path(out_dir,x))
@@ -139,7 +139,7 @@ r2_table <- r2_df %>%
   left_join(sp_key) %>% 
   mutate(
     model = casefold(substr(model,1,2),T),
-    species = sci_name) %>% 
+    species = sci_name_abv) %>% 
   select(
     species,
     model,

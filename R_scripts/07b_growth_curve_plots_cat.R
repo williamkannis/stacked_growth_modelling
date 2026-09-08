@@ -43,9 +43,9 @@ mu_curve_df <-
 ind_mu_curve_df <- 
   readRDS(file.path(curve_dir,"_cat-ind_mu_curves_2026-06-22.rds"))
 pred_df <-
-  readRDS(file.path(pred_dir,"fsgrw_predictors_2026-08-21.rds"))
+  readRDS(file.path(pred_dir,"FCE1302_fsgrw_predictors.rds"))
 age_df <- 
-  readRDS(file.path(pred_dir,"fsage_cleaned_2026-06-18.rds"))
+  readRDS(file.path(pred_dir,"fsage_filtered.rds"))
 
 
 # JORFLO DATA  ----------------------------------------------------------------_

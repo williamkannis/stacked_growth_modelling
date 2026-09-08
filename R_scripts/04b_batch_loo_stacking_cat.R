@@ -42,8 +42,8 @@ sample_bridge <-
   readRDS(file.path(label_dir,"fsgwh_sampleid_bridge_2026-08-21.rds"))
 cat_labels <- 
   readRDS(file.path(label_dir,"fsgwh_cat_labels2026-08-22.rds"))
-mean_lengths <- 
-  readRDS(file.path(label_dir,"fsgwh_mean_lengths_2026-08-21.rds"))
+len_df <- 
+  read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))
 n.cores <- 5
 stack.iter <- 10000
 
@@ -62,6 +62,8 @@ sp_out <- lapply(sp_dir,list.files,pattern = "categorical")
 sapply(sp_out,n_distinct)
 
 # Format mean lengths
+mean_lengths <- sapply(len_df$length,function(x) x)
+names(mean_lengths) <- len_df$species
 mean_lengths <- mean_lengths[order(names(mean_lengths))]
 mean_lengths <- mean_lengths[names(mean_lengths) != 'JORFLO']
 

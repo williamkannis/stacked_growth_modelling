@@ -46,7 +46,7 @@ ind_gmean_df <-
 stack_gmean_df <- 
   readRDS(file.path(param_dir,"stacked_mean_growth_predictions_2026-08-21.rds"))
 sp_key <-
-  readRDS(file.path(label_dir,"fsgwh_sp_key_2026-08-22.rds"))
+  read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))
   
 # Species specific directories
 sp <- names(sp_stack_wt)
@@ -194,7 +194,7 @@ out_table <- combined_mean_df %>%
   left_join(r2_df) %>% 
   left_join(sp_key) %>% 
   mutate(
-    species = sci_name,
+    species = sci_name_abv,
     model = casefold(substr(model,1,2),T),
     adj_r2 = round(all,3)) %>% 
   arrange(species,desc(elpd_diff))
