@@ -11,7 +11,7 @@
 # DESCRIPTION: Prepares raw data to a state that can be shared with manuscript
 # and used to replicate results. This involves coarsening the throw trap and
 # hydrology data to annual means. Full age-at-length is shared, and here column
-# names are cleaned up and unnecassary fields are removed. No data imputation
+# names are cleaned up and unnecessary fields are removed. No data imputation
 # or filtering takes place at this stage.
 
 
