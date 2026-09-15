@@ -68,13 +68,47 @@ summary(age_clean)
 
 # Species key and mean lengths for density data  -------------------------------
 
+# Species key
+key <- data.frame(
+  species = c(
+    "FUNCHR", 
+    "GAMHOL", 
+    "HETFOR", 
+    "JORFLO", 
+    "LUCGOO",
+    "POELAT"
+    ),
+  sci_name = c(
+    "Fundulus chrysotus",
+    "Gambusia holbrooki",
+    "Heterandria formosa",
+    "Jordanella floridae",
+    "Lucania goodei",
+    "Poecilia latipinna"
+    ),
+  sci_name_abv = c(
+    "F. chrysotus",
+    "G. holbrooki",
+    "H. formosa",
+    "J. floridae",
+    "L. goodei",
+    "P. latipinna"
+  )
+  
+)
+
+
 # Mean length used for growth at typical length predictions
 mean_len_df <- len_df %>% 
   filter(species %in% unique(age_clean$species)) %>% 
   group_by(species) %>% 
-  summarise(length = mean(length,na.rm = T)) %>% 
+  summarise(
+    length_mean = mean(length,na.rm = T),
+    length_min = min(length,na.rm = T),
+    length_max = max(length,na.rm = T)
+    ) %>% 
   right_join(key) %>% 
-  select(species,sci_name,sci_name_abv,length)
+  select(species,sci_name,sci_name_abv,length_min,length_max,length_mean)
 
 
 # Growth sampling periods  -----------------------------------------------------
