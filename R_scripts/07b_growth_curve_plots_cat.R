@@ -52,11 +52,11 @@ age_df <-
 
 # Load in jorflo random effect only curve
 j_mu_curve_df <- readRDS(
-  file.path(curve_dir,"stacked_mu_curves_2026-08-21.rds")
+  file.path(curve_dir,"stacked_mu_curves.rds")
 ) %>% 
   filter(species == "JORFLO")
 j_ind_mu_curve_df <- readRDS(
-  file.path(curve_dir,"ind_mu_curves_2026-08-21.rds")
+  file.path(curve_dir,"ind_mu_curves.rds")
 ) %>% 
   filter(species == "JORFLO")
 
