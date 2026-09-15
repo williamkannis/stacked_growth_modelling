@@ -38,6 +38,9 @@ len_df <- read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))
 input_df <- age_df %>% 
   left_join(pred_df)
 
+# Prepare mean length data
+len_df$length <- len_df$length_mean
+
 
 # LUCGOO model runs  -----------------------------------------------------------
 

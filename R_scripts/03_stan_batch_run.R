@@ -37,10 +37,12 @@ len_df <- read.csv(file.path(input_dir,"FCE1302_fskey_meanlen.csv"))
 
 # Combine age and predictor data.frames
 input_df <- age_df %>% 
-  left_join(pca_df) %>% 
+  left_join(pca_df)
 
-
+# Prepare mean length data
+len_df$length <- len_df$length_mean
   
+
 # LUCGOO model runs  -----------------------------------------------------------
 
 # Fit models
@@ -324,8 +326,12 @@ saveRDS(
 # Age and length summary tables  -----------------------------------------------
 
 mean_length <- len_df %>% 
-  mutate(mean_length = length) %>% 
-  select(species,sci_name_abv,mean_length)
+  rename(
+    d_length_min = length_min,
+    d_length_max = length_max,
+    d_length_mean = length_mean
+    ) %>% 
+  select(species,sci_name_abv,d_length_min,d_length_max,d_length_mean)
 
 age_length_sum <- age_df %>% 
   group_by(species) %>% 
@@ -348,8 +354,8 @@ write.csv(
   age_length_sum,
   file.path(
     fig_dir,
-    "table_s1.2",
-    "table_s1.2.csv"
+    "table_s1.3",
+    "table_s1.3.csv"
   ), 
   row.names = F)
 
