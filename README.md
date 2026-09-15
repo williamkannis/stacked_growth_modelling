@@ -176,7 +176,7 @@ Figure 2
 three growth forms to each species. Random effect only model is fit to Flagfish
 (JORFLO) due to smaller sample size. Creates age and length summary tables.
 
-<ins>Output:</ins> [Growth model outputs](#growth-model-outputs)
+<ins>Output:</ins> [Growth model outputs](#growth-model-outputs), Table s1.3
 
 <br>**Script**: ```03b_stan_batch_run_cat.R```
 
