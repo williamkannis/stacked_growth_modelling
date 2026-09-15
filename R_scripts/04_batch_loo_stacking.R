@@ -27,11 +27,13 @@ library(loo)
 
 # directories
 # fun_dir <-"functions"
+input_dir <- "input_data"
 out_dir <- "outputs/stan_outputs"
 label_dir <- "figures/_labels"
 loo_dir <- "outputs/loo_outputs"
 param_dir <- "outputs/parameter_outputs"
 curve_dir <- "outputs/curve_outputs"
+
 
 # Load in custom functions
 devtools::load_all("~/Documents/work/R packages/growthstack")
@@ -61,7 +63,7 @@ sp_out <- lapply(sp_dir,list.files,pattern = "continuous|random")
 sapply(sp_out,n_distinct)
 
 # Format mean lengths
-mean_lengths <- sapply(len_df$length,function(x) x)
+mean_lengths <- sapply(len_df$length_mean,function(x) x)
 names(mean_lengths) <- len_df$species
 mean_lengths <- mean_lengths[order(names(mean_lengths))]
 

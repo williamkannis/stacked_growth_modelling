@@ -28,6 +28,7 @@ library(loo)
 
 # directories
 # fun_dir <-"functions"
+input_dir <- "input_data"
 out_dir <- "outputs/stan_outputs"
 label_dir <- "figures/_labels"
 loo_dir <- "outputs/loo_outputs"
@@ -47,6 +48,7 @@ len_df <-
 n.cores <- 5
 stack.iter <- 10000
 
+
 # Load in model outputs  -------------------------------------------------------
 
 # Species-specific directories
@@ -62,7 +64,7 @@ sp_out <- lapply(sp_dir,list.files,pattern = "categorical")
 sapply(sp_out,n_distinct)
 
 # Format mean lengths
-mean_lengths <- sapply(len_df$length,function(x) x)
+mean_lengths <- sapply(len_df$length_mean,function(x) x)
 names(mean_lengths) <- len_df$species
 mean_lengths <- mean_lengths[order(names(mean_lengths))]
 mean_lengths <- mean_lengths[names(mean_lengths) != 'JORFLO']
