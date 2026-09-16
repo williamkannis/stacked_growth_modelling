@@ -13,7 +13,7 @@
 
 
 # Housekeeping  ----------------------------------------------------------------
-rm(list = ls())
+rm(list = ls()) 
 
 # Load packages
 library(dplyr)
@@ -50,10 +50,7 @@ luc_out <- fit_growth(
   nu=4,
   fixed.effect = "categorical",
   sample.groups = c("wateryear","region","site"),
-  predictors = c("PC1","PC2","PC3"),  
-  scale = T,
-  linear.predictions = T,  
-  pred.len = 100,
+  category = "hydroperiod",
   sp="LUCGOO",   
   age.df = input_df, 
   len.df = len_df,
@@ -91,10 +88,7 @@ poe_out <- fit_growth(
   nu=3,
   fixed.effect = "categorical",
   sample.groups = c("wateryear","region","site"),
-  predictors = c("PC1","PC2","PC3"),  
-  scale = T,
-  linear.predictions = T,  
-  pred.len = 100,
+  category = "hydroperiod",
   sp="POELAT",   
   age.df = input_df, 
   len.df = len_df,
@@ -132,10 +126,7 @@ het_out <- fit_growth(
   nu=4,
   fixed.effect = "categorical",
   sample.groups = c("wateryear","region","site"),
-  predictors = c("PC1","PC2","PC3"),  
-  scale = T,
-  linear.predictions = T,  
-  pred.len = 100,
+  category = "hydroperiod",
   sp="HETFOR",   
   age.df = input_df, 
   len.df = len_df,
@@ -173,10 +164,7 @@ gam_out <- fit_growth(
   nu=4,
   fixed.effect = "categorical",
   sample.groups = c("wateryear","region","site"),
-  predictors = c("PC1","PC2","PC3"),  
-  scale = T,
-  linear.predictions = T,  
-  pred.len = 100,
+  category = "hydroperiod",
   sp="GAMHOL",   
   age.df = input_df, 
   len.df = len_df,
@@ -214,10 +202,7 @@ fun_out <- fit_growth(
   nu=3,
   fixed.effect = "categorical",
   sample.groups = c("wateryear","region","site"),
-  predictors = c("PC1","PC2","PC3"),  
-  scale = T,
-  linear.predictions = T,  
-  pred.len = 100,
+  category = "hydroperiod",
   sp="FUNCHR",   
   age.df = input_df, 
   len.df = len_df,
