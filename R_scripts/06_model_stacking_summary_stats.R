@@ -23,6 +23,7 @@ library(tidyverse)
 library(stringr)
 
 # Directories
+input_dir <- "input_data"
 fig_dir <- "figures"
 label_dir <- "figures/_labels"
 loo_dir <- "outputs/loo_outputs"
