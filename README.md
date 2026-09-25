@@ -346,3 +346,11 @@ model outputs to actual growth parameter values
 Contains raw R plots and .csv tables used to create the figures and tables in 
 the main manuscript and appendices. Most figures were edited in Adobe Illustrator
 for aesthetic purposes, and we included Illustrator files as well.
+
+## License
+
+The code in this repository is licensed under the
+[MIT License](LICENSE).
+
+Associated data are released under
+a [Creative Commons Attribution 4.0 International License (CC BY 4.0)].
