@@ -25,7 +25,7 @@ If you use these, models, code or data, please cite:
 >Annis, W.K., Strickland, B.A., Dorn, N.J., Trexler, J.C. (2026). 
 Data for "Bayesian model-stacking improves somatic growth 
 estimates in Everglades Cyprinodontid fishes" (Version 0.0.1) [Dataset]. Zenodo. 
-(BLANK)[BLANK]
+https://doi.org/10.5281/zenodo.22963703
 
 > Annis, W.K., Strickland, B.A., Dorn, N.J., Trexler, J.C. (YEAR). Bayesian 
 model-stacking improves somatic growth estimates in Everglades Cyprinodontid 
@@ -35,9 +35,11 @@ Additionally, if you use associated R functions, also cite:
 
 >BLANK
 
-## Repository strucuture
-Download the entire repository. Then download [required data](#data) from 
-[Zenodo Repository](#BLANK), and unzip into the following file 
+## Data and Repository strucuture
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22963703.svg)](https://doi.org/10.5281/zenodo.22963703)
+
+Download the entire repository. Then download [required data](#input-data) from 
+[Zenodo Repository](#https://doi.org/10.5281/zenodo.22963703), and unzip into the following file 
 structure:
 
 ```bash
@@ -66,7 +68,8 @@ structure:
 ## Input Data
 **Directory:** ```input_data/```
 
-The data below can be found at the manuscript's [Zenodo repository:](BLANK),
+The data below can be found at the manuscript's 
+[Zenodo repository:](https://doi.org/10.5281/zenodo.22963703),
 and downloaded into the ```input_data/``` directory. These can be used to 
 replicate the full manuscript workflow. See README at data source for more
 details on data structure and metadata.
@@ -102,7 +105,7 @@ script. **Cannot run with data provided**
 **Directory:** ```outputs/```
 
 File containing the following outputs can be downloaded at the manuscript's 
-[Zenodo repository:](BLANK) and unzipped into the ```outputs/``` directory. 
+[Zenodo repository:](https://doi.org/10.5281/zenodo.22963703) and unzipped into the ```outputs/``` directory. 
 See README at data source for more details on data structure and metadata.
 These can be used to replicate specific sections of the workflow, as indicated 
 below:
