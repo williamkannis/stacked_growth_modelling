@@ -17,6 +17,7 @@
 rm(list = ls())
 
 # Packages
+library(growthstack)
 library(rstan)
 library(parallel)
 library(tidyverse)
@@ -29,9 +30,6 @@ label_dir <- "figures/_labels"
 loo_dir <- "outputs/loo_outputs"
 param_dir <- "outputs/parameter_outputs"
 out_dir <- "outputs/stan_outputs"
-
-# Load in custom functions
-devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data
 sp_stack_wt <- 

@@ -18,13 +18,13 @@
 rm(list = ls())
 
 # Packages
+library(growthstack)
 library(dplyr)
 library(purrr)
 library(rstan)
 library(parallel)
 library(tidyverse)
 library(ggplot2)
-devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Directories
 loo_dir <- "outputs/loo_outputs"
@@ -32,9 +32,6 @@ out_dir <- "outputs/stan_outputs"
 input_dir <-"input_data"
 label_dir <- "figures/_labels"
 export_dir <- "figures"
-
-# Load in custom functions
-# source(file.path(fun_dir,"growth_prediction_functions.R"))
 
 # Load data
 sp_stack_wt <- 

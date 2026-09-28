@@ -18,13 +18,13 @@
 rm(list = ls())
 
 # Packages
+library(growthstack)
 library(dplyr)
 library(purrr)
 library(rstan)
 library(parallel)
 library(tidyverse)
 library(ggplot2)
-devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Directories
 loo_dir <- "outputs/loo_outputs"

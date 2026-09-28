@@ -16,6 +16,7 @@
 rm(list = ls())
 
 # Packages
+library(growthstack)
 library(rstan)
 library(parallel)
 library(tidyverse)
@@ -29,9 +30,6 @@ param_dir <- "outputs/parameter_outputs"
 curve_dir <- "outputs/curve_outputs"
 pred_dir <- "input_data"
 export_dir <- "figures"
-
-# Custom functions
-devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load data
 curve_df <- 

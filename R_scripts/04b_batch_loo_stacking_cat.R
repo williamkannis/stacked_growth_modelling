@@ -22,21 +22,18 @@
 rm(list = ls())
 
 # Load packages
+library(growthstack)
 library(dplyr)
 library(tidyr)
 library(loo)
 
 # directories
-# fun_dir <-"functions"
 input_dir <- "input_data"
 out_dir <- "outputs/stan_outputs"
 label_dir <- "figures/_labels"
 loo_dir <- "outputs/loo_outputs"
 param_dir <- "outputs/parameter_outputs"
 curve_dir <- "outputs/curve_outputs"
-
-# Load in custom functions
-devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Load in data
 sample_bridge <- 

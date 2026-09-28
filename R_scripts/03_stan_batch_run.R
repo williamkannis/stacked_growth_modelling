@@ -17,18 +17,15 @@
 rm(list = ls())
 
 # Load packages
+library(growthstack)
 library(dplyr)
 library(readxl)
 library(rstan)
 
 # Directories
-# fun_dir <-"functions"
 input_dir <- "input_data"
 out_dir <- "outputs/stan_outputs"
 fig_dir <-"figures"
-
-# Load in custom functions
-devtools::load_all("~/Documents/work/R packages/growthstack")
 
 # Data
 age_df <- readRDS(file.path(input_dir,"fsage_filtered.rds"))
