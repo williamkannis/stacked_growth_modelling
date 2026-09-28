@@ -33,7 +33,9 @@ fishes.[Journal, DOI]
 
 Additionally, if you use associated R functions, also cite:
 
->BLANK
+>Annis, W.K., Strickland, B.A., Dorn, N.J., Trexler, J.C. (2026).
+Growthstack: Bayesian hierarchical growth modelling and model stacking tools 
+(Version 0.0.1-beta) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23020941
 
 ## Data and Repository strucuture
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22963703.svg)](https://doi.org/10.5281/zenodo.22963703)
@@ -69,7 +71,7 @@ structure:
 **Directory:** ```input_data/```
 
 The data below can be found at the manuscript's 
-[Zenodo repository:](https://doi.org/10.5281/zenodo.22963703),
+[Zenodo repository](https://doi.org/10.5281/zenodo.22963703),
 and downloaded into the ```input_data/``` directory. These can be used to 
 replicate the full manuscript workflow. See README at data source for more
 details on data structure and metadata.
@@ -105,7 +107,7 @@ script. **Cannot run with data provided**
 **Directory:** ```outputs/```
 
 File containing the following outputs can be downloaded at the manuscript's 
-[Zenodo repository:](https://doi.org/10.5281/zenodo.22963703) and unzipped into the ```outputs/``` directory. 
+[Zenodo repository](https://doi.org/10.5281/zenodo.22963703) and unzipped into the ```outputs/``` directory. 
 See README at data source for more details on data structure and metadata.
 These can be used to replicate specific sections of the workflow, as indicated 
 below:
@@ -147,7 +149,7 @@ The following scripts provide all R code necessary to replicate the
 manuscript's analyses, and are named sequentially in workflow order. Scripts
 call in custom functions designed to fit growth models, make predictions, and
 summarize results. These functions and their documentation can be found 
-[here](BLANK). 
+[here](https://doi.org/10.5281/zenodo.23020941). 
 Script whose numerical id is followed by "b" refer to scripts used in
 relation to categorical (cat) effect version of the models. These only
 need to be ran to replicate the results in Appendix 2.
@@ -263,7 +265,7 @@ but for categorical predictor model outputs.
 We estimated growth rates using three model forms: von Bertalanffy, Gompertz, 
 and Logistic; and three effect structures: Random effect only, Categorical 
 second-level predictors, and continuous second-level predictors. While model
-stan files were called in using the [associated R package](BLANK),
+stan files were called in using the [associated R package](https://doi.org/10.5281/zenodo.23020941),
 we also provide the stan scripts for each model code in this repository. Stan
 files are named by growth form and effect structure as defined below.
 Additionally, we provided R script used to validate each model with simulated
